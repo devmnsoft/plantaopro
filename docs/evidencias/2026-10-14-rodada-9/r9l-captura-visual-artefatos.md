@@ -1,6 +1,6 @@
 # Rodada 9 — r9l: Captura visual / aprovação visual (screenshots + zoom/breakpoints)
 
-Data: 2026-10-15 · Base: `b302093` (r9k) · Ambiente local/homologação · Web `http://localhost:52976`, API `http://localhost:51976`, banco principal `plantaopro` (PG18) · Sem push/merge/publish. · **Atualizado 2026-10-16 (r9m): capturas de screenshot concluídas (§4); aprovação visual pendente de aceite do usuário (§6).**
+Data: 2026-10-15 · Base: `b302093` (r9k) · Ambiente local/homologação · Web `http://localhost:52976`, API `http://localhost:51976`, banco principal `plantaopro` (PG18) · Sem push/merge/publish. · **Atualizado 2026-10-16 (r9m): capturas de screenshot concluídas (§4) e APROVAÇÃO VISUAL DECLARADA pelo usuário (§6) — PRONTO integral.**
 
 ## 1. Objetivo
 
@@ -53,7 +53,7 @@ Lições de protocolo registradas (causas das ~10 tentativas frustradas anterior
 
 ## 6. Aprovação visual
 
-**Capturas obtidas (item 4); aceite pendente do usuário.** As 3 imagens foram exibidas no Review pane em 2026-10-16 para aprovação; sem resposta até o registro. Com o aceite, a linha r9l vira PRONTO integral. As três telas têm evidência funcional completa (seção 3 + artefatos DOM) independentemente da aprovação visual.
+**DECLARADA em 2026-10-16** — usuário aprovou as 3 capturas exibidas no Review pane (resposta "Aprovado — fechar"). Linha r9l em **PRONTO integral**: pixels das 3 telas (§4) + aceite do usuário + evidência funcional completa (seção 3 + artefatos DOM). Nota de processo: tentativas de `fullPage` adicionais ocorreram com a janela oculta e não afetam o fechamento — o escopo da rodada (pixels das telas + aprovação) foi integralmente atendido com as capturas de viewport versionadas em `imagens/`.
 
 ## 7. Servidores deixados ativos
 

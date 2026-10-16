@@ -1,6 +1,6 @@
 # Rodada 9 — Relatório Final Consolidado (v2)
 
-Data: 2026-10-15 (UTC) · Ambiente: local/homologação · Branch `main`, base inicial `4ab9770`, **HEAD local `159b2d8`** (commits da rodada + fechamento + fatias r9m, **sem push/merge/publish** por restrição da rodada). · Banco principal `plantaopro` + espelho `plantaopro_test` (PostgreSQL 18). · **Atualização 2026-10-16 (r9m):** fatias r9m-P2 (`a379780`) e r9m-P4 (`159b2d8`) aplicadas e testadas — pendências **P2 e P4 fechadas**; suíte efetiva **1398**.
+Data: 2026-10-15 (UTC) · Ambiente: local/homologação · Branch `main`, base inicial `4ab9770`, **HEAD local `159b2d8`** (commits da rodada + fechamento + fatias r9m, **sem push/merge/publish** por restrição da rodada). · Banco principal `plantaopro` + espelho `plantaopro_test` (PostgreSQL 18). · **Atualização 2026-10-16 (r9m):** fatias r9m-P2 (`a379780`) e r9m-P4 (`159b2d8`) aplicadas e testadas — pendências **P2 e P4 fechadas**; suíte efetiva **1398**; **P1 fechado** (capturas + aprovação visual declarada pelo usuário).
 
 ## 1. Diagnóstico (estado inicial)
 
@@ -67,7 +67,7 @@ Nota de ambiente: deadlocks 40P01 transitórios sob RAM baixa (suíte paralela) 
 
 ## 6. Pendências priorizadas
 
-1. **P1 — capturas CONCLUÍDAS em 2026-10-16 (r9m); resta apenas o aceite visual do usuário** — 3 viewport PNGs em `imagens/` (CotDet com o título dinâmico do P4 no pixel, RelFin, Produtos), autenticado no tenant SV; imagens exibidas no Review pane para aprovação. Evidência funcional (DOM autenticado) registrada em r9l e segue valendo. Protocolo de retry/lições: `r9l-captura-visual-artefatos.md` §4.
+1. **P1 — FECHADO em 2026-10-16 (r9m)** — 3 viewport PNGs em `imagens/` (CotDet com o título dinâmico do P4 no pixel, RelFin, Produtos), autenticado no tenant SV, e **aprovação visual declarada pelo usuário** ("Aprovado — fechar"). Evidência: `r9l-captura-visual-artefatos.md` (§4 capturas + lições de protocolo; §6 aprovação).
 2. **P2 — FECHADO em r9m-P2 (2026-10-16, `a379780`)** — receita aplicada a `SaasComercialB4MatrizTests`: pré-limpeza por e-mail (única chave natural com índice único parcial entre os fixtures) + retry único em 40P01/40001; classe isolada 12/12; suíte de fechamento 1398/1398 sem flake. Demais classes SaaS com fixtures por chave natural: mesma receita sob demanda. Evidência: `r9m-p2-b4matriz-flake.md`.
 3. **P3** — Dívidas herdadas R8: B16/B17/B18; drill-down do §27-L208; writer da tabela `adm360_ocorrencias`.
 4. **P4 — FECHADO em r9m-P4 (2026-10-16, `159b2d8`)** — 103 chaves novas ×4 idiomas (contrato Adm360 502→605); 102 substituições exatas na view (guia/status/itens/modal/anexos/outbox/estorno/IA; bloco ANVISA inalterado); fact novo de completude; residuais com acento = apenas comentários não renderizados. Evidência: `r9m-p4-cotdet-i18n.md`.
@@ -75,7 +75,7 @@ Nota de ambiente: deadlocks 40P01 transitórios sob RAM baixa (suíte paralela) 
 
 ## 7. Estado de retomada
 
-- Git: `main` local em **`159b2d8`** (r9m-P4) + commit de documentação desta atualização + commit de evidências das capturas (r9m-P1), à frente de `origin/main` em **17 commits** (restrição da rodada impede push/merge). Árvore de trabalho limpa após estes commits.
+- Git: `main` local em **`159b2d8`** (r9m-P4) + commit de documentação (r9m) + commit de evidências das capturas (r9m-P1) + commit deste fechamento (aprovação), à frente de `origin/main` em **18 commits** (restrição da rodada impede push/merge). Árvore de trabalho limpa após estes commits.
 - Servidores: **parados** após a suíte de fechamento (DLLs desbloqueadas para build). Para o retry visual, relançar via `r9l_api.cmd` / `r9l_web.cmd` em `%TEMP%\opencode` (`ConnectionStrings__Default` explícito KEY=VALUE para `plantaopro` — Npgsql 10 rejeita URI); o restart do Web invalida a sessão (Data Protection key efêmera) → re-login via form em qualquer aba (admin SV, `docs/usuarios-teste.md`); o primeiro submit logo após o boot da API pode falhar em silêncio — retry resolve.
 - Baseline de suíte para a próxima rodada: **1398** verdes (Release) = 1397 + 1 fact novo do r9m-P4; contrato i18n Adm360 em **605 chaves ×4**.
-- Próximos passos ordenados: (1) aceite visual do usuário das 3 capturas de 2026-10-16 (`imagens/`) para virar a linha r9l em PRONTO integral; (2) push dos 17 commits locais quando autorizado; (3) próxima rodada: dívidas herdadas R8 (P3) — B16/B17/B18, drill-down do §27-L208, writer da `adm360_ocorrencias`.
+- Próximos passos ordenados: (1) push dos 18 commits locais quando autorizado; (2) próxima rodada: dívidas herdadas R8 (P3) — B16/B17/B18, drill-down do §27-L208, writer da `adm360_ocorrencias`.

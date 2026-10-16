@@ -3350,4 +3350,313 @@
   <data name="Adm360.RelFin.VendasVazia" xml:space="preserve">
     <value>Ninguna venta encontrada en el período.</value>
   </data>
+  <data name="Adm360.CotDet.LabelCotacao" xml:space="preserve">
+    <value>Cotización </value>
+  </data>
+  <data name="Adm360.CotDet.TitleSuffix" xml:space="preserve">
+    <value> — Administrativo 360</value>
+  </data>
+  <data name="Adm360.CotDet.BreadcrumbLabel" xml:space="preserve">
+    <value>Cotizaciones</value>
+  </data>
+  <data name="Adm360.CotDet.BtnGerarOrcamento" xml:space="preserve">
+    <value>Generar Presupuesto Quirúrgico</value>
+  </data>
+  <data name="Adm360.CotDet.BtnAprovarEnfileirar" xml:space="preserve">
+    <value>Aprobar Respuesta y Encolar</value>
+  </data>
+  <data name="Adm360.CotDet.CanceladoEmPrefix" xml:space="preserve">
+    <value>Cotización cancelada el </value>
+  </data>
+  <data name="Adm360.CotDet.CanceladoEmSuffix" xml:space="preserve">
+    <value> UTC.</value>
+  </data>
+  <data name="Adm360.CotDet.MotivoLabel" xml:space="preserve">
+    <value>Motivo: </value>
+  </data>
+  <data name="Adm360.CotDet.MotivoNaoInformado" xml:space="preserve">
+    <value>no informado</value>
+  </data>
+  <data name="Adm360.CotDet.CanceladoEstadoTerminal" xml:space="preserve">
+    <value>Estado terminal auditable: esta cotización ya no puede transmitirse, aprobarse ni revertirse (ver historial de eventos).</value>
+  </data>
+  <data name="Adm360.CotDet.GuiaCiclo" xml:space="preserve">
+    <value>&lt;strong&gt;Ciclo de la cotización.&lt;/strong&gt; Cada botón corresponde a una transición del flujo (generar presupuesto, aprobar respuesta, transmitir, revertir). La cotización avanza de fase solo cuando los ítems están completos y la respuesta aprobada.</value>
+  </data>
+  <data name="Adm360.CotDet.GuiaStatus" xml:space="preserve">
+    <value>&lt;strong&gt;Estado interno.&lt;/strong&gt; El sello indica la fase real del registro; los movimientos financieros generan asientos compensatorios trazables cuando la fase lo exige.</value>
+  </data>
+  <data name="Adm360.CotDet.GuiaAssistente" xml:space="preserve">
+    <value>&lt;strong&gt;Asistente de IA.&lt;/strong&gt; El panel opcional genera un análisis en texto de la cotización y los documentos adjuntos. Es una lectura de apoyo: aceptar, rechazar o transmitir sigue siendo decisión humana, por el botón correspondiente.</value>
+  </data>
+  <data name="Adm360.CotDet.GuiaDocumentos" xml:space="preserve">
+    <value>&lt;strong&gt;Documentos (XML).&lt;/strong&gt; Los adjuntos fiscales (NF-e/NFC-e/NFS-e) se validan al cargar; un error de formato se muestra sin alterar el resto del documento.</value>
+  </data>
+  <data name="Adm360.CotDet.GuiaAnvisa" xml:space="preserve">
+    <value>&lt;strong&gt;Regulación ANVISA.&lt;/strong&gt; Cada ítem con producto relacionado muestra el estado regulatorio del material ofertado (número de registro, no aplicable o pendiente). En el modal de mapeo, la selección por catálogo muestra ese estado para cada candidato. En la aprobación de la respuesta, el estado queda congelado en la instantánea de la versión enviada — la propuesta enviada no cambia si el catálogo se altera después.</value>
+  </data>
+  <data name="Adm360.CotDet.PendingItemsIntro" xml:space="preserve">
+    <value>Existen </value>
+  </data>
+  <data name="Adm360.CotDet.PendingItemsOutro" xml:space="preserve">
+    <value> ítems pendientes de relación De/Para.</value>
+  </data>
+  <data name="Adm360.CotDet.PendingItemsBloqueio" xml:space="preserve">
+    <value>La aprobación de la respuesta y el envío al portal quedan bloqueados hasta que todos los ítems tengan productos internos correspondientes o una justificación de no atención.</value>
+  </data>
+  <data name="Adm360.CotDet.CardProvedorOrigem" xml:space="preserve">
+    <value>Proveedor y Origen</value>
+  </data>
+  <data name="Adm360.CotDet.LblEstabelecimento" xml:space="preserve">
+    <value>Establecimiento: </value>
+  </data>
+  <data name="Adm360.CotDet.CardHospitalSolicitante" xml:space="preserve">
+    <value>Hospital Solicitante</value>
+  </data>
+  <data name="Adm360.CotDet.HospitalNaoIdentificado" xml:space="preserve">
+    <value>No identificado</value>
+  </data>
+  <data name="Adm360.CotDet.LblProcedimento" xml:space="preserve">
+    <value>Procedimiento: </value>
+  </data>
+  <data name="Adm360.CotDet.Nd" xml:space="preserve">
+    <value>S/D</value>
+  </data>
+  <data name="Adm360.CotDet.LblDataPrevista" xml:space="preserve">
+    <value>Fecha Prevista: </value>
+  </data>
+  <data name="Adm360.CotDet.PrazoDentro" xml:space="preserve">
+    <value>Dentro del Plazo</value>
+  </data>
+  <data name="Adm360.CotDet.LblFuso" xml:space="preserve">
+    <value>Zona horaria: </value>
+  </data>
+  <data name="Adm360.CotDet.CardStatusOrcamento" xml:space="preserve">
+    <value>Estado y Presupuesto</value>
+  </data>
+  <data name="Adm360.CotDet.LblPortal" xml:space="preserve">
+    <value>Portal: </value>
+  </data>
+  <data name="Adm360.CotDet.OrcamentoPrefix" xml:space="preserve">
+    <value>Presupuesto: </value>
+  </data>
+  <data name="Adm360.CotDet.ItensTableTitulo" xml:space="preserve">
+    <value>Ítems Solicitados y Relación de Productos</value>
+  </data>
+  <data name="Adm360.CotDet.ThItemExterno" xml:space="preserve">
+    <value>Ítem Solicitado (Externo)</value>
+  </data>
+  <data name="Adm360.CotDet.ThQtdUnid" xml:space="preserve">
+    <value>Cant / Und</value>
+  </data>
+  <data name="Adm360.CotDet.ThProdutoOfertado" xml:space="preserve">
+    <value>Producto Ofertado (Interno)</value>
+  </data>
+  <data name="Adm360.CotDet.ThConversao" xml:space="preserve">
+    <value>Conversión / Cant Ofertada</value>
+  </data>
+  <data name="Adm360.CotDet.ThPrecoUnit" xml:space="preserve">
+    <value>Precio Unit. (R$)</value>
+  </data>
+  <data name="Adm360.CotDet.ThDescontoUnit" xml:space="preserve">
+    <value>Descuento (R$)</value>
+  </data>
+  <data name="Adm360.CotDet.ThTotalOfertado" xml:space="preserve">
+    <value>Total Ofertado</value>
+  </data>
+  <data name="Adm360.CotDet.ThStatusDePara" xml:space="preserve">
+    <value>Estado De/Para</value>
+  </data>
+  <data name="Adm360.CotDet.ThAcao" xml:space="preserve">
+    <value>Acción</value>
+  </data>
+  <data name="Adm360.CotDet.LblCodigo" xml:space="preserve">
+    <value>Cód: </value>
+  </data>
+  <data name="Adm360.CotDet.LblFabricante" xml:space="preserve">
+    <value>Fab: </value>
+  </data>
+  <data name="Adm360.CotDet.LblModelo" xml:space="preserve">
+    <value>Mod: </value>
+  </data>
+  <data name="Adm360.CotDet.LblSubst" xml:space="preserve">
+    <value>Sustit.: </value>
+  </data>
+  <data name="Adm360.CotDet.BadgePendenteMapeamento" xml:space="preserve">
+    <value>Pendiente de mapeo</value>
+  </data>
+  <data name="Adm360.CotDet.LblFator" xml:space="preserve">
+    <value>Factor: </value>
+  </data>
+  <data name="Adm360.CotDet.StatusRelacionado" xml:space="preserve">
+    <value>Relacionado</value>
+  </data>
+  <data name="Adm360.CotDet.StatusPendente" xml:space="preserve">
+    <value>Pendiente</value>
+  </data>
+  <data name="Adm360.CotDet.StatusNaoAtendido" xml:space="preserve">
+    <value>No Atendido</value>
+  </data>
+  <data name="Adm360.CotDet.BtnMapear" xml:space="preserve">
+    <value>Mapear</value>
+  </data>
+  <data name="Adm360.CotDet.ModalMapearPrefix" xml:space="preserve">
+    <value>Mapear Ítem #</value>
+  </data>
+  <data name="Adm360.CotDet.LblStatusAtendimento" xml:space="preserve">
+    <value>Estado de Atención</value>
+  </data>
+  <data name="Adm360.CotDet.OptRelacionadoInterno" xml:space="preserve">
+    <value>Relacionado con Producto Interno</value>
+  </data>
+  <data name="Adm360.CotDet.LblProdutoInterno" xml:space="preserve">
+    <value>Producto Interno</value>
+  </data>
+  <data name="Adm360.CotDet.LblFatorConversao" xml:space="preserve">
+    <value>Factor de Conversión</value>
+  </data>
+  <data name="Adm360.CotDet.LblPrecoUnitario" xml:space="preserve">
+    <value>Precio Unitario (R$)</value>
+  </data>
+  <data name="Adm360.CotDet.LblDesconto" xml:space="preserve">
+    <value>Descuento (R$)</value>
+  </data>
+  <data name="Adm360.CotDet.LblJustSubstituicao" xml:space="preserve">
+    <value>Justificación de Sustitución (si aplica)</value>
+  </data>
+  <data name="Adm360.CotDet.PhJustSubstituicao" xml:space="preserve">
+    <value>Ej: Material equivalente autorizado por la ANVISA</value>
+  </data>
+  <data name="Adm360.CotDet.LblMotivoNaoAtendimento" xml:space="preserve">
+    <value>Motivo de No Atención (si no atendido)</value>
+  </data>
+  <data name="Adm360.CotDet.PhMotivoNaoAtendimento" xml:space="preserve">
+    <value>Ej: Sin stock o descontinuado</value>
+  </data>
+  <data name="Adm360.CotDet.BtnSalvarMapeamento" xml:space="preserve">
+    <value>Guardar Mapeo</value>
+  </data>
+  <data name="Adm360.CotDet.AnexosTitulo" xml:space="preserve">
+    <value>Adjuntos Pre-Qirúrgicos</value>
+  </data>
+  <data name="Adm360.CotDet.AnexosVazio" xml:space="preserve">
+    <value>Ningún adjunto asociado a esta cotización.</value>
+  </data>
+  <data name="Adm360.CotDet.BtnBaixar" xml:space="preserve">
+    <value>Descargar</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxTitulo" xml:space="preserve">
+    <value>Historial y Fila Outbox de Transmisión</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxVazio" xml:space="preserve">
+    <value>Ninguna respuesta transmitida o en cola.</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxNaFila" xml:space="preserve">
+    <value>En fila de envío</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxEnviando" xml:space="preserve">
+    <value>En curso</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxExportada" xml:space="preserve">
+    <value>Exportada manualmente</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxConfigPendente" xml:space="preserve">
+    <value>Configuración pendiente</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxAceita" xml:space="preserve">
+    <value>Aceptada por el portal</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxRejeitada" xml:space="preserve">
+    <value>Rechazada por el portal</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxDesconhecido" xml:space="preserve">
+    <value>Resultado desconocido</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxAcaoNaFila" xml:space="preserve">
+    <value>Siguiente acción: transmitir la respuesta (canal del portal o exportación manual).</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxAcaoEnviando" xml:space="preserve">
+    <value>Siguiente acción: aguardar el retorno del portal; los envíos interrumpidos se concilian automáticamente.</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxAcaoAceita" xml:space="preserve">
+    <value>Estado final: propuesta aceptada por el portal con protocolo registrado.</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxAcaoRejeitada" xml:space="preserve">
+    <value>Siguiente acción: revisar el motivo del rechazo y retransmitir.</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxAcaoConfig" xml:space="preserve">
+    <value>Siguiente acción: configurar la cuenta del proveedor y retransmitir.</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxAcaoDesconhecida" xml:space="preserve">
+    <value>Siguiente acción: confirmar explícitamente la retransmisión para evitar envío duplicado.</value>
+  </data>
+  <data name="Adm360.CotDet.OutboxAcaoExportada" xml:space="preserve">
+    <value>Siguiente acción: entregar el archivo exportado al cliente; la retransmisión preserva el archivo original.</value>
+  </data>
+  <data name="Adm360.CotDet.TransmissaoPrefix" xml:space="preserve">
+    <value>Transmisión </value>
+  </data>
+  <data name="Adm360.CotDet.BtnTransmitirResposta" xml:space="preserve">
+    <value>Transmitir Respuesta</value>
+  </data>
+  <data name="Adm360.CotDet.BtnRetransmitir" xml:space="preserve">
+    <value>Retransmitir</value>
+  </data>
+  <data name="Adm360.CotDet.BtnRetentarEnvio" xml:space="preserve">
+    <value>Reintentar Envío</value>
+  </data>
+  <data name="Adm360.CotDet.BtnConfirmarRetransmissao" xml:space="preserve">
+    <value>Confirmar retransmisión</value>
+  </data>
+  <data name="Adm360.CotDet.BtnEstornar" xml:space="preserve">
+    <value>Revertir</value>
+  </data>
+  <data name="Adm360.CotDet.LblTentativas" xml:space="preserve">
+    <value>Intentos: </value>
+  </data>
+  <data name="Adm360.CotDet.LblProtocolo" xml:space="preserve">
+    <value>Protocolo: </value>
+  </data>
+  <data name="Adm360.CotDet.BadgeArquivoImutavel" xml:space="preserve">
+    <value>ARCHIVO GENERADO · INMUTABLE</value>
+  </data>
+  <data name="Adm360.CotDet.BtnBaixarExportado" xml:space="preserve">
+    <value>Descargar Archivo Exportado</value>
+  </data>
+  <data name="Adm360.CotDet.EstornoModalTitulo" xml:space="preserve">
+    <value>Revertir transmisión </value>
+  </data>
+  <data name="Adm360.CotDet.EstornoModalCorpo" xml:space="preserve">
+    <value>La respuesta vuelve a la fila (NA_FILA) sin borrar el historial: el protocolo y el mensaje de retorno actuales se preservan, y se podrá generar una nueva revisión.</value>
+  </data>
+  <data name="Adm360.CotDet.EstornoLblJustificativa" xml:space="preserve">
+    <value>Justificación de la reversión *</value>
+  </data>
+  <data name="Adm360.CotDet.EstornoPhJustificativa" xml:space="preserve">
+    <value>Ej.: rechazo incorrecto por el portal — enviar nueva revisión con el ítem corregido</value>
+  </data>
+  <data name="Adm360.CotDet.EstornoAjuda" xml:space="preserve">
+    <value>Mínimo de 10 caracteres. Registrada en la pista de auditoría junto con el usuario que ejecutó la reversión.</value>
+  </data>
+  <data name="Adm360.CotDet.BtnConfirmarEstorno" xml:space="preserve">
+    <value>Confirmar reversión</value>
+  </data>
+  <data name="Adm360.CotDet.AiKicker" xml:space="preserve">
+    <value>Asistente · opcional</value>
+  </data>
+  <data name="Adm360.CotDet.AiTituloPrefix" xml:space="preserve">
+    <value>Análisis de la cotización </value>
+  </data>
+  <data name="Adm360.CotDet.AiBtnGerar" xml:space="preserve">
+    <value>Generar análisis</value>
+  </data>
+  <data name="Adm360.CotDet.AiDescricao" xml:space="preserve">
+    <value>Lectura auxiliar sobre ítems, plazos y estado de la cotización. No sustituye aprobación, transmisión ni ninguna acción del módulo.</value>
+  </data>
+  <data name="Adm360.CotDet.AiVazio" xml:space="preserve">
+    <value>Sin generación en esta sesión.</value>
+  </data>
+  <data name="Adm360.CotDet.AiAjusteHtml" xml:space="preserve">
+    <value>¿Necesita ajuste? &lt;a href="/AssistenteIa"&gt;Configurar asistente&lt;/a&gt; (administradores).</value>
+  </data>
 </root>

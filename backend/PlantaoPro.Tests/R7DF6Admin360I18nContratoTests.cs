@@ -251,13 +251,13 @@ public sealed class R7DF6Admin360I18nContratoTests
     }
 
     [Fact]
-    public void RecursosContemAs502ChavesAdm360EmTodosOsQuatroIdiomas()
+    public void RecursosContemAs605ChavesAdm360EmTodosOsQuatroIdiomas()
     {
         foreach (var arquivo in new[] { "UiTexts.resx", "UiTexts.en.resx", "UiTexts.es.resx", "UiTexts.fr.resx" })
         {
             var resx = Read("backend", "PlantaoPro.Web", "Localization", arquivo);
             var totalAdm360 = Regex.Matches(resx, "<data name=\"Adm360\\.").Count;
-            Assert.Equal(502, totalAdm360);
+            Assert.Equal(605, totalAdm360);
             foreach (var chave in new[]
                      {
                          // views
@@ -289,7 +289,11 @@ public sealed class R7DF6Admin360I18nContratoTests
                           "Adm360.Produtos.PageTitle", "Adm360.Produtos.ThUnidade", "Adm360.Produtos.GuiaSkuUnico", "Adm360.Produtos.LoteAviso",
                           "Adm360.Produtos.ConfContinuar", "Adm360.Produtos.JsMargemNeg", "Adm360.Produtos.JsPrevLocal",
                           "Adm360.CotDet.AnvisaBadgeTit", "Adm360.CotDet.AnvisaBadgeNaTxt", "Adm360.CotDet.AnvisaBadgePendTxt",
-                          "Adm360.CotDet.SelectAjuda", "Adm360.CotDet.OptSelecioneProduto", "Adm360.CotDet.JsPendenteTexto"
+                          "Adm360.CotDet.SelectAjuda", "Adm360.CotDet.OptSelecioneProduto", "Adm360.CotDet.JsPendenteTexto",
+                           // r9m: completude do detalhe da cotação (fora do bloco ANVISA)
+                           "Adm360.CotDet.LabelCotacao", "Adm360.CotDet.GuiaCiclo", "Adm360.CotDet.GuiaAnvisa",
+                           "Adm360.CotDet.ThStatusDePara", "Adm360.CotDet.StatusNaoAtendido", "Adm360.CotDet.OutboxAcaoRejeitada",
+                           "Adm360.CotDet.EstornoModalCorpo", "Adm360.CotDet.AiAjusteHtml", "Adm360.CotDet.BadgeArquivoImutavel"
                      })
             {
                 Assert.Contains($"<data name=\"{chave}\"", resx, StringComparison.Ordinal);
@@ -327,6 +331,14 @@ public sealed class R7DF6Admin360I18nContratoTests
         Assert.Contains("<value>ANVISA pending</value>", en);
         Assert.Contains("<value>Ventas Facturadas en el Período</value>", es);
         Assert.Contains("<value>Ventes facturées sur la période</value>", fr);
+        // r9m: pt-BR canônico (fragmentos com espaços preservados, <strong> escapado no guia, · universal)
+        Assert.Contains("<value>ARQUIVO GERADO · IMUTÁVEL</value>", master);
+        Assert.Contains("<value>&lt;strong&gt;Ciclo da cotação.&lt;/strong&gt; Cada botão corresponde a uma transição do fluxo (gerar orçamento, aprovar resposta, transmitir, estornar).", master);
+        Assert.Contains("<value>Nenhuma geração nesta sessão.</value>", master);
+        // r9m: amostras en/es/fr
+        Assert.Contains("<value>Next action: review the rejection reason and retransmit.</value>", en);
+        Assert.Contains("<value>Siguiente acción: revisar el motivo del rechazo y retransmitir.</value>", es);
+        Assert.Contains("<value>Prochaine action : examiner le motif du rejet puis réémettre.</value>", fr);
     }
 
     [Fact]
@@ -405,6 +417,53 @@ public sealed class R7DF6Admin360I18nContratoTests
                      "-- Selecione o Produto --", "ou identificador manual (UUID)",
                      "Selecione no catálogo ou informe o identificador", "Sem produto relacionado — regulação ANVISA",
                      "(registro manual no cadastro)", "número ainda não informado no cadastro do produto."
+                 })
+        {
+            Assert.DoesNotContain(literal, cotdet);
+        }
+    }
+
+    [Fact]
+    public void ViewsAdm360_R9mDetalhesCotacaoCompletudeSemLiterals()
+    {
+        var cotdet = Read("backend", "PlantaoPro.Web", "Views", "Administrativo360", "Cotacoes", "Detalhes.cshtml");
+        foreach (var chave in new[]
+                 {
+                     // r9m: título/breadcrumb/alertas + guia
+                     "Adm360.CotDet.LabelCotacao", "Adm360.CotDet.TitleSuffix", "Adm360.CotDet.BreadcrumbLabel",
+                     "Adm360.CotDet.CanceladoEstadoTerminal", "Login.HelpSummary",
+                     "Adm360.CotDet.GuiaCiclo", "Adm360.CotDet.GuiaStatus", "Adm360.CotDet.GuiaAssistente",
+                     "Adm360.CotDet.GuiaDocumentos", "Adm360.CotDet.GuiaAnvisa", "Adm360.CotDet.PendingItemsBloqueio",
+                     // cards de status (inclui reuso de chaves do dashboard de cotações)
+                     "Adm360.CotDet.CardProvedorOrigem", "Adm360.CotDet.PrazoDentro",
+                     "Adm360.Cotacoes.ThResponseDeadline", "Adm360.Cotacoes.StatusExpirada",
+                     // tabela de itens + modal de mapeamento (reuso: CloseAria/Cancelar/Voltar)
+                     "Adm360.CotDet.ItensTableTitulo", "Adm360.CotDet.ThStatusDePara", "Adm360.CotDet.StatusNaoAtendido",
+                     "Adm360.CotDet.ModalMapearPrefix", "Adm360.CotDet.BtnSalvarMapeamento",
+                     "Clinical.ButtonCancel", "Implantacao.CloseAria", "Shift.Back",
+                     // anexos + fila outbox
+                     "Adm360.CotDet.AnexosVazio", "Adm360.CotDet.OutboxTitulo", "Adm360.CotDet.OutboxAcaoEnviando",
+                     "Adm360.CotDet.BtnTransmitirResposta", "Adm360.CotDet.BadgeArquivoImutavel",
+                     // estorno + assistente IA
+                     "Adm360.CotDet.EstornoModalCorpo", "Adm360.CotDet.BtnConfirmarEstorno",
+                     "Adm360.CotDet.AiKicker", "Adm360.CotDet.AiDescricao", "Adm360.CotDet.AiVazio", "Adm360.CotDet.AiAjusteHtml"
+                 })
+        {
+            Assert.Contains($"UiText.L(\"{chave}\")", cotdet);
+        }
+        // estados de máquina e formatos preservados
+        Assert.Contains("case \"RELACIONADO\":", cotdet);
+        Assert.Contains("value=\"NAO_ATENDIDO\"", cotdet);
+        Assert.Contains(".ToString(\"N2\")", cotdet);
+        Assert.Contains(".ToString(\"N4\")", cotdet);
+        Assert.Contains("data-anvisa-numero", cotdet);
+        foreach (var literal in new[]
+                 {
+                     "Cotação cancelada em", "Gerar Orçamento Cirúrgico", "Aprovar Resposta e Enfileirar",
+                     "Pendente de mapeamento", "Salvar Mapeamento", "Nenhum anexo associado a esta cotação.",
+                     "Na fila de envio", "ARQUIVO GERADO · IMUTÁVEL", "Estornar transmissão",
+                     "Transmitir Resposta", "Nenhuma geração nesta sessão.", "Configurar assistente",
+                     "Dentro do Prazo", "Como usar esta tela", "Hospital Solicitante"
                  })
         {
             Assert.DoesNotContain(literal, cotdet);

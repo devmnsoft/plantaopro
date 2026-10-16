@@ -1,7 +1,7 @@
 @model PlantaoPro.Web.Models.CotacaoDetalhesPageViewModel
 @{
-    ViewData["Title"] = $"Cotação {Model.Cotacao.IdentificadorExterno} — Administrativo 360";
-    ViewData["BreadcrumbLabel"] = "Cotações";
+    ViewData["Title"] = $"{UiText.L("Adm360.CotDet.LabelCotacao")}{Model.Cotacao.IdentificadorExterno}{UiText.L("Adm360.CotDet.TitleSuffix")}";
+    ViewData["BreadcrumbLabel"] = UiText.L("Adm360.CotDet.BreadcrumbLabel");
     ViewData["BreadcrumbLeaf"] = Model.Cotacao.IdentificadorExterno;
     var expirado = Model.Cotacao.PrazoResposta < DateTime.UtcNow && Model.Cotacao.StatusInterno != "RESPONDIDA";
     var itensPendentes = Model.Cotacao.Itens.Count(i => i.StatusRelacionamento == "PENDENTE");
@@ -13,12 +13,12 @@
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
             <h2 class="h4 mb-0 text-light fw-bold">
-                Cotação @Model.Cotacao.IdentificadorExterno <span class="pp-badge pp-badge--neutral ms-1">v@(Model.Cotacao.RevisaoExterna)</span>
+                @UiText.L("Adm360.CotDet.LabelCotacao")@Model.Cotacao.IdentificadorExterno <span class="pp-badge pp-badge--neutral ms-1">v@(Model.Cotacao.RevisaoExterna)</span>
             </h2>
         </div>
         <div class="d-flex gap-2">
             <a href="/Administrativo360/Cotacoes" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i> Voltar
+                <i class="bi bi-arrow-left me-1"></i> @UiText.L("Shift.Back")
             </a>
 
             @if (!Model.Cotacao.OrcamentoId.HasValue && itensPendentes == 0)
@@ -26,7 +26,7 @@
                 <form method="post" action="/Administrativo360/Cotacoes/GerarOrcamento/@Model.Cotacao.Id" class="d-inline">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-calculator me-1"></i> Gerar Orçamento Cirúrgico
+                        <i class="bi bi-calculator me-1"></i> @UiText.L("Adm360.CotDet.BtnGerarOrcamento")
                     </button>
                 </form>
             }
@@ -36,7 +36,7 @@
                 <form method="post" action="/Administrativo360/Cotacoes/AprovarResposta/@Model.Cotacao.Id" class="d-inline">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check-circle me-1"></i> Aprovar Resposta e Enfileirar
+                        <i class="bi bi-check-circle me-1"></i> @UiText.L("Adm360.CotDet.BtnAprovarEnfileirar")
                     </button>
                 </form>
             }
@@ -48,21 +48,21 @@
         <div class="alert alert-warning d-flex align-items-start" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>
             <div>
-                <strong>Cotação cancelada em @Model.Cotacao.CanceladoEm.Value.ToString("dd/MM/yyyy HH:mm") UTC.</strong>
-                <div class="small mt-1">Motivo: @(Model.Cotacao.MotivoCancelamento ?? "não informado")</div>
-                <div class="small text-muted mt-1">Estado terminal auditável: esta cotação não pode mais ser transmitida, aprovada ou estornada (ver histórico de eventos).</div>
+                <strong>@UiText.L("Adm360.CotDet.CanceladoEmPrefix")@Model.Cotacao.CanceladoEm.Value.ToString("dd/MM/yyyy HH:mm")@UiText.L("Adm360.CotDet.CanceladoEmSuffix")</strong>
+                <div class="small mt-1">@UiText.L("Adm360.CotDet.MotivoLabel")@(Model.Cotacao.MotivoCancelamento ?? UiText.L("Adm360.CotDet.MotivoNaoInformado"))</div>
+                <div class="small text-muted mt-1">@UiText.L("Adm360.CotDet.CanceladoEstadoTerminal")</div>
             </div>
         </div>
     }
 
     <details class="screen-guide-card">
-        <summary><i class="bi bi-compass" aria-hidden="true"></i>Como usar esta tela</summary>
+        <summary><i class="bi bi-compass" aria-hidden="true"></i>@UiText.L("Login.HelpSummary")</summary>
         <div>
-            <p><strong>Ciclo da cotação.</strong> Cada botão corresponde a uma transição do fluxo (gerar orçamento, aprovar resposta, transmitir, estornar). A cotação avança de fase apenas quando os itens estão completos e a resposta aprovada.</p>
-            <p><strong>Status interno.</strong> O selo indica a fase real do registro; movimentos financeiros geram lançamentos compensatórios rastreáveis quando a fase exige.</p>
-            <p><strong>Assistente IA.</strong> O painel opcional gera uma análise em texto da cotação e dos documentos anexados. É leitura de apoio: aceitar, rejeitar ou transmitir continua sendo decisão humana, pelo botão correspondente.</p>
-            <p><strong>Documentos (XML).</strong> Anexos fiscais (NF-e/NFC-e/NFS-e) são validados na carga; erro de formato é exibido sem alterar o restante do documento.</p>
-            <p><strong>Regulação ANVISA.</strong> Cada item com produto relacionado exibe o estado regulatório do material ofertado (número do registro, não aplicável ou pendente). No modal de mapeamento, a seleção pelo catálogo mostra esse estado para cada candidato. Na aprovação da resposta, o estado é congelado no snapshot da versão enviada — a proposta enviada não muda se o catálogo for alterado depois.</p>
+            <p>@Html.Raw(UiText.L("Adm360.CotDet.GuiaCiclo"))</p>
+            <p>@Html.Raw(UiText.L("Adm360.CotDet.GuiaStatus"))</p>
+            <p>@Html.Raw(UiText.L("Adm360.CotDet.GuiaAssistente"))</p>
+            <p>@Html.Raw(UiText.L("Adm360.CotDet.GuiaDocumentos"))</p>
+            <p>@Html.Raw(UiText.L("Adm360.CotDet.GuiaAnvisa"))</p>
         </div>
     </details>
 
@@ -70,7 +70,7 @@
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="bi bi-exclamation-triangle me-2"></i>@Model.Erro
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@UiText.L("Implantacao.CloseAria")"></button>
         </div>
     }
 
@@ -79,8 +79,8 @@
         <div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
             <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
             <div>
-                <strong>Existem @itensPendentes itens pendentes de relacionamento De/Para.</strong>
-                <p class="mb-0 small">A aprovação da resposta e o envio ao portal ficam bloqueados até que todos os itens tenham produtos internos correspondentes ou justificativa de não atendimento.</p>
+                <strong>@UiText.L("Adm360.CotDet.PendingItemsIntro")@itensPendentes@UiText.L("Adm360.CotDet.PendingItemsOutro")</strong>
+                <p class="mb-0 small">@UiText.L("Adm360.CotDet.PendingItemsBloqueio")</p>
             </div>
         </div>
     }
@@ -90,47 +90,47 @@
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <span class="text-muted small">Provedor e Origem</span>
+                    <span class="text-muted small">@UiText.L("Adm360.CotDet.CardProvedorOrigem")</span>
                     <h5 class="fw-bold text-warning mb-1">@Model.Cotacao.Provedor</h5>
                     <span class="pp-badge pp-badge--neutral">@Model.Cotacao.Origem</span>
-                    <div class="mt-2 small text-muted">Estabelecimento: @Model.Cotacao.EstabelecimentoNome</div>
+                    <div class="mt-2 small text-muted">@UiText.L("Adm360.CotDet.LblEstabelecimento")@Model.Cotacao.EstabelecimentoNome</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <span class="text-muted small">Hospital Solicitante</span>
-                    <h5 class="fw-bold text-light mb-1">@(Model.Cotacao.HospitalNome ?? Model.Cotacao.HospitalSolicitanteExterno ?? "Não identificado")</h5>
-                    <div class="small text-muted">Procedimento: @(Model.Cotacao.Procedimento ?? "N/D")</div>
-                    <div class="small text-muted">Data Prevista: @(Model.Cotacao.DataPrevista?.ToString("dd/MM/yyyy") ?? "N/D")</div>
+                    <span class="text-muted small">@UiText.L("Adm360.CotDet.CardHospitalSolicitante")</span>
+                    <h5 class="fw-bold text-light mb-1">@(Model.Cotacao.HospitalNome ?? Model.Cotacao.HospitalSolicitanteExterno ?? UiText.L("Adm360.CotDet.HospitalNaoIdentificado"))</h5>
+                    <div class="small text-muted">@UiText.L("Adm360.CotDet.LblProcedimento")@(Model.Cotacao.Procedimento ?? UiText.L("Adm360.CotDet.Nd"))</div>
+                    <div class="small text-muted">@UiText.L("Adm360.CotDet.LblDataPrevista")@(Model.Cotacao.DataPrevista?.ToString("dd/MM/yyyy") ?? UiText.L("Adm360.CotDet.Nd"))</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <span class="text-muted small">Prazo de Resposta</span>
+                    <span class="text-muted small">@UiText.L("Adm360.Cotacoes.ThResponseDeadline")</span>
                     <h5 class="fw-bold @(expirado ? "text-danger" : "text-light") mb-1">
                         @Model.Cotacao.PrazoResposta.ToString("dd/MM/yyyy HH:mm")
                     </h5>
                     <span class="pp-badge @(expirado ? "pp-badge--danger" : "pp-badge--info")">
-                        @(expirado ? "Expirada" : "Dentro do Prazo")
+                        @(expirado ? UiText.L("Adm360.Cotacoes.StatusExpirada") : UiText.L("Adm360.CotDet.PrazoDentro"))
                     </span>
-                    <div class="small text-muted mt-1">Fuso: @Model.Cotacao.FusoHorario</div>
+                    <div class="small text-muted mt-1">@UiText.L("Adm360.CotDet.LblFuso")@Model.Cotacao.FusoHorario</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <span class="text-muted small">Status e Orçamento</span>
+                    <span class="text-muted small">@UiText.L("Adm360.CotDet.CardStatusOrcamento")</span>
                     <h5 class="fw-bold text-light mb-1">@Model.Cotacao.StatusInterno</h5>
-                    <div class="small text-muted">Portal: @Model.Cotacao.StatusExterno</div>
+                    <div class="small text-muted">@UiText.L("Adm360.CotDet.LblPortal")@Model.Cotacao.StatusExterno</div>
                     @if (Model.Cotacao.OrcamentoId.HasValue)
                     {
                         <div class="mt-1">
-                            <span class="pp-badge pp-badge--success">Orçamento: @Model.Cotacao.OrcamentoNumero</span>
+                            <span class="pp-badge pp-badge--success">@UiText.L("Adm360.CotDet.OrcamentoPrefix")@Model.Cotacao.OrcamentoNumero</span>
                         </div>
                     }
                 </div>
@@ -142,7 +142,7 @@
     <div class="card bg-dark border-secondary mb-4">
         <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
             <h5 class="card-title text-light mb-0 h6">
-                <i class="bi bi-box-seam me-2"></i>Itens Solicitados e Relacionamento de Produtos (@Model.Cotacao.Itens.Count)
+                <i class="bi bi-box-seam me-2"></i>@UiText.L("Adm360.CotDet.ItensTableTitulo") (@Model.Cotacao.Itens.Count)
             </h5>
         </div>
         <div class="card-body p-0">
@@ -151,15 +151,15 @@
                     <thead class="table-secondary text-dark">
                         <tr>
                             <th>#</th>
-                            <th>Item Solicitado (Externo)</th>
-                            <th>Qtd / Unid</th>
-                            <th>Produto Ofertado (Interno)</th>
-                            <th>Conversão / Qtd Ofertada</th>
-                            <th>Preço Unit (R$)</th>
-                            <th>Desconto (R$)</th>
-                            <th>Total Ofertado</th>
-                            <th>Status De/Para</th>
-                            <th class="text-end">Ação</th>
+                            <th>@UiText.L("Adm360.CotDet.ThItemExterno")</th>
+                            <th>@UiText.L("Adm360.CotDet.ThQtdUnid")</th>
+                            <th>@UiText.L("Adm360.CotDet.ThProdutoOfertado")</th>
+                            <th>@UiText.L("Adm360.CotDet.ThConversao")</th>
+                            <th>@UiText.L("Adm360.CotDet.ThPrecoUnit")</th>
+                            <th>@UiText.L("Adm360.CotDet.ThDescontoUnit")</th>
+                            <th>@UiText.L("Adm360.CotDet.ThTotalOfertado")</th>
+                            <th>@UiText.L("Adm360.CotDet.ThStatusDePara")</th>
+                            <th class="text-end">@UiText.L("Adm360.CotDet.ThAcao")</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -171,11 +171,11 @@
                                     <strong class="text-light">@item.DescricaoExterna</strong>
                                     @if (!string.IsNullOrWhiteSpace(item.CodigoExterno))
                                     {
-                                        <div class="small text-muted">Cód: @item.CodigoExterno</div>
+                                        <div class="small text-muted">@UiText.L("Adm360.CotDet.LblCodigo")@item.CodigoExterno</div>
                                     }
                                     @if (!string.IsNullOrWhiteSpace(item.FabricanteExterno))
                                     {
-                                        <div class="small text-secondary">Fab: @item.FabricanteExterno / Mod: @item.ModeloExterno</div>
+                                        <div class="small text-secondary">@UiText.L("Adm360.CotDet.LblFabricante")@item.FabricanteExterno / @UiText.L("Adm360.CotDet.LblModelo")@item.ModeloExterno</div>
                                     }
                                 </td>
                                 <td>
@@ -200,18 +200,18 @@
                                         }
                                         @if (!string.IsNullOrWhiteSpace(item.JustificativaSubstituicao))
                                         {
-                                            <div class="small text-info">Subst: @item.JustificativaSubstituicao</div>
+                                            <div class="small text-info">@UiText.L("Adm360.CotDet.LblSubst")@item.JustificativaSubstituicao</div>
                                         }
                                     }
                                     else
                                     {
-                                        <span class="text-danger small"><i class="bi bi-x-circle me-1"></i>Pendente de mapeamento</span>
+                                        <span class="text-danger small"><i class="bi bi-x-circle me-1"></i>@UiText.L("Adm360.CotDet.BadgePendenteMapeamento")</span>
                                     }
                                 </td>
                                 <td>
                                     @if (item.ProdutoId.HasValue)
                                     {
-                                        <div>Fator: @item.FatorConversao.ToString("N4")</div>
+                                        <div>@UiText.L("Adm360.CotDet.LblFator")@item.FatorConversao.ToString("N4")</div>
                                         <strong>@item.QuantidadeConvertida.ToString("N2")</strong> <span class="pp-badge pp-badge--neutral">@item.UnidadeInterna</span>
                                     }
                                     else
@@ -228,13 +228,13 @@
                                     @switch (item.StatusRelacionamento)
                                     {
                                         case "RELACIONADO":
-                                            <span class="pp-badge pp-badge--success">Relacionado</span>
+                                            <span class="pp-badge pp-badge--success">@UiText.L("Adm360.CotDet.StatusRelacionado")</span>
                                             break;
                                         case "PENDENTE":
-                                            <span class="pp-badge pp-badge--warning">Pendente</span>
+                                            <span class="pp-badge pp-badge--warning">@UiText.L("Adm360.CotDet.StatusPendente")</span>
                                             break;
                                         case "NAO_ATENDIDO":
-                                            <span class="pp-badge pp-badge--danger">Não Atendido</span>
+                                            <span class="pp-badge pp-badge--danger">@UiText.L("Adm360.CotDet.StatusNaoAtendido")</span>
                                             break;
                                         default:
                                             <span class="pp-badge pp-badge--neutral">@item.StatusRelacionamento</span>
@@ -243,7 +243,7 @@
                                 </td>
                                 <td class="text-end">
                                     <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalItem-@item.Id">
-                                        <i class="bi bi-pencil-square me-1"></i> Mapear
+                                        <i class="bi bi-pencil-square me-1"></i> @UiText.L("Adm360.CotDet.BtnMapear")
                                     </button>
                                 </td>
                             </tr>
@@ -258,20 +258,20 @@
                                             <input type="hidden" name="CotacaoItemId" value="@item.Id" />
                                             <div class="modal-header border-secondary">
                                                 <h5 class="modal-title h6" id="modalLabel-@item.Id">
-                                                    Mapear Item #@item.NumeroItem: @item.DescricaoExterna
+                                                    @UiText.L("Adm360.CotDet.ModalMapearPrefix")@item.NumeroItem: @item.DescricaoExterna
                                                 </h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="@UiText.L("Implantacao.CloseAria")"></button>
                                             </div>
                                             <div class="modal-body">
                                                 <div class="mb-3">
-                                                    <label class="form-label small">Status de Atendimento</label>
+                                                    <label class="form-label small">@UiText.L("Adm360.CotDet.LblStatusAtendimento")</label>
                                                     <select name="StatusRelacionamento" class="form-select form-select-sm bg-dark text-light border-secondary">
-                                                        <option value="RELACIONADO" selected="@(item.StatusRelacionamento == "RELACIONADO")">Relacionado com Produto Interno</option>
-                                                        <option value="NAO_ATENDIDO" selected="@(item.StatusRelacionamento == "NAO_ATENDIDO")">Não Atendido</option>
+                                                        <option value="RELACIONADO" selected="@(item.StatusRelacionamento == "RELACIONADO")">@UiText.L("Adm360.CotDet.OptRelacionadoInterno")</option>
+                                                        <option value="NAO_ATENDIDO" selected="@(item.StatusRelacionamento == "NAO_ATENDIDO")">@UiText.L("Adm360.CotDet.StatusNaoAtendido")</option>
                                                     </select>
                                                 </div>
                                                 <div class="mb-3">
-                                                    <label class="form-label small" for="selProduto-@item.Id">Produto Interno</label>
+                                                    <label class="form-label small" for="selProduto-@item.Id">@UiText.L("Adm360.CotDet.LblProdutoInterno")</label>
                                                      @* s8 (rodada 9): seleção pelo catálogo — cada candidato exibe a regulação ANVISA do seu cadastro; entrada manual por UUID continua disponível. *@
                                                      <select id="selProduto-@item.Id" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="selecionarProduto('@item.Id', this)">
                                                          <option value="">@UiText.L("Adm360.CotDet.OptSelecioneProduto")</option>
@@ -289,35 +289,35 @@
                                                 </div>
                                                 <div class="row g-2 mb-3">
                                                     <div class="col-md-6">
-                                                        <label class="form-label small">Fator de Conversão</label>
+                                                        <label class="form-label small">@UiText.L("Adm360.CotDet.LblFatorConversao")</label>
                                                         <input type="number" step="0.0001" name="FatorConversao" class="form-control form-control-sm bg-dark text-light border-secondary"
                                                                value="@(item.FatorConversao > 0 ? item.FatorConversao : 1.0000m)" />
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <label class="form-label small">Preço Unitário (R$)</label>
+                                                        <label class="form-label small">@UiText.L("Adm360.CotDet.LblPrecoUnitario")</label>
                                                         <input type="number" step="0.01" name="PrecoUnitarioOfertado" class="form-control form-control-sm bg-dark text-light border-secondary"
                                                                value="@item.PrecoUnitarioOfertado" />
                                                     </div>
                                                 </div>
                                                 <div class="mb-3">
-                                                    <label class="form-label small">Desconto (R$)</label>
+                                                    <label class="form-label small">@UiText.L("Adm360.CotDet.LblDesconto")</label>
                                                     <input type="number" step="0.01" name="Desconto" class="form-control form-control-sm bg-dark text-light border-secondary"
                                                            value="@item.Desconto" />
                                                 </div>
                                                 <div class="mb-3">
-                                                    <label class="form-label small">Justificativa de Substituição (se aplicável)</label>
+                                                    <label class="form-label small">@UiText.L("Adm360.CotDet.LblJustSubstituicao")</label>
                                                     <input type="text" name="JustificativaSubstituicao" class="form-control form-control-sm bg-dark text-light border-secondary"
-                                                           value="@item.JustificativaSubstituicao" placeholder="Ex: Material equivalente autorizado pela ANVISA" />
+                                                           value="@item.JustificativaSubstituicao" placeholder="@UiText.L("Adm360.CotDet.PhJustSubstituicao")" />
                                                 </div>
                                                 <div class="mb-3">
-                                                    <label class="form-label small">Motivo de Não Atendimento (se não atendido)</label>
+                                                    <label class="form-label small">@UiText.L("Adm360.CotDet.LblMotivoNaoAtendimento")</label>
                                                     <input type="text" name="MotivoNaoAtendimento" class="form-control form-control-sm bg-dark text-light border-secondary"
-                                                           value="@item.MotivoNaoAtendimento" placeholder="Ex: Sem estoque ou descontinuado" />
+                                                           value="@item.MotivoNaoAtendimento" placeholder="@UiText.L("Adm360.CotDet.PhMotivoNaoAtendimento")" />
                                                 </div>
                                             </div>
                                             <div class="modal-footer border-secondary">
-                                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                <button type="submit" class="btn btn-sm btn-warning">Salvar Mapeamento</button>
+                                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">@UiText.L("Clinical.ButtonCancel")</button>
+                                                <button type="submit" class="btn btn-sm btn-warning">@UiText.L("Adm360.CotDet.BtnSalvarMapeamento")</button>
                                             </div>
                                         </form>
                                     </div>
@@ -391,14 +391,14 @@
             <div class="card bg-dark border-secondary h-100">
                 <div class="card-header bg-dark border-secondary">
                     <h5 class="card-title text-light mb-0 h6">
-                        <i class="bi bi-paperclip me-2"></i>Anexos Pré-Cirúrgicos (@Model.Cotacao.Anexos.Count)
+                        <i class="bi bi-paperclip me-2"></i>@UiText.L("Adm360.CotDet.AnexosTitulo") (@Model.Cotacao.Anexos.Count)
                     </h5>
                 </div>
                 <div class="card-body p-0">
                     <ul class="list-group list-group-flush bg-dark">
                         @if (!Model.Cotacao.Anexos.Any())
                         {
-                            <li class="list-group-item bg-dark text-muted py-3">Nenhum anexo associado a esta cotação.</li>
+                            <li class="list-group-item bg-dark text-muted py-3">@UiText.L("Adm360.CotDet.AnexosVazio")</li>
                         }
                         @foreach (var anexo in Model.Cotacao.Anexos)
                         {
@@ -408,7 +408,7 @@
                                     <div class="small text-muted">@((anexo.TamanhoBytes / 1024.0).ToString("N1")) KB — SHA256: @anexo.Sha256Hash[..8]...</div>
                                 </div>
                                 <a href="/Administrativo360/Cotacoes/@Model.Cotacao.Id/Anexos/@anexo.Id" class="btn btn-sm btn-outline-light">
-                                    <i class="bi bi-download me-1"></i> Baixar
+                                    <i class="bi bi-download me-1"></i> @UiText.L("Adm360.CotDet.BtnBaixar")
                                 </a>
                             </li>
                         }
@@ -422,14 +422,14 @@
             <div class="card bg-dark border-secondary h-100">
                 <div class="card-header bg-dark border-secondary">
                     <h5 class="card-title text-light mb-0 h6">
-                        <i class="bi bi-send-check me-2"></i>Histórico e Fila Outbox de Transmissão (@Model.Respostas.Count)
+                        <i class="bi bi-send-check me-2"></i>@UiText.L("Adm360.CotDet.OutboxTitulo") (@Model.Respostas.Count)
                     </h5>
                 </div>
                 <div class="card-body p-0">
                     <ul class="list-group list-group-flush bg-dark">
                         @if (!Model.Respostas.Any())
                         {
-                            <li class="list-group-item bg-dark text-muted py-3">Nenhuma resposta transmitida ou em fila.</li>
+                            <li class="list-group-item bg-dark text-muted py-3">@UiText.L("Adm360.CotDet.OutboxVazio")</li>
                         }
                         @foreach (var resp in Model.Respostas)
                         {
@@ -446,31 +446,31 @@
                             };
                             var badgeTexto = resp.StatusTransmissao switch
                             {
-                                "NA_FILA" => "Na fila de envio",
-                                "ENVIANDO" => "Em andamento",
-                                "EXPORTADA_MANUALMENTE" => "Exportada manualmente",
-                                "CONFIGURACAO_PENDENTE" => "Configuração pendente",
-                                "ACEITA_PELO_PORTAL" => "Aceita pelo portal",
-                                "REJEITADA_PELO_PORTAL" => "Rejeitada pelo portal",
-                                "RESULTADO_DESCONHECIDO" => "Resultado desconhecido",
+                                "NA_FILA" => UiText.L("Adm360.CotDet.OutboxNaFila"),
+                                "ENVIANDO" => UiText.L("Adm360.CotDet.OutboxEnviando"),
+                                "EXPORTADA_MANUALMENTE" => UiText.L("Adm360.CotDet.OutboxExportada"),
+                                "CONFIGURACAO_PENDENTE" => UiText.L("Adm360.CotDet.OutboxConfigPendente"),
+                                "ACEITA_PELO_PORTAL" => UiText.L("Adm360.CotDet.OutboxAceita"),
+                                "REJEITADA_PELO_PORTAL" => UiText.L("Adm360.CotDet.OutboxRejeitada"),
+                                "RESULTADO_DESCONHECIDO" => UiText.L("Adm360.CotDet.OutboxDesconhecido"),
                                 _ => resp.StatusTransmissao
                             };
                             var proximaAcao = resp.StatusTransmissao switch
                             {
-                                "NA_FILA" => "Próxima ação: transmitir a resposta (canal do portal ou exportação manual).",
-                                "ENVIANDO" => "Próxima ação: aguardar o retorno do portal; envios interrompidos são conciliados automaticamente.",
-                                "ACEITA_PELO_PORTAL" => "Estado final: proposta aceita pelo portal com protocolo registrado.",
-                                "REJEITADA_PELO_PORTAL" => "Próxima ação: revisar o motivo da rejeição e retransmitir.",
-                                "CONFIGURACAO_PENDENTE" => "Próxima ação: configurar a conta do provedor e retransmitir.",
-                                "RESULTADO_DESCONHECIDO" => "Próxima ação: confirmar explicitamente a retransmissão para evitar envio duplicado.",
-                                "EXPORTADA_MANUALMENTE" => "Próxima ação: entregar o arquivo exportado ao cliente; a retransmissão preserva o arquivo original.",
+                                "NA_FILA" => UiText.L("Adm360.CotDet.OutboxAcaoNaFila"),
+                                "ENVIANDO" => UiText.L("Adm360.CotDet.OutboxAcaoEnviando"),
+                                "ACEITA_PELO_PORTAL" => UiText.L("Adm360.CotDet.OutboxAcaoAceita"),
+                                "REJEITADA_PELO_PORTAL" => UiText.L("Adm360.CotDet.OutboxAcaoRejeitada"),
+                                "CONFIGURACAO_PENDENTE" => UiText.L("Adm360.CotDet.OutboxAcaoConfig"),
+                                "RESULTADO_DESCONHECIDO" => UiText.L("Adm360.CotDet.OutboxAcaoDesconhecida"),
+                                "EXPORTADA_MANUALMENTE" => UiText.L("Adm360.CotDet.OutboxAcaoExportada"),
                                 _ => string.Empty
                             };
 
                             <li class="list-group-item bg-dark text-light border-secondary">
                                 <div class="d-flex justify-content-between align-items-center mb-1 gap-2 flex-wrap">
                                     <div>
-                                        <strong class="text-light">Transmissão v@(resp.Revisao)</strong>
+                                        <strong class="text-light">@UiText.L("Adm360.CotDet.TransmissaoPrefix")v@(resp.Revisao)</strong>
                                         <span class="pp-badge @badgeClass ms-1">@badgeTexto</span>
                                     </div>
                                     <div>
@@ -479,7 +479,7 @@
                                             <form method="post" action="/Administrativo360/Cotacoes/TransmitirResposta/@resp.Id?cotacaoId=@Model.Cotacao.Id" class="d-inline">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-send me-1"></i> Transmitir Resposta
+                                                    <i class="bi bi-send me-1"></i> @UiText.L("Adm360.CotDet.BtnTransmitirResposta")
                                                 </button>
                                             </form>
                                         }
@@ -488,7 +488,7 @@
                                             <form method="post" action="/Administrativo360/Cotacoes/TransmitirResposta/@resp.Id?cotacaoId=@Model.Cotacao.Id" class="d-inline">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn btn-sm btn-outline-warning">
-                                                    <i class="bi bi-arrow-repeat me-1"></i> @(resp.StatusTransmissao == "EXPORTADA_MANUALMENTE" ? "Retransmitir" : "Retentar Envio")
+                                                    <i class="bi bi-arrow-repeat me-1"></i> @(resp.StatusTransmissao == "EXPORTADA_MANUALMENTE" ? UiText.L("Adm360.CotDet.BtnRetransmitir") : UiText.L("Adm360.CotDet.BtnRetentarEnvio"))
                                                 </button>
                                             </form>
                                         }
@@ -497,7 +497,7 @@
                                             <form method="post" action="/Administrativo360/Cotacoes/TransmitirResposta/@resp.Id?cotacaoId=@Model.Cotacao.Id&confirmarRetransmissaoDesconhecido=true" class="d-inline">
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn btn-sm btn-outline-warning">
-                                                    <i class="bi bi-arrow-repeat me-1"></i> Confirmar retransmissão
+                                                    <i class="bi bi-arrow-repeat me-1"></i> @UiText.L("Adm360.CotDet.BtnConfirmarRetransmissao")
                                                 </button>
                                             </form>
                                         }
@@ -505,13 +505,13 @@
                                             && resp.StatusTransmissao is "ACEITA_PELO_PORTAL" or "REJEITADA_PELO_PORTAL" or "RESULTADO_DESCONHECIDO" or "EXPORTADA_MANUALMENTE")
                                         {
                                             <button type="button" class="btn btn-sm btn-outline-danger ms-1" data-bs-toggle="modal" data-bs-target="#modalEstorno-@resp.Id">
-                                                <i class="bi bi-arrow-counterclockwise me-1"></i> Estornar
+                                                <i class="bi bi-arrow-counterclockwise me-1"></i> @UiText.L("Adm360.CotDet.BtnEstornar")
                                             </button>
                                         }
                                     </div>
                                 </div>
                                 <div class="small text-muted">
-                                    Tentativas: @resp.Tentativas | Protocolo: @(resp.ProtocoloExterno ?? "Pendente")
+                                    @UiText.L("Adm360.CotDet.LblTentativas")@resp.Tentativas | @UiText.L("Adm360.CotDet.LblProtocolo")@(resp.ProtocoloExterno ?? UiText.L("Adm360.CotDet.StatusPendente"))
                                 </div>
                                 @if (!string.IsNullOrWhiteSpace(resp.MensagemRetorno))
                                 {
@@ -524,9 +524,9 @@
                                 @if (resp.ExportacaoId.HasValue)
                                 {
                                     <div class="mt-2 d-flex align-items-center flex-wrap gap-2">
-                                        <span class="pp-badge pp-badge--success"><i class="bi bi-file-earmark-lock me-1"></i>ARQUIVO GERADO · IMUTÁVEL</span>
+                                        <span class="pp-badge pp-badge--success"><i class="bi bi-file-earmark-lock me-1"></i>@UiText.L("Adm360.CotDet.BadgeArquivoImutavel")</span>
                                         <a href="/Administrativo360/Cotacoes/@Model.Cotacao.Id/Exportacao/@resp.Id" class="btn btn-sm btn-outline-success">
-                                            <i class="bi bi-download me-1"></i> Baixar Arquivo Exportado
+                                            <i class="bi bi-download me-1"></i> @UiText.L("Adm360.CotDet.BtnBaixarExportado")
                                         </a>
                                         <span class="small text-muted" title="@resp.ExportacaoSha256Hash">SHA256: @(string.IsNullOrEmpty(resp.ExportacaoSha256Hash) ? "-" : resp.ExportacaoSha256Hash[..8])…</span>
                                         <div class="small text-muted w-100">@resp.ExportacaoNomeArquivo</div>
@@ -543,20 +543,20 @@
                                                 <form method="post" action="/Administrativo360/Cotacoes/EstornarResposta/@resp.Id?cotacaoId=@Model.Cotacao.Id">
                                                     @Html.AntiForgeryToken()
                                                     <div class="modal-header border-secondary">
-                                                        <h5 class="modal-title h6" id="modalEstornoLabel-@resp.Id">Estornar transmissão v@(resp.Revisao)</h5>
-                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                                        <h5 class="modal-title h6" id="modalEstornoLabel-@resp.Id">@UiText.L("Adm360.CotDet.EstornoModalTitulo")v@(resp.Revisao)</h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="@UiText.L("Implantacao.CloseAria")"></button>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <p class="small text-muted mb-3">A resposta volta para a fila (NA_FILA) sem apagar o histórico: o protocolo e a mensagem de retorno atuais são preservados, e uma nova revisão poderá ser gerada.</p>
-                                                        <label for="estornoJustificativa-@resp.Id" class="form-label small fw-bold">Justificativa do estorno *</label>
+                                                        <p class="small text-muted mb-3">@UiText.L("Adm360.CotDet.EstornoModalCorpo")</p>
+                                                        <label for="estornoJustificativa-@resp.Id" class="form-label small fw-bold">@UiText.L("Adm360.CotDet.EstornoLblJustificativa")</label>
                                                         <textarea id="estornoJustificativa-@resp.Id" name="justificativa" rows="3" required minlength="10" maxlength="500" autofocus
                                                             class="form-control bg-dark text-light border-secondary"
-                                                            placeholder="Ex.: rejeição incorreta pelo portal — enviar nova revisão com item corrigido"></textarea>
-                                                        <div class="form-text text-muted small">Mínimo de 10 caracteres. Registrada na trilha de auditoria junto ao usuário que executou o estorno.</div>
+                                                            placeholder="@UiText.L("Adm360.CotDet.EstornoPhJustificativa")"></textarea>
+                                                        <div class="form-text text-muted small">@UiText.L("Adm360.CotDet.EstornoAjuda")</div>
                                                     </div>
                                                     <div class="modal-footer border-secondary">
-                                                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Voltar</button>
-                                                        <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-arrow-counterclockwise me-1"></i> Confirmar estorno</button>
+                                                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">@UiText.L("Shift.Back")</button>
+                                                        <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-arrow-counterclockwise me-1"></i> @UiText.L("Adm360.CotDet.BtnConfirmarEstorno")</button>
                                                     </div>
                                                 </form>
                                             </div>
@@ -571,14 +571,14 @@
         </div>
         <section class="pp-ai-panel" data-ai-panel data-ai-url="/Administrativo360/Cotacoes/@Model.Cotacao.Id/AnaliseIa" data-ai-method="POST" aria-labelledby="ppAiCotacaoTitulo">
             <div class="pp-ai-panel__head">
-                <div><span class="pp-ai-panel__kicker">Assistente · opcional</span><h2 id="ppAiCotacaoTitulo" class="pp-ai-panel__title"><i class="bi bi-stars me-1" aria-hidden="true"></i>Análise da cotação @Model.Cotacao.IdentificadorExterno</h2></div>
-                <button type="button" class="btn btn-sm btn-primary" data-ai-run><i class="bi bi-lightning me-1" aria-hidden="true"></i>Gerar análise</button>
+                <div><span class="pp-ai-panel__kicker">@UiText.L("Adm360.CotDet.AiKicker")</span><h2 id="ppAiCotacaoTitulo" class="pp-ai-panel__title"><i class="bi bi-stars me-1" aria-hidden="true"></i>@UiText.L("Adm360.CotDet.AiTituloPrefix")@Model.Cotacao.IdentificadorExterno</h2></div>
+                <button type="button" class="btn btn-sm btn-primary" data-ai-run><i class="bi bi-lightning me-1" aria-hidden="true"></i>@UiText.L("Adm360.CotDet.AiBtnGerar")</button>
             </div>
-            <p class="small text-muted">Leitura auxiliar sobre itens, prazos e estado da cotação. Não substitui aprovação, transmissão nem qualquer ação do módulo.</p>
+            <p class="small text-muted">@UiText.L("Adm360.CotDet.AiDescricao")</p>
             <p class="pp-ai-panel__meta" data-ai-meta aria-live="polite"></p>
-            <p class="pp-ai-panel__output" data-ai-output role="status">Nenhuma geração nesta sessão.</p>
+            <p class="pp-ai-panel__output" data-ai-output role="status">@UiText.L("Adm360.CotDet.AiVazio")</p>
             <pre class="pp-ai-panel__text" data-ai-text hidden></pre>
-            <p class="pp-ai-panel__note">Precisa de ajuste? <a href="/AssistenteIa">Configurar assistente</a> (administradores).</p>
+            <p class="pp-ai-panel__note">@Html.Raw(UiText.L("Adm360.CotDet.AiAjusteHtml"))</p>
         </section>
     </div>
 </div>

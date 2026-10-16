@@ -1,6 +1,6 @@
 # Rodada 9 — Relatório Final Consolidado (v2)
 
-Data: 2026-10-15 (UTC) · Ambiente: local/homologação · Branch `main`, base inicial `4ab9770`, **HEAD local `a4989da`** (12 commits da rodada, **sem push/merge/publish** por restrição da rodada). · Banco principal `plantaopro` + espelho `plantaopro_test` (PostgreSQL 18).
+Data: 2026-10-15 (UTC) · Ambiente: local/homologação · Branch `main`, base inicial `4ab9770`, **HEAD local `159b2d8`** (commits da rodada + fechamento + fatias r9m, **sem push/merge/publish** por restrição da rodada). · Banco principal `plantaopro` + espelho `plantaopro_test` (PostgreSQL 18). · **Atualização 2026-10-16 (r9m):** fatias r9m-P2 (`a379780`) e r9m-P4 (`159b2d8`) aplicadas e testadas — pendências **P2 e P4 fechadas**; suíte efetiva **1398**.
 
 ## 1. Diagnóstico (estado inicial)
 
@@ -26,6 +26,8 @@ Data: 2026-10-15 (UTC) · Ambiente: local/homologação · Branch `main`, base i
 | r9j | `b02dca2` | i18n completude: 219 chaves novas (RelFin 108 / Produtos 99 / CotDet-ANVISA 12) ×4 idiomas; contrato 283→**502** + teste view-level | `r9j-i18n-completude.md` |
 | r9k | `b302093` | B14 flake: `SementarAsync` crash-idempotente (pré-limpeza dos 7 CNPJs dos testes + varredura de solicitações órfãs); prova controlada antes/depois | `r9k-b14-flake-provisionamento.md` |
 | r9l | `a4989da` | Captura visual: 3 telas verificadas ao vivo via DOM autenticado + artefatos `outerHTML`; diagnóstico de conexão (API/Npgsql 10); screenshots bloqueados por ambiente | `r9l-captura-visual-artefatos.md` + `artefatos-dom/` |
+| r9m-P2 | `a379780` | B4 matriz flake: pré-limpeza por e-mail na semente (única chave natural c/ índice único parcial) + retry único 40P01/40001 em semente/purga de `SaasComercialB4MatrizTests`; classe isolada 12/12 | `r9m-p2-b4matriz-flake.md` |
+| r9m-P4 | `159b2d8` | i18n completude de `Cotacoes/Detalhes.cshtml` fora do bloco ANVISA: 103 chaves novas ×4 idiomas (contrato Adm360 502→605) + fact novo de completude; suíte 1397→1398 | `r9m-p4-cotdet-i18n.md` |
 
 ## 3. Migrations
 
@@ -43,7 +45,8 @@ Todas em `docs/evidencias/2026-10-14-rodada-9/`: provas por slice (coluna acima)
 **PASSOU**
 - Build Release `PlantaoPro.sln`: 0 erros em todas as fatias (warnings pré-existentes).
 - Suíte completa Release: baseline 1394×3 no gate; **final 1397/1397 efetivos** em r9j e r9k (1 flake ambiental 40P01 em cada execução, método diferente a cada vez, retry isolado 12/12 nas duas — ver nota abaixo).
-- Contrato i18n: 502 chaves ×4 idiomas com paridade + âncoras de valor pt/en/es/fr + teste de ausência de literais nas views de r9j.
+- **Suíte completa Release pós-r9m: 1398/1398 efetivos sem flake** (nova base = 1397 + 1 fact novo do r9m-P4).
+- Contrato i18n: 502 chaves ×4 idiomas com paridade + âncoras de valor pt/en/es/fr + teste de ausência de literais nas views de r9j (elevado a **605 chaves** no r9m-P4, com fact novo de completude do detalhe da cotação).
 - B14 crash-idempotência: experimento controlado (órfãos plantados → HEAD falha exatamente com `"CNPJ já cadastrado."`; correção passa e zera os órfãos); classe isolada 11/11.
 - Instalação limpa scratch + upgrade de manifesto (r9i); `scrpt_completo.sql` cobertura 100%.
 - Credencial do admin SV testada ao vivo: `BCrypt.Verify("Sv-Homolog-2026!", hash)=True` (DLL do próprio build) e `POST /api/auth/login` → success, tenant `8b0c8e74-a81b-4ea2-b499-94755a1ca301`.
@@ -60,19 +63,19 @@ Todas em `docs/evidencias/2026-10-14-rodada-9/`: provas por slice (coluna acima)
 - Zoom 200% empírico e breakpoints 360/768/1440: a webview do harness não expõe zoom de navegador (medido inalterado) nem device-metrics; verificados por construção (layout fluido, sem largura fixa no conteúdo).
 - **Aprovação visual**: não declarada (requer pixels + aceite do usuário).
 
-Nota de ambiente: deadlocks 40P01 transitórios sob RAM baixa (suíte paralela) ocorreram 2× nesta rodada em `SaasComercialB4MatrizTests` (métodos diferentes; 12/12 no retry isolado em ambos os casos). Fator ambiental documentado, não bloqueador; candidato a pré-limpeza na semente registrado (r9k §6).
+Nota de ambiente: deadlocks 40P01 transitórios sob RAM baixa (suíte paralela) ocorreram 2× nesta rodada em `SaasComercialB4MatrizTests` (métodos diferentes; 12/12 no retry isolado em ambos os casos). Fator ambiental documentado, não bloqueador; o candidato registrado em r9k §6 foi **fechado em r9m-P2** (pré-limpeza por e-mail + retry único 40P01/40001), e a suíte de fechamento executou sem flake.
 
 ## 6. Pendências priorizadas
 
-1. **P1 (requer usuário)** — Aprovação visual + captura dos screenshots: com a janela do OpenCode visível, seguir o protocolo de `r9l-captura-visual-artefatos.md` §4 (servidores já ativos e sessão autenticada); anexar PNGs em `imagens/` e fechar a linha r9l.
-2. **P2** — Aplicar a receita de pré-limpeza de semente de r9k a `SaasComercialB4MatrizTests` (e demais classes SaaS com fixtures por chave natural) para eliminar a fonte do flake 40P01.
+1. **P1 (requer usuário)** — Aprovação visual + captura dos screenshots: com a janela do OpenCode visível, seguir o protocolo de `r9l-captura-visual-artefatos.md` §4 (servidores reiniciados via `r9l_api.cmd`/`r9l_web.cmd` + re-login via form, pois restart invalida a sessão); anexar PNGs em `imagens/` e fechar a linha r9l. Evidência funcional (DOM autenticado) já registrada em r9l e segue valendo.
+2. **P2 — FECHADO em r9m-P2 (2026-10-16, `a379780`)** — receita aplicada a `SaasComercialB4MatrizTests`: pré-limpeza por e-mail (única chave natural com índice único parcial entre os fixtures) + retry único em 40P01/40001; classe isolada 12/12; suíte de fechamento 1398/1398 sem flake. Demais classes SaaS com fixtures por chave natural: mesma receita sob demanda. Evidência: `r9m-p2-b4matriz-flake.md`.
 3. **P3** — Dívidas herdadas R8: B16/B17/B18; drill-down do §27-L208; writer da tabela `adm360_ocorrencias`.
-4. **P4** — Literais fora do bloco ANVISA em `Cotacoes/Detalhes.cshtml` (guia/status/outbox/estorno/IA) — dívida registrada de r9j.
+4. **P4 — FECHADO em r9m-P4 (2026-10-16, `159b2d8`)** — 103 chaves novas ×4 idiomas (contrato Adm360 502→605); 102 substituições exatas na view (guia/status/itens/modal/anexos/outbox/estorno/IA; bloco ANVISA inalterado); fact novo de completude; residuais com acento = apenas comentários não renderizados. Evidência: `r9m-p4-cotdet-i18n.md`.
 5. **P5** — `pg_dump` 18 quebrado neste host: manter catálogos por SQL direto até resolver (afeta apenas tooling de snapshot).
 
 ## 7. Estado de retomada
 
-- Git: `main` local em **`a4989da`**, à frente de `origin/main` em 12 commits (restrição da rodada impede push/merge). Árvore de trabalho limpa.
-- Servidores deixados ativos para o retry visual: API `http://localhost:51976` e Web `http://localhost:52976`, ambos com `ConnectionStrings__Default` explícito (KEY=VALUE para `plantaopro`) via scripts `r9l_api.cmd` / `r9l_web.cmd` em `%TEMP%\opencode` (a webview exige formato KEY=VALUE — Npgsql 10 rejeita URI); sessão autenticada do admin SV preservada no perfil do browser do harness.
-- Baseline de suíte para a próxima rodada: **1397** verdes (Release).
-- Próximos passos ordenados: (1) retry de screenshots/aprovação visual (P1) assim que a janela estiver visível; (2) P2 se houver janela de testes; (3) push dos 12 commits quando autorizado.
+- Git: `main` local em **`159b2d8`** (r9m-P4) + commit de documentação desta atualização, à frente de `origin/main` em **16 commits** (restrição da rodada impede push/merge). Árvore de trabalho limpa após este commit.
+- Servidores: **parados** após a suíte de fechamento (DLLs desbloqueadas para build). Para o retry visual, relançar via `r9l_api.cmd` / `r9l_web.cmd` em `%TEMP%\opencode` (`ConnectionStrings__Default` explícito KEY=VALUE para `plantaopro` — Npgsql 10 rejeita URI); o restart do Web invalida a sessão (Data Protection key efêmera) → re-login via form em qualquer aba (admin SV, `docs/usuarios-teste.md`); o primeiro submit logo após o boot da API pode falhar em silêncio — retry resolve.
+- Baseline de suíte para a próxima rodada: **1398** verdes (Release) = 1397 + 1 fact novo do r9m-P4; contrato i18n Adm360 em **605 chaves ×4**.
+- Próximos passos ordenados: (1) retry de screenshots/aprovação visual (P1) assim que a janela estiver visível; (2) push dos 16 commits locais quando autorizado; (3) próxima rodada: dívidas herdadas R8 (P3) — B16/B17/B18, drill-down do §27-L208, writer da `adm360_ocorrencias`.

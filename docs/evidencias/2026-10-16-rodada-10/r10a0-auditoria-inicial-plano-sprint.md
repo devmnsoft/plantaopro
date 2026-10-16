@@ -70,6 +70,7 @@ Cada slice termina com: evidência executada (testes isolados + suíte full), do
 | Slice | Escopo | Resultado | Evidência |
 |---|---|---|---|
 | `r10b1` | D1 writer A12 `adm360_ocorrencias` | FECHADO — máquina estrita ABERTA→EM_TRATAMENTO→RESOLVIDA→ENCERRADA, encerrar exige destino+justificativa, zero toque em estoque; API `Adm360.Qualidade`; Web lê tabela real + 4 comandos; i18n 605→**650**; **24/24** da fatia; full 1416 com 1 flake catálogo ① (`ProvisionamentoB5Tests.P3`) isolado 5× 11/11 | `r10b1-writer-adm360-ocorrencias-a12.md` |
+| `r10b2` | D2 consolidação B17 facade Meu Dia | FECHADO — `MeuDiaServices.cs` deletado, `MeuDiaController` direto sobre `IProductivityActionService`, janela UTC +1d/PageSize 25/CLINICO relocada p/ helpers privados com caveat documentado; contrato R8B17 reescrito (4 fatos); **9/9** da fatia; **full 1417/1417 limpo** | `r10b2-consolidacao-facade-meu-dia-b17.md` |
 
 ## 4. Riscos e gotchas da rodada
 

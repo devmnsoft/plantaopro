@@ -3,75 +3,80 @@ using Xunit;
 namespace PlantaoPro.Tests;
 
 /// <summary>
-/// R8-B17 — §29 item 9: "`MeuDiaService` facade sobre `ProductivityActionService` (compatibilidade intencional)."
+/// R8-B17 (validação original) + Rodada 10 r10b2 (CONSOLIDAÇÃO efetivada).
 ///
-/// RESULTADO DA VALIDAÇÃO (fonte canônica, sem regra inventada):
+/// Histórico: R8-B17 validou por fonte canônica que o Meu Dia NÃO tinha fonte própria —
+/// a antiga <c>MeuDiaServices.cs</c> (IMeuDiaService/MeuDiaService/IMeuDiaRepository/MeuDiaRepository)
+/// era delegação pura para <c>IProductivityActionService</c> + um PADRÃO DE JANELA fixo
+/// ("hoje" = <c>DateTimeOffset.UtcNow.AddDays(1)</c>, PageSize 25; agenda com <c>Module:"CLINICO"</c>)
+/// + mapeamento de nomes PT-BR. Zero mudança de produção foi permitida naquela rodada;
+/// a consolidação ficou registrada como dívida (r8b17 §5 item 1).
 ///
-///   O Meu Dia NÃO tem fonte própria. A camada "Meu Dia" (<c>MeuDiaService</c> + <c>MeuDiaRepository</c>,
-///   em <c>MeuDiaServices.cs</c>) é uma FACADE fina sobre o ÚNICO serviço canônico
-///   <c>IProductivityActionService</c> (que delega a <c>IProductivityActionRepository</c>, onde vive a
-///   única query derivada — CTE <c>with derived … count(*) filter(…)</c> de Active/Critical/Today/Overdue/Snoozed):
-///
-///     • <c>MeuDiaRepository.ReadAsync(q,ct)</c>     =&gt; <c>productivity.ListAsync(q,ct)</c>  (passthrough puro)
-///     • <c>MeuDiaService.ObterResumo/Pendencias</c> =&gt; ReadAsync(Today)   [Today = DueTo UtcNow+1d, PageSize 25]
-///     • <c>MeuDiaService.Agenda</c>                 =&gt; ReadAsync(Module:"CLINICO", DueTo UtcNow+1d)
-///     • <c>MeuDiaService.Indicadores</c>            =&gt; <c>productivity.SummaryAsync(ct)</c>
-///     • <c>MeuDiaService.AcoesRapidas</c>           =&gt; <c>productivity.QuickActions()</c>
-///
-///   A ÚNICA coisa que a facade agrega é um PADRÃO DE JANELA fixo ("hoje" UTC +1 dia, pág. 25; agenda CLINICO)
-///   e o mapeamento de nomes PT-BR (ObterResumo/Indicadores/Pendencias/Agenda/AcoesRapidas) sobre ListAsync/
-///   SummaryAsync/QuickActions. Sem segunda tabela, sem segunda query, sem conexão própria.
-///
-///   CONSUMIDORES: o Meu Dia vem SOMENTE pelo <c>MeuDiaController</c> (-&gt; IMeuDiaService); a "Central de
-///   Ações" vem direto do <c>ProductivityActionController</c> (-&gt; IProductivityActionService). As duas
-///   superfícies convergem no MESMO serviço canônico — o comentário no topo do arquivo já declara isso
-///   ("Compatibility facade: Meu Dia and Central de Ações share one real, derived source").
-///
-///   CONCLUSÃO: canônico = <c>ProductivityActionService</c>; a facade é ADAPTER intencional documentado, não
-///   duplicação de lógica de dados. Consolidação (apagar a facade) é estruturalmente possível e de baixo risco,
-///   mas o rito §29 veda deleção antecipada nesta rodada (remover exigiria re-ligar o <c>MeuDiaController</c> e
-///   relocar o padrão de janela "hoje"). Esta fatia ENTREGUE a validação + CONTRATO anti-drift que fixa:
-///   (1) o "repositório" do Meu Dia é passthrough do serviço canônico; (2) o serviço Meu Dia só delega (sem
-///   SQL/conexão/repositório próprio); (3) Meu Dia e Central de Ações rosam no mesmo serviço canônico. Zero mudança.
+/// r10b2 removeu a fachada: <c>MeuDiaController</c> depende AGORA DIRETO de
+/// <c>IProductivityActionService</c> (o MESMO serviço da Central de Ações) e o padrão de janela
+/// foi relocado para helpers privados do controller (<c>JanelaHoje()</c>/<c>JanelaAgendaClinica()</c>).
+/// Este contrato trava a NOVA topologia e o anti-drift original: se alguém der ao Meu Dia uma
+/// fonte própria (fachada nova, SQL inline, conexão, repositório-alvo direto), ele falha e força
+/// decisão consciente. Caveat UTC documentado: a janela segue em <c>UtcNow</c> (não fuso do
+/// tenant/usuário) — mudança de comportamento, registrada como dívida.
 /// </summary>
 public sealed class R8B17MeuDiaFacadeContratoTests
 {
-    private static string Api(string file) =>
-        Path.Combine(RepositoryPathResolver.BackendRoot, "PlantaoPro.Api", file);
     private static string ApiCtl(string file) =>
         Path.Combine(RepositoryPathResolver.BackendRoot, "PlantaoPro.Api", "Controllers", file);
 
     [Fact]
-    public void MeuDiaRepository_EhPassthroughDoUnicoSource()
+    public void MeuDia_DependeDiretamenteDoServicoCanonical_E_FachadaFoiRemovida()
     {
-        var facade = File.ReadAllText(Api("MeuDiaServices.cs"));
-        // O "repositório" do Meu Dia não tem query própria: encaminha para o serviço de produtividade.
-        Assert.Contains("productivity.ListAsync(query, ct)", facade);
+        var meuDiaCtl = File.ReadAllText(ApiCtl("MeuDiaController.cs"));
+        // O controller Meu Dia consome o único serviço canônico de produtividade.
+        Assert.Contains("IProductivityActionService", meuDiaCtl);
+        // A fachada foi apagada: sem os símbolos IMeuDiaService/IMeuDiaRepository no projeto Api.
+        var apiRoot = Path.Combine(RepositoryPathResolver.BackendRoot, "PlantaoPro.Api");
+        Assert.False(File.Exists(Path.Combine(apiRoot, "MeuDiaServices.cs")),
+            "r10b2: a fachada Meu Dia (MeuDiaServices.cs) deveria ter sido removida.");
+        foreach (var cs in Directory.EnumerateFiles(apiRoot, "*.cs", SearchOption.AllDirectories))
+        {
+            var src = File.ReadAllText(cs);
+            Assert.DoesNotContain("IMeuDiaService", src);
+            Assert.DoesNotContain("IMeuDiaRepository", src);
+        }
     }
 
     [Fact]
-    public void MeuDiaService_SoDelega_E_NaoAbreFontePropria()
+    public void MeuDiaController_SoDelega_E_NaoAbreFontePropria()
     {
-        var facade = File.ReadAllText(Api("MeuDiaServices.cs"));
-        // Cada método Meu Dia delega ao serviço canônico (Summary/QuickActions) ou ao passthrough (ReadAsync).
-        Assert.Contains("productivity.SummaryAsync(ct)", facade);
-        Assert.Contains("productivity.QuickActions()", facade);
-        // A camada Meu Dia NÃO abre fonte própria: sem SQL inline, sem conexão, sem o repositório de produtividade direto.
-        Assert.True(!facade.Contains("select", StringComparison.OrdinalIgnoreCase),
-            "MeuDiaServices.cs não deveria ter SQL própria (a fonte é o ProductivityActionService).");
-        Assert.DoesNotContain("NpgsqlConnection", facade);
-        Assert.DoesNotContain("IProductivityActionRepository", facade);
+        var ctl = File.ReadAllText(ApiCtl("MeuDiaController.cs"));
+        // Cada rota delega ao serviço canônico (ListAsync/SummaryAsync/QuickActions).
+        Assert.Contains("productivity.ListAsync", ctl);
+        Assert.Contains("productivity.SummaryAsync(ct)", ctl);
+        Assert.Contains("productivity.QuickActions()", ctl);
+        // Sem fonte própria: sem SQL inline, sem conexão, sem o repositório de produtividade direto.
+        Assert.True(!ctl.Contains("select", StringComparison.OrdinalIgnoreCase),
+            "MeuDiaController não deveria ter SQL própria (a fonte é o ProductivityActionService).");
+        Assert.DoesNotContain("NpgsqlConnection", ctl);
+        Assert.DoesNotContain("IProductivityActionRepository", ctl);
+    }
+
+    [Fact]
+    public void JanelaHoje_MantraUtcExplicitaEPreservada()
+    {
+        var ctl = File.ReadAllText(ApiCtl("MeuDiaController.cs"));
+        // Padrão de janela relocado da fachada: "hoje" = UtcNow + 1 dia, pág. 25; agenda CLINICO.
+        Assert.Contains("DateTimeOffset.UtcNow.AddDays(1)", ctl);
+        Assert.Contains("PageSize: 25", ctl);
+        Assert.Contains("Module: \"CLINICO\"", ctl);
+        // Caveat registrado (r8b17 §5): a janela é UTC, não o fuso do tenant/usuário.
+        Assert.Contains("UTC", ctl);
     }
 
     [Fact]
     public void MeuDiaeCentralDeAcoes_RosamNoUnicoServicoCanonical()
     {
-        var facade    = File.ReadAllText(Api("MeuDiaServices.cs"));
         var meuDiaCtl = File.ReadAllText(ApiCtl("MeuDiaController.cs"));
         var prodCtl   = File.ReadAllText(ApiCtl("ProductivityActionController.cs"));
-        // Meu Dia (controller) depende da facade; Central de Ações depende do serviço canônico; e a facade depende do serviço.
-        Assert.Contains("IMeuDiaService", meuDiaCtl);
+        // As duas superfícies dependem do MESMO serviço canônico — sem camada intermediária.
+        Assert.Contains("IProductivityActionService", meuDiaCtl);
         Assert.Contains("IProductivityActionService", prodCtl);
-        Assert.Contains("IProductivityActionService", facade);
     }
 }

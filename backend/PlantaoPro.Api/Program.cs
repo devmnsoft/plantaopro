@@ -273,8 +273,6 @@ builder.Services.AddScoped<IImpersonationRepository, ImpersonationRepository>();
 builder.Services.AddScoped<IImpersonationService, ImpersonationService>();
 builder.Services.AddScoped<ImpersonationTokenService>();
 builder.Services.AddScoped<ImpersonationAuthorizationService>();
-builder.Services.AddScoped<IMeuDiaRepository, MeuDiaRepository>();
-builder.Services.AddScoped<IMeuDiaService, MeuDiaService>();
 builder.Services.AddScoped<IWorkItemRepository, WorkItemRepository>();
 builder.Services.AddScoped<IWorkItemService, WorkItemService>();
 builder.Services.AddScoped<IOperationRealtimePublisher, OperationRealtimePublisher>();

@@ -25,6 +25,13 @@ else
         <div class="col-md-3"><div class="card shadow-sm h-100"><div class="card-body">
             <span class="badge bg-primary">KPI real</span><h2 class="h6 mt-2">@kpi.Titulo</h2><strong>@kpi.Valor @kpi.Unidade</strong>
             <p class="small text-muted">@kpi.Tendencia</p>
+            @* Rodada 10 r10b3 (§27-L208): drill-down apenas para KPIs com rota de listagem existente que reproduce
+               o predicado do KPI (estado atual, reg_status='A', escopo tenant da API): Plantões -> /Plantoes e
+               Escalas -> /Escalas (todos os status = conjunto completo reg_status='A'). Médicos fica sem link
+               (listagem api/medicos é global, sem escopo de tenant) e Agendamentos também (rota /agenda é por
+               período, default semana). Sem rota inventada — decisão registrada em r10b3. *@
+            @if (kpi.Titulo == "Plantões") { <a class="small d-block mt-1" asp-controller="Plantoes" asp-action="Index">Ver registros</a> }
+            else if (kpi.Titulo == "Escalas") { <a class="small d-block mt-1" asp-controller="Escalas" asp-action="Index">Ver registros</a> }
         </div></div></div>
     }
     </div>

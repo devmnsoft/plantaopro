@@ -31,6 +31,11 @@ namespace PlantaoPro.Tests;
 /// B4  Downgrade com uso acima do destino recusa com 409; dentro do limite aprova.
 /// B5  Ativar-agendados: só AGENDADO vencido vira ATIVO (+habilitado, +trilha);
 ///     segunda chamada não reativa nada.
+///
+/// r9m-P2 (dívida residual de r9k §6): mesma receita de B14 — pré-limpeza por chave
+/// natural (o e-mail do usuário tem índice único parcial) antes da purga da semente
+/// + retry único em impasse transitório (40P01/40001) na semente e na purga: fator
+/// ambiental de suíte paralela com RAM baixa (retries isolados sempre verdes).
 /// </summary>
 [Collection("saas-operacao-serial")]
 public sealed class SaasComercialB4MatrizTests : IDisposable
@@ -402,19 +407,49 @@ insert into plantaopro.downgrade_solicitacoes (id, tenant_id, cliente_id, assina
 
     private static async Task SementarAsync()
     {
-        await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
-        await cn.OpenAsync();
-        await using var tx = await cn.BeginTransactionAsync();
-        await cn.ExecuteAsync(PurgeSql, SeedParams(), tx);
-        await cn.ExecuteAsync(InsertSql, SeedParams(), tx);
-        await tx.CommitAsync();
+        await ExecutarComRetryImpasseAsync(async () =>
+        {
+            await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            // r9m-P2: pré-limpeza por chave natural (mesma receita de r9k/B14) — órfão
+            // com GUID diferente (execução derrubada) não colide no índice único parcial
+            // ux_usuarios_email_normalizado no reinsert.
+            await cn.ExecuteAsync(
+                "delete from plantaopro.usuarios where lower(email_normalizado)='b4-usuario@exemplo.test';",
+                null, tx);
+            await cn.ExecuteAsync(PurgeSql, SeedParams(), tx);
+            await cn.ExecuteAsync(InsertSql, SeedParams(), tx);
+            await tx.CommitAsync();
+        });
     }
 
     private static async Task PurgarAsync()
     {
-        await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
-        await cn.OpenAsync();
-        await cn.ExecuteAsync(PurgeSql, SeedParams());
+        await ExecutarComRetryImpasseAsync(async () =>
+        {
+            await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
+            await cn.OpenAsync();
+            await cn.ExecuteAsync(PurgeSql, SeedParams());
+        });
+    }
+
+    /// <summary>
+    /// r9m-P2: reexecuta uma vez em impasse transitório (40P01 deadlock detectado /
+    /// 40001 falha de serialização) — purgas concorrentes sob RAM baixa; o retry
+    /// isolado da classe é sempre verde (ver r9k §4 e §6).
+    /// </summary>
+    private static async Task ExecutarComRetryImpasseAsync(Func<Task> acao)
+    {
+        try
+        {
+            await acao();
+        }
+        catch (PostgresException ex) when (ex.SqlState is "40P01" or "40001")
+        {
+            await Task.Delay(250);
+            await acao();
+        }
     }
 
     private sealed class B4FakeCurrentUser : ICurrentUserService

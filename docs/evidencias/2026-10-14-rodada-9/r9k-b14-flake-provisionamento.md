@@ -49,4 +49,4 @@ Nenhuma — mudança somente em teste.
 ## 6. Pendências remanescentes
 
 - O deadlock 40P01 sob RAM baixa persiste como fator **ambiental** (purgas concorrentes entre classes na suíte paralela). O impacto em cascata que motivou B14 ("CNPJ já cadastrado" na execução seguinte) foi eliminado: após qualquer derrubada, o retry isolado de qualquer classe B5 é verde sem limpeza manual.
-- Candidato registrado (fora do escopo desta fatia): tratar `SaasComercialB4MatrizTests` (e outras classes SaaS com fixtures por chave natural) com a mesma receita de pré-limpeza na semente — 2ª ocorrência de 40P01 nesta rodada (método diferente a cada execução).
+- Candidato registrado (fora do escopo desta fatia): tratar `SaasComercialB4MatrizTests` (e outras classes SaaS com fixtures por chave natural) com a mesma receita de pré-limpeza na semente — 2ª ocorrência de 40P01 nesta rodada (método diferente a cada execução). **→ FECHADO em r9m-P2** (`r9m-p2-b4matriz-flake.md`): pré-limpeza por e-mail (única chave natural com índice único parcial entre os fixtures) + retry único em 40P01/40001 na semente e na purga; classe isolada 12/12.

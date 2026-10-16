@@ -15,8 +15,18 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
         ["Clientes"] = "CLIENTES",
         ["Planos"] = "PLANOS",
         ["Assinaturas"] = "ASSINATURAS",
-        ["Billing"] = "BILLING",
-        ["FaturamentoSaas"] = "BILLING",
+        // R13-B1 (achado r12b2, reproduzido ao vivo): o guard cobrava o codigo fantasma BILLING,
+        // ausente de modulos_sistema — o modulo canonico do dominio e FATURAMENTO_SAAS ("Faturamento
+        // SaaS", ATIVO/A, ordem 200, seed 2026_plantao_pro_self_service_white_label.sql) com suite
+        // completa de 31 permissoes (incl. .VER) ja grantada dormente nos perfis admin de tenant.
+        // Consequencia: qualquer usuario nao-global que passava na checagem de papeis caia em
+        // MODULO_NAO_CONTRATADO para sempre (drill-down "Receita Vencida" do BI quebrado); so o
+        // bypass global-admin salvava. Mesma classe de defeito dos fixes R6-BlocoA (Caixa)/R7-E1
+        // (Usuario)/R12-B1 (Bi/Premium): alinhar o guard ao catalogo canonico, sem DDL. O
+        // BillingController (R5-B6) e shell de redirecionamento para Assinaturas/FaturamentoSaas —
+        // coberto pelo mesmo mapeamento.
+        ["Billing"] = "FATURAMENTO_SAAS",
+        ["FaturamentoSaas"] = "FATURAMENTO_SAAS",
         ["MinhaAssinatura"] = "ASSINATURAS",
         ["Marketplace"] = "MARKETPLACE",
         ["WhiteLabel"] = "WHITE_LABEL",

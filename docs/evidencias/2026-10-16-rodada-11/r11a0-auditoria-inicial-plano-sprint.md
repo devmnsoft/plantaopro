@@ -41,7 +41,9 @@ Cada slice termina com: evidência executada (testes isolados + suíte full), do
 
 ## 4. Registro de fechamentos da fila (atualizado por slice)
 
-_(vazio — preenchido slice a slice)_
+| Slice | Escopo | Resultado | Evidência |
+|---|---|---|---|
+| `r11b1` | D1 P1 — bloqueio imediato de saldo (A12 L112/L296) | FECHADO — abrir gera pernas `BLOQUEIO_OCORRENCIA` (LIBERADO→BLOQUEADO, locais internos e externos, local da ocorrência primeiro, bloqueio parcial sem rejeitar); resolver inverte (`LIBERACAO_OCORRENCIA`); tratar/encerrar sem pernas; reserva fail-closed sobre saldo bloqueado; motivo/origem consultáveis; sem DDL/API/Web; invariante "não apaga estoque" agora vale com bloqueio (ciclo net-zero); **24/24** da classe A12; **full 1428/1428 limpo** | `r11b1-bloqueio-imediato-a12.md` |
 
 ## 5. Riscos e gotchas da rodada
 

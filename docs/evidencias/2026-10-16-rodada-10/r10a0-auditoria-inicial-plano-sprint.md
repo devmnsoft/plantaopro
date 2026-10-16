@@ -67,7 +67,9 @@ Cada slice termina com: evidência executada (testes isolados + suíte full), do
 
 ## 3. Registro de fechamentos da fila (atualizado por slice)
 
-_(vazio — preenchido slice a slice)_
+| Slice | Escopo | Resultado | Evidência |
+|---|---|---|---|
+| `r10b1` | D1 writer A12 `adm360_ocorrencias` | FECHADO — máquina estrita ABERTA→EM_TRATAMENTO→RESOLVIDA→ENCERRADA, encerrar exige destino+justificativa, zero toque em estoque; API `Adm360.Qualidade`; Web lê tabela real + 4 comandos; i18n 605→**650**; **24/24** da fatia; full 1416 com 1 flake catálogo ① (`ProvisionamentoB5Tests.P3`) isolado 5× 11/11 | `r10b1-writer-adm360-ocorrencias-a12.md` |
 
 ## 4. Riscos e gotchas da rodada
 

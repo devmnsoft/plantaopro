@@ -5,6 +5,11 @@ public sealed record CriarPedidoCommand(Guid FornecedorId, DateOnly? Previsao, d
 public sealed record ReceberItemCommand(Guid PedidoItemId, decimal Quantidade, string? Lote, DateOnly? Validade, Guid LocalId);
 public sealed record ConfirmarRecebimentoCommand(Guid PedidoId, string Documento, string IdempotencyKey, IReadOnlyList<ReceberItemCommand> Itens, Guid? DocumentoXmlId = null);
 public sealed record DecidirInspecaoCommand(Guid RecebimentoItemId, decimal Aprovada, decimal Reprovada, string Justificativa, string Destino, string IdempotencyKey);
+// A12 — Ocorrências/Não conformidades (writer de adm360_ocorrencias, rodada 10 r10b1)
+public sealed record CriarOcorrenciaCommand(Guid ProdutoId, Guid LoteId, Guid LocalId, string Tipo, string Descricao, decimal Quantidade, Guid? ResponsavelId = null, DateOnly? Prazo = null, Guid? RecebimentoItemId = null);
+public sealed record VersaoOcorrenciaCommand(long Versao);
+public sealed record EncerrarOcorrenciaCommand(long Versao, string? Destino = null, string? JustificativaEncerramento = null);
+public sealed record OcorrenciaResumo(Guid Id, string Produto, string Lote, string Local, string Tipo, string Descricao, decimal Quantidade, string Situacao, Guid? ResponsavelId, DateOnly? Prazo, string? Destino, string? JustificativaEncerramento, long Versao, DateTimeOffset CriadoEm);
 public sealed record TransferirCommand(Guid ProdutoId, Guid LoteId, Guid OrigemId, Guid DestinoId, decimal Quantidade, string Motivo, string IdempotencyKey);
 public sealed record ReservarCommand(Guid ProdutoId, Guid LoteId, Guid LocalId, decimal Quantidade, string Motivo, Guid? OrigemId, string IdempotencyKey, DateOnly? DataPrevistaUso = null, Guid? OrcamentoItemId = null);
 public sealed record RegistrarLeituraCommand(Guid TarefaId, Guid ScanId, string Codigo, string? Lote, decimal Quantidade);
@@ -81,6 +86,15 @@ public interface IQualidadeRepository
 {
     Task<IReadOnlyList<InspecaoPendente>> PendentesAsync(Guid tenantId, CancellationToken ct);
     Task DecidirAsync(Guid tenantId, Guid usuarioId, DecidirInspecaoCommand command, CancellationToken ct);
+}
+
+public interface IOcorrenciasRepository
+{
+    Task<IReadOnlyList<OcorrenciaResumo>> ListarAsync(Guid tenantId, string? situacao, CancellationToken ct);
+    Task<Guid> AbrirAsync(Guid tenantId, Guid usuarioId, CriarOcorrenciaCommand command, CancellationToken ct);
+    Task TratarAsync(Guid tenantId, Guid usuarioId, Guid ocorrenciaId, long versao, CancellationToken ct);
+    Task ResolverAsync(Guid tenantId, Guid usuarioId, Guid ocorrenciaId, long versao, CancellationToken ct);
+    Task EncerrarAsync(Guid tenantId, Guid usuarioId, Guid ocorrenciaId, EncerrarOcorrenciaCommand command, CancellationToken ct);
 }
 
 public interface IColetaRepository

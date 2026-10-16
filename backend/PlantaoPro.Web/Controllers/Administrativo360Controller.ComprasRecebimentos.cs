@@ -252,25 +252,123 @@ public partial class Administrativo360Controller
         return RedirectToAction(nameof(Inspecoes));
     }
 
+    // ==========================================
+    // OCORRÊNCIAS E NÃO CONFORMIDADES (A12)
+    // r10b1: lista e comandos sobre a tabela adm360_ocorrencias (antes a página mostrava
+    // apenas linhas virtuais derivadas de quarentena pendente — nada persistia).
+    // ==========================================
+
     [HttpGet]
-    public async Task<IActionResult> Ocorrencias()
+    public async Task<IActionResult> Ocorrencias(string? situacao)
     {
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
-        var resp = await ReadApiResponse<IReadOnlyList<InspecaoPendenteViewModel>>(client, "api/administrativo360/qualidade/pendentes");
-        var lista = (resp.Data ?? Array.Empty<InspecaoPendenteViewModel>()).Select(p => new OcorrenciaViewModel(
-            p.RecebimentoItemId, "QUARENTENA_RECEBIMENTO",
-            $"Item em quarentena aguardando laudo de qualidade: {p.Produto} (Lote: {p.Lote})",
-            p.Pendente, "ABERTA", DateOnly.FromDateTime(DateTime.Today.AddDays(2)), p.Local, DateTimeOffset.UtcNow
-        )).ToList();
+        var resp = await ReadApiResponse<IReadOnlyList<Ocorrencia360ViewModel>>(client, "api/administrativo360/ocorrencias");
+        var lookups = await CarregarLookupsAsync(client);
 
         return View(new OcorrenciasIndexViewModel
         {
-            Ocorrencias = lista,
+            Ocorrencias = resp.Data ?? Array.Empty<Ocorrencia360ViewModel>(),
+            Produtos = (lookups.Produtos ?? Array.Empty<Produto360ViewModel>()).Where(p => p.Ativo).ToArray(),
+            Lotes = lookups.Lotes ?? Array.Empty<Lote360ViewModel>(),
+            Locais = (lookups.Locais ?? Array.Empty<Local360ViewModel>()).Where(l => l.Tipo == "INTERNO").ToArray(),
             Erro = resp.Error
         });
     }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CriarOcorrencia(Guid produtoId, Guid loteId, Guid localId, string tipo, string descricao, decimal quantidade, DateOnly? prazo)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        if (produtoId == Guid.Empty || loteId == Guid.Empty || localId == Guid.Empty
+            || string.IsNullOrWhiteSpace(tipo) || string.IsNullOrWhiteSpace(descricao) || quantidade <= 0)
+        {
+            TempData["Error"] = UiText.L("Adm360.Occ.ErrRequiredFields");
+            return RedirectToAction(nameof(Ocorrencias));
+        }
+
+        var payload = new
+        {
+            ProdutoId = produtoId,
+            LoteId = loteId,
+            LocalId = localId,
+            Tipo = tipo.Trim(),
+            Descricao = descricao.Trim(),
+            Quantidade = quantidade,
+            Prazo = prazo
+        };
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/ocorrencias", payload);
+        if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
+            TempData["Success"] = UiText.L("Adm360.Occ.OkCreated");
+        else
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Occ.FallbackCreate");
+
+        return RedirectToAction(nameof(Ocorrencias));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> TratarOcorrencia(Guid id, long versao)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/ocorrencias/{id}/tratar", new VersaoPayload(versao));
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["Success"] = UiText.L("Adm360.Occ.OkTratando");
+        else
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Occ.FallbackTransition");
+
+        return RedirectToAction(nameof(Ocorrencias));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResolverOcorrencia(Guid id, long versao)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/ocorrencias/{id}/resolver", new VersaoPayload(versao));
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["Success"] = UiText.L("Adm360.Occ.OkResolved");
+        else
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Occ.FallbackTransition");
+
+        return RedirectToAction(nameof(Ocorrencias));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> EncerrarOcorrencia(Guid id, long versao, string destino, string justificativa)
+    {
+        if (string.IsNullOrWhiteSpace(destino) || string.IsNullOrWhiteSpace(justificativa))
+        {
+            TempData["Error"] = UiText.L("Adm360.Occ.ErrCloseFields");
+            return RedirectToAction(nameof(Ocorrencias));
+        }
+
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var payload = new
+        {
+            Versao = versao,
+            Destino = destino.Trim(),
+            JustificativaEncerramento = justificativa.Trim()
+        };
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/ocorrencias/{id}/encerrar", payload);
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["Success"] = UiText.L("Adm360.Occ.OkClosed");
+        else
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Occ.FallbackTransition");
+
+        return RedirectToAction(nameof(Ocorrencias));
+    }
+
+    private sealed record VersaoPayload(long Versao);
 
     // ==========================================
     // ESTOQUE, LOTES E MOVIMENTAÇÕES

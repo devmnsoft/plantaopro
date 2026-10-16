@@ -3659,4 +3659,139 @@
   <data name="Adm360.CotDet.AiAjusteHtml" xml:space="preserve">
     <value>¿Necesita ajuste? &lt;a href="/AssistenteIa"&gt;Configurar asistente&lt;/a&gt; (administradores).</value>
   </data>
+  <data name="Adm360.Occ.PageTitle" xml:space="preserve">
+    <value>Ocurrencias y No Conformidades — Administrativo 360</value>
+  </data>
+  <data name="Adm360.Occ.BreadcrumbLabel" xml:space="preserve">
+    <value>Ocurrencias de Calidad</value>
+  </data>
+  <data name="Adm360.Occ.Heading" xml:space="preserve">
+    <value>Ocurrencias y No Conformidades</value>
+  </data>
+  <data name="Adm360.Occ.Subtitle" xml:space="preserve">
+    <value>Seguimiento de desviaciones de recepción, divergencias documentales y lotes retenidos (A12): abierta → en tratamiento → resuelta → cerrada.</value>
+  </data>
+  <data name="Adm360.Occ.LinkIrInspecoes" xml:space="preserve">
+    <value>Ir a Cola de Inspecciones</value>
+  </data>
+  <data name="Adm360.Occ.TableTitulo" xml:space="preserve">
+    <value>Ocurrencias Registradas</value>
+  </data>
+  <data name="Adm360.Occ.TotalLabel" xml:space="preserve">
+    <value>Total:</value>
+  </data>
+  <data name="Adm360.Occ.EmptyState" xml:space="preserve">
+    <value>Ninguna ocurrencia registrada por el momento.</value>
+  </data>
+  <data name="Adm360.Occ.ThProdutoLote" xml:space="preserve">
+    <value>Producto / Lote</value>
+  </data>
+  <data name="Adm360.Occ.ThLocal" xml:space="preserve">
+    <value>Ubicación Afectada</value>
+  </data>
+  <data name="Adm360.Occ.ThTipo" xml:space="preserve">
+    <value>Tipo de Desviación</value>
+  </data>
+  <data name="Adm360.Occ.ThDescricao" xml:space="preserve">
+    <value>Descripción de la Ocurrencia</value>
+  </data>
+  <data name="Adm360.Occ.ThQuantidade" xml:space="preserve">
+    <value>Cant. Involucrada</value>
+  </data>
+  <data name="Adm360.Occ.ThPrazo" xml:space="preserve">
+    <value>Plazo de Resolución</value>
+  </data>
+  <data name="Adm360.Occ.ThStatus" xml:space="preserve">
+    <value>Estado</value>
+  </data>
+  <data name="Adm360.Occ.ThDestino" xml:space="preserve">
+    <value>Destino de los Artículos</value>
+  </data>
+  <data name="Adm360.Occ.ThAcao" xml:space="preserve">
+    <value>Acción</value>
+  </data>
+  <data name="Adm360.Occ.StatusAberta" xml:space="preserve">
+    <value>Abierta</value>
+  </data>
+  <data name="Adm360.Occ.StatusEmTratamento" xml:space="preserve">
+    <value>En Tratamiento</value>
+  </data>
+  <data name="Adm360.Occ.StatusResolvida" xml:space="preserve">
+    <value>Resuelta</value>
+  </data>
+  <data name="Adm360.Occ.StatusEncerrada" xml:space="preserve">
+    <value>Cerrada</value>
+  </data>
+  <data name="Adm360.Occ.Vencida" xml:space="preserve">
+    <value>Vencida</value>
+  </data>
+  <data name="Adm360.Occ.Immediato" xml:space="preserve">
+    <value>Inmediata</value>
+  </data>
+  <data name="Adm360.Occ.BtnTratar" xml:space="preserve">
+    <value>Iniciar Tratamiento</value>
+  </data>
+  <data name="Adm360.Occ.BtnResolver" xml:space="preserve">
+    <value>Marcar Resuelta</value>
+  </data>
+  <data name="Adm360.Occ.BtnEncerrar" xml:space="preserve">
+    <value>Cerrar</value>
+  </data>
+  <data name="Adm360.Occ.SecNova" xml:space="preserve">
+    <value>Abrir Ocurrencia</value>
+  </data>
+  <data name="Adm360.Occ.SecNovaDesc" xml:space="preserve">
+    <value>Registrar una ocurrencia no elimina existencias (A12).</value>
+  </data>
+  <data name="Adm360.Occ.LabelProduto" xml:space="preserve">
+    <value>Producto</value>
+  </data>
+  <data name="Adm360.Occ.LabelLote" xml:space="preserve">
+    <value>Lote</value>
+  </data>
+  <data name="Adm360.Occ.LabelTipo" xml:space="preserve">
+    <value>Tipo de Desviación</value>
+  </data>
+  <data name="Adm360.Occ.LabelDescricao" xml:space="preserve">
+    <value>Descripción</value>
+  </data>
+  <data name="Adm360.Occ.LabelQuantidade" xml:space="preserve">
+    <value>Cantidad</value>
+  </data>
+  <data name="Adm360.Occ.LabelPrazo" xml:space="preserve">
+    <value>Plazo (opcional)</value>
+  </data>
+  <data name="Adm360.Occ.SelectPlaceholder" xml:space="preserve">
+    <value>— Seleccione —</value>
+  </data>
+  <data name="Adm360.Occ.LabelJustificativa" xml:space="preserve">
+    <value>Justificación del Cierre</value>
+  </data>
+  <data name="Adm360.Occ.BtnCriar" xml:space="preserve">
+    <value>Registrar Ocurrencia</value>
+  </data>
+  <data name="Adm360.Occ.ErrRequiredFields" xml:space="preserve">
+    <value>Informe producto, lote, ubicación, tipo de desviación y descripción, con cantidad mayor que cero.</value>
+  </data>
+  <data name="Adm360.Occ.ErrCloseFields" xml:space="preserve">
+    <value>Cerrar exige destino de los artículos y justificación.</value>
+  </data>
+  <data name="Adm360.Occ.OkCreated" xml:space="preserve">
+    <value>Ocurrencia registrada.</value>
+  </data>
+  <data name="Adm360.Occ.OkTratando" xml:space="preserve">
+    <value>Ocurrencia marcada como en tratamiento.</value>
+  </data>
+  <data name="Adm360.Occ.OkResolved" xml:space="preserve">
+    <value>Ocurrencia marcada como resuelta.</value>
+  </data>
+  <data name="Adm360.Occ.OkClosed" xml:space="preserve">
+    <value>Ocurrencia cerrada.</value>
+  </data>
+  <data name="Adm360.Occ.FallbackCreate" xml:space="preserve">
+    <value>No fue posible registrar la ocurrencia.</value>
+  </data>
+  <data name="Adm360.Occ.FallbackTransition" xml:space="preserve">
+    <value>La ocurrencia no pudo actualizarse. Actualice la página e intente de nuevo.</value>
+  </data>
 </root>

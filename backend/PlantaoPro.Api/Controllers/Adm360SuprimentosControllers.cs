@@ -39,6 +39,21 @@ public sealed class Qualidade360Controller : ControllerBase
  [HttpGet("pendentes")] public async Task<IActionResult> Pendentes(CancellationToken ct){var x=Context();return Ok(await repository.PendentesAsync(x.Tenant,ct));}
  [HttpPost("decisoes")] public async Task<IActionResult> Decidir(DecidirInspecaoCommand command,CancellationToken ct){var x=Context();await repository.DecidirAsync(x.Tenant,x.User,command,ct);return NoContent();}
 }
+// A12 — Ocorrências/Não conformidades (writer de adm360_ocorrencias, rodada 10 r10b1).
+// Mesma política de qualidade (ADM360:LIBERAR_QUALIDADE): o estoquista puro não trata ocorrências.
+[ApiController,Route("api/administrativo360/ocorrencias"),Authorize(Policy="Adm360.Qualidade")]
+public sealed class Ocorrencias360Controller : ControllerBase
+{
+ private readonly IOcorrenciasRepository repository;
+ private readonly ICurrentUserService current;
+ public Ocorrencias360Controller(IOcorrenciasRepository repository, ICurrentUserService current) { this.repository=repository; this.current=current; }
+ private (Guid Tenant,Guid User) Context()=>(current.TenantId??throw new UnauthorizedAccessException(),current.UserId??throw new UnauthorizedAccessException());
+ [HttpGet] public async Task<IActionResult> Listar([FromQuery]string? situacao,CancellationToken ct){var x=Context();return Ok(await repository.ListarAsync(x.Tenant,situacao,ct));}
+ [HttpPost] public async Task<IActionResult> Abrir(CriarOcorrenciaCommand command,CancellationToken ct){var x=Context();try{return Ok(new{id=await repository.AbrirAsync(x.Tenant,x.User,command,ct)});}catch(ArgumentException ex){return BadRequest(new { error = ex.Message });}}
+ [HttpPost("{id:guid}/tratar")] public async Task<IActionResult> Tratar(Guid id,[FromBody]VersaoOcorrenciaCommand command,CancellationToken ct){var x=Context();try{await repository.TratarAsync(x.Tenant,x.User,id,command.Versao,ct);return NoContent();}catch(ArgumentException ex){return BadRequest(new { error = ex.Message });}catch(PlantaoPro.Domain.Administrativo360.Administrativo360BusinessException ex){return Conflict(new { message = ex.Message });}}
+ [HttpPost("{id:guid}/resolver")] public async Task<IActionResult> Resolver(Guid id,[FromBody]VersaoOcorrenciaCommand command,CancellationToken ct){var x=Context();try{await repository.ResolverAsync(x.Tenant,x.User,id,command.Versao,ct);return NoContent();}catch(ArgumentException ex){return BadRequest(new { error = ex.Message });}catch(PlantaoPro.Domain.Administrativo360.Administrativo360BusinessException ex){return Conflict(new { message = ex.Message });}}
+ [HttpPost("{id:guid}/encerrar")] public async Task<IActionResult> Encerrar(Guid id,[FromBody]EncerrarOcorrenciaCommand command,CancellationToken ct){var x=Context();try{await repository.EncerrarAsync(x.Tenant,x.User,id,command,ct);return NoContent();}catch(ArgumentException ex){return BadRequest(new { error = ex.Message });}catch(PlantaoPro.Domain.Administrativo360.Administrativo360BusinessException ex){return Conflict(new { message = ex.Message });}}
+}
 [ApiController,Route("api/administrativo360/coleta"),Authorize(Policy="Adm360.Estoque")]
 public sealed class Coleta360Controller : ControllerBase
 {

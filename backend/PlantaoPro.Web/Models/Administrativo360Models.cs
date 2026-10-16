@@ -1101,11 +1101,15 @@ public sealed class InspecoesIndexViewModel
     public string? Erro { get; init; }
 }
 
-public sealed record OcorrenciaViewModel(Guid Id, string Tipo, string Descricao, decimal Quantidade, string Situacao, DateOnly? Prazo, string? Destino, DateTimeOffset CriadoEm);
+// A12 — Ocorrências/Não conformidades (rodada 10 r10b1): espelha OcorrenciaResumo da API.
+public sealed record Ocorrencia360ViewModel(Guid Id, string Produto, string Lote, string Local, string Tipo, string Descricao, decimal Quantidade, string Situacao, Guid? ResponsavelId, DateOnly? Prazo, string? Destino, string? JustificativaEncerramento, long Versao, DateTimeOffset CriadoEm);
 
 public sealed class OcorrenciasIndexViewModel
 {
-    public IReadOnlyList<OcorrenciaViewModel> Ocorrencias { get; init; } = Array.Empty<OcorrenciaViewModel>();
+    public IReadOnlyList<Ocorrencia360ViewModel> Ocorrencias { get; init; } = Array.Empty<Ocorrencia360ViewModel>();
+    public IReadOnlyList<Produto360ViewModel> Produtos { get; init; } = Array.Empty<Produto360ViewModel>();
+    public IReadOnlyList<Lote360ViewModel> Lotes { get; init; } = Array.Empty<Lote360ViewModel>();
+    public IReadOnlyList<Local360ViewModel> Locais { get; init; } = Array.Empty<Local360ViewModel>();
     public string? Erro { get; init; }
 }
 

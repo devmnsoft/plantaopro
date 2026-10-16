@@ -3659,4 +3659,139 @@
   <data name="Adm360.CotDet.AiAjusteHtml" xml:space="preserve">
     <value>Needs adjustment? &lt;a href="/AssistenteIa"&gt;Configure assistant&lt;/a&gt; (administrators).</value>
   </data>
+  <data name="Adm360.Occ.PageTitle" xml:space="preserve">
+    <value>Occurrences &amp; Nonconformities — Administrative 360</value>
+  </data>
+  <data name="Adm360.Occ.BreadcrumbLabel" xml:space="preserve">
+    <value>Quality Occurrences</value>
+  </data>
+  <data name="Adm360.Occ.Heading" xml:space="preserve">
+    <value>Occurrences &amp; Nonconformities</value>
+  </data>
+  <data name="Adm360.Occ.Subtitle" xml:space="preserve">
+    <value>Tracking of receiving deviations, documentary divergences and held lots (A12): open → in treatment → resolved → closed.</value>
+  </data>
+  <data name="Adm360.Occ.LinkIrInspecoes" xml:space="preserve">
+    <value>Go to Inspection Queue</value>
+  </data>
+  <data name="Adm360.Occ.TableTitulo" xml:space="preserve">
+    <value>Registered Occurrences</value>
+  </data>
+  <data name="Adm360.Occ.TotalLabel" xml:space="preserve">
+    <value>Total:</value>
+  </data>
+  <data name="Adm360.Occ.EmptyState" xml:space="preserve">
+    <value>No occurrences recorded at the moment.</value>
+  </data>
+  <data name="Adm360.Occ.ThProdutoLote" xml:space="preserve">
+    <value>Product / Lot</value>
+  </data>
+  <data name="Adm360.Occ.ThLocal" xml:space="preserve">
+    <value>Affected Location</value>
+  </data>
+  <data name="Adm360.Occ.ThTipo" xml:space="preserve">
+    <value>Deviation Type</value>
+  </data>
+  <data name="Adm360.Occ.ThDescricao" xml:space="preserve">
+    <value>Occurrence Description</value>
+  </data>
+  <data name="Adm360.Occ.ThQuantidade" xml:space="preserve">
+    <value>Qty. Involved</value>
+  </data>
+  <data name="Adm360.Occ.ThPrazo" xml:space="preserve">
+    <value>Resolution Deadline</value>
+  </data>
+  <data name="Adm360.Occ.ThStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Adm360.Occ.ThDestino" xml:space="preserve">
+    <value>Items Destination</value>
+  </data>
+  <data name="Adm360.Occ.ThAcao" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="Adm360.Occ.StatusAberta" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Adm360.Occ.StatusEmTratamento" xml:space="preserve">
+    <value>In Treatment</value>
+  </data>
+  <data name="Adm360.Occ.StatusResolvida" xml:space="preserve">
+    <value>Resolved</value>
+  </data>
+  <data name="Adm360.Occ.StatusEncerrada" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="Adm360.Occ.Vencida" xml:space="preserve">
+    <value>Overdue</value>
+  </data>
+  <data name="Adm360.Occ.Immediato" xml:space="preserve">
+    <value>Immediate</value>
+  </data>
+  <data name="Adm360.Occ.BtnTratar" xml:space="preserve">
+    <value>Start Treatment</value>
+  </data>
+  <data name="Adm360.Occ.BtnResolver" xml:space="preserve">
+    <value>Mark Resolved</value>
+  </data>
+  <data name="Adm360.Occ.BtnEncerrar" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Adm360.Occ.SecNova" xml:space="preserve">
+    <value>Open Occurrence</value>
+  </data>
+  <data name="Adm360.Occ.SecNovaDesc" xml:space="preserve">
+    <value>Recording an occurrence does not remove stock (A12).</value>
+  </data>
+  <data name="Adm360.Occ.LabelProduto" xml:space="preserve">
+    <value>Product</value>
+  </data>
+  <data name="Adm360.Occ.LabelLote" xml:space="preserve">
+    <value>Lot</value>
+  </data>
+  <data name="Adm360.Occ.LabelTipo" xml:space="preserve">
+    <value>Deviation Type</value>
+  </data>
+  <data name="Adm360.Occ.LabelDescricao" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Adm360.Occ.LabelQuantidade" xml:space="preserve">
+    <value>Quantity</value>
+  </data>
+  <data name="Adm360.Occ.LabelPrazo" xml:space="preserve">
+    <value>Deadline (optional)</value>
+  </data>
+  <data name="Adm360.Occ.SelectPlaceholder" xml:space="preserve">
+    <value>— Select —</value>
+  </data>
+  <data name="Adm360.Occ.LabelJustificativa" xml:space="preserve">
+    <value>Closing Justification</value>
+  </data>
+  <data name="Adm360.Occ.BtnCriar" xml:space="preserve">
+    <value>Register Occurrence</value>
+  </data>
+  <data name="Adm360.Occ.ErrRequiredFields" xml:space="preserve">
+    <value>Provide product, lot, location, deviation type and description, with quantity greater than zero.</value>
+  </data>
+  <data name="Adm360.Occ.ErrCloseFields" xml:space="preserve">
+    <value>Closing requires the items destination and a justification.</value>
+  </data>
+  <data name="Adm360.Occ.OkCreated" xml:space="preserve">
+    <value>Occurrence registered.</value>
+  </data>
+  <data name="Adm360.Occ.OkTratando" xml:space="preserve">
+    <value>Occurrence marked as in treatment.</value>
+  </data>
+  <data name="Adm360.Occ.OkResolved" xml:space="preserve">
+    <value>Occurrence marked as resolved.</value>
+  </data>
+  <data name="Adm360.Occ.OkClosed" xml:space="preserve">
+    <value>Occurrence closed.</value>
+  </data>
+  <data name="Adm360.Occ.FallbackCreate" xml:space="preserve">
+    <value>Could not register the occurrence.</value>
+  </data>
+  <data name="Adm360.Occ.FallbackTransition" xml:space="preserve">
+    <value>The occurrence could not be updated. Refresh the page and try again.</value>
+  </data>
 </root>

@@ -251,13 +251,13 @@ public sealed class R7DF6Admin360I18nContratoTests
     }
 
     [Fact]
-    public void RecursosContemAs605ChavesAdm360EmTodosOsQuatroIdiomas()
+    public void RecursosContemAs650ChavesAdm360EmTodosOsQuatroIdiomas()
     {
         foreach (var arquivo in new[] { "UiTexts.resx", "UiTexts.en.resx", "UiTexts.es.resx", "UiTexts.fr.resx" })
         {
             var resx = Read("backend", "PlantaoPro.Web", "Localization", arquivo);
             var totalAdm360 = Regex.Matches(resx, "<data name=\"Adm360\\.").Count;
-            Assert.Equal(605, totalAdm360);
+            Assert.Equal(650, totalAdm360);
             foreach (var chave in new[]
                      {
                          // views
@@ -293,7 +293,10 @@ public sealed class R7DF6Admin360I18nContratoTests
                            // r9m: completude do detalhe da cotação (fora do bloco ANVISA)
                            "Adm360.CotDet.LabelCotacao", "Adm360.CotDet.GuiaCiclo", "Adm360.CotDet.GuiaAnvisa",
                            "Adm360.CotDet.ThStatusDePara", "Adm360.CotDet.StatusNaoAtendido", "Adm360.CotDet.OutboxAcaoRejeitada",
-                           "Adm360.CotDet.EstornoModalCorpo", "Adm360.CotDet.AiAjusteHtml", "Adm360.CotDet.BadgeArquivoImutavel"
+                           "Adm360.CotDet.EstornoModalCorpo", "Adm360.CotDet.AiAjusteHtml", "Adm360.CotDet.BadgeArquivoImutavel",
+                            // r10b1: página de ocorrências A12 (writer de adm360_ocorrencias)
+                            "Adm360.Occ.PageTitle", "Adm360.Occ.ThStatus", "Adm360.Occ.BtnEncerrar",
+                            "Adm360.Occ.OkClosed", "Adm360.Occ.FallbackTransition", "Adm360.Occ.ErrCloseFields"
                      })
             {
                 Assert.Contains($"<data name=\"{chave}\"", resx, StringComparison.Ordinal);
@@ -313,10 +316,15 @@ public sealed class R7DF6Admin360I18nContratoTests
         Assert.Contains("<value>Vencimentos por Parcela</value>", master);
         // ampersand escapado no título bilingue do guia (pt-BR canônico)
         Assert.Contains("<value>Captação &amp; Entrada</value>", master);
+        // r10b1: página de ocorrências A12
+        Assert.Contains("<value>Ocorrências e Não Conformidades</value>", master);
+        Assert.Contains("<value>Registrar ocorrência não apaga estoque (A12).</value>", master);
         // traduções presentes nas demais culturas (amostra)
         var en = Read("backend", "PlantaoPro.Web", "Localization", "UiTexts.en.resx");
         Assert.Contains("<value>Capture &amp; Intake</value>", en);
         Assert.Contains("<value>Purchase order approved successfully. Values frozen.</value>", en);
+        // r10b1
+        Assert.Contains("<value>Occurrences &amp; Nonconformities</value>", en);
         // r9h
         Assert.Contains("<value>Management P&amp;L by Client — accrual basis (NOT cash flow)</value>", en);
         Assert.Contains("<value>Due Dates by Installment</value>", en);
@@ -467,6 +475,50 @@ public sealed class R7DF6Admin360I18nContratoTests
                  })
         {
             Assert.DoesNotContain(literal, cotdet);
+        }
+    }
+
+    [Fact]
+    public void ViewsAdm360_R10b1OcorrenciasCompletudeSemLiterals()
+    {
+        var view = Read("backend", "PlantaoPro.Web", "Views", "Administrativo360", "Ocorrencias.cshtml");
+        foreach (var chave in new[]
+                 {
+                     // r10b1: página de ocorrências A12 (título/breadcrumb/header/link)
+                     "Adm360.Occ.PageTitle", "Adm360.Occ.BreadcrumbLabel", "Adm360.Occ.Heading",
+                     "Adm360.Occ.Subtitle", "Adm360.Occ.LinkIrInspecoes",
+                     // tabela + colunas + estados de máquina
+                     "Adm360.Occ.TableTitulo", "Adm360.Occ.TotalLabel", "Adm360.Occ.EmptyState",
+                     "Adm360.Occ.ThProdutoLote", "Adm360.Occ.ThLocal", "Adm360.Occ.ThTipo",
+                     "Adm360.Occ.ThDescricao", "Adm360.Occ.ThQuantidade", "Adm360.Occ.ThPrazo",
+                     "Adm360.Occ.ThStatus", "Adm360.Occ.ThDestino", "Adm360.Occ.ThAcao",
+                     "Adm360.Occ.StatusAberta", "Adm360.Occ.StatusEmTratamento", "Adm360.Occ.StatusResolvida",
+                     "Adm360.Occ.StatusEncerrada", "Adm360.Occ.Vencida", "Adm360.Occ.Immediato",
+                     // comandos A12 por situação + formulário de abertura
+                     "Adm360.Occ.BtnTratar", "Adm360.Occ.BtnResolver", "Adm360.Occ.BtnEncerrar",
+                     "Adm360.Occ.SecNova", "Adm360.Occ.SecNovaDesc", "Adm360.Occ.LabelProduto",
+                     "Adm360.Occ.LabelLote", "Adm360.Occ.LabelTipo", "Adm360.Occ.LabelDescricao",
+                     "Adm360.Occ.LabelQuantidade", "Adm360.Occ.LabelPrazo", "Adm360.Occ.SelectPlaceholder",
+                     "Adm360.Occ.LabelJustificativa", "Adm360.Occ.BtnCriar"
+                 })
+        {
+            Assert.Contains($"UiText.L(\"{chave}\")", view);
+        }
+        // formatos e rotas de comando preservados
+        Assert.Contains(".ToString(\"N4\")", view);
+        Assert.Contains("asp-action=\"TratarOcorrencia\"", view);
+        Assert.Contains("asp-action=\"ResolverOcorrencia\"", view);
+        Assert.Contains("asp-action=\"EncerrarOcorrencia\"", view);
+        Assert.Contains("asp-action=\"CriarOcorrencia\"", view);
+        foreach (var literal in new[]
+                 {
+                     "Ocorrências e Não Conformidades", "Rastreamento de desvios",
+                     "Ocorrências Registradas", "Nenhuma ocorrência registrada no momento.",
+                     "Iniciar Tratamento", "Marcar Resolvida", "Abrir Ocorrência", "Registrar Ocorrência",
+                     "Em Aberto", "Em Tratamento", "Destino dos Itens", "Tipo do Desvio"
+                 })
+        {
+            Assert.DoesNotContain(literal, view);
         }
     }
 }

@@ -214,6 +214,7 @@ builder.Services.AddScoped<ICadastrosRepository>(sp => new CadastrosRepository(G
 builder.Services.AddScoped<IComprasRepository>(sp => new ComprasRepository(GetConn(sp)));
 builder.Services.AddScoped<IEstoqueRepository>(sp => new EstoqueRepository(GetConn(sp)));
 builder.Services.AddScoped<IQualidadeRepository>(sp => new QualidadeRepository(GetConn(sp)));
+builder.Services.AddScoped<IOcorrenciasRepository>(sp => new OcorrenciasRepository(GetConn(sp)));
 builder.Services.AddScoped<IColetaRepository>(sp => new ColetaRepository(GetConn(sp)));
 builder.Services.AddScoped<IInventarioRepository>(sp => new InventarioRepository(GetConn(sp)));
 builder.Services.AddScoped<IOrcamentoCirurgicoRepository>(sp => new OrcamentoCirurgicoRepository(GetConn(sp)));

@@ -66,7 +66,7 @@ Classe nova `R12GuardBiPremiumCatalogTests` (fonte-scan estilo E13/R6 + comporta
 |---|---|---|
 | `r12b1` | Fix do catálogo do guard (`Bi`→`BI`, `DashboardsPremium`→`DASHBOARD`) + classe de contrato + gate de suíte | FEITO (commitado `ae76e36`) |
 | `r12b2` | Homologação viva: subir Api/Web, grant reversível `BI`+`DASHBOARD` ao SV, validar `/Bi` e `/DashboardsPremium` (negado→liberado), e aproveitar o ambiente para capturas de pixel pendentes da R11 | FEITO — ciclo negado-honesto→liberado provado ao vivo; 4/7 drill-downs abertos; capturas R11 fechadas (fallback DOM); net-zero verificado; achado P3 BILLING. Ver `r12b2-homologacao-viva-guard-bi-premium-drilldowns.md` |
-| `r12z` | Relatório final consolidado + fila próxima | PENDENTE |
+| `r12z` | Relatório final consolidado + fila próxima | FEITO — ver `r12z-relatorio-final-consolidado.md` |
 
 ## 7. Decisões / fronteiras registradas
 - **Exposição em menu fora de escopo**: este fix torna as rotas *resolúveis e porteadas por contrato*, mas **não inventa link de menu** (regra de casa: UI nova exige decisão de produto). Até que um menu aponte para elas, `/Bi` e `/DashboardsPremium/*` são acessíveis por URL direta quando contratados. A decisão de onde expor segue na fila.

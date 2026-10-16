@@ -59,14 +59,12 @@ Classe nova `R12GuardBiPremiumCatalogTests` (fonte-scan estilo E13/R6 + comporta
 | Porta | Resultado | Nota |
 |---|---|---|
 | Baseline (`10a2171`) | **1428/1428 limpo** | build `EXIT 0`; o flake `R7OB…O3` (catálogo ①) não repetiu nesta base |
-| Pós-r12b1 | a registrar | esperado: base + fatos novos do guard |
-
-Δ esperado: +6..8 fatos (classe `R12GuardBiPremiumCatalogTests`).
+| Pós-r12b1 | **Total 1437 · Aprovados 1436 · 1 falha = flake catálogo ① conhecido** (`ProvisionamentoB5Tests.P1_Finalizar…`, `40P01 deadlock` no teardown `PurgarAsync()` — isolate **5× → 11/11 em cada pass**) | Δ registrado **+9 fatos** (classe `R12GuardBiPremiumCatalogTests` + 2 classes); detalhes no `r12b1-fix-catalogo-guard-bi-premium.md` §5 |
 
 ## 6. Slices da rodada
 | Slice | Entrega | Status |
 |---|---|---|
-| `r12b1` | Fix do catálogo do guard (`Bi`→`BI`, `DashboardsPremium`→`DASHBOARD`) + classe de contrato + gate de suíte | PLANEJADO |
+| `r12b1` | Fix do catálogo do guard (`Bi`→`BI`, `DashboardsPremium`→`DASHBOARD`) + classe de contrato + gate de suíte | FEITO (commitado) |
 | `r12b2` | Homologação viva: subir Api/Web, grant reversível `BI`+`DASHBOARD` ao SV, validar `/Bi` e `/DashboardsPremium` (negado→liberado), e aproveitar o ambiente para capturas de pixel pendentes da R11 | PENDENTE |
 | `r12z` | Relatório final consolidado + fila próxima | PENDENTE |
 

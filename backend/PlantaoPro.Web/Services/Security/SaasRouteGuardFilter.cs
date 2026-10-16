@@ -73,6 +73,16 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
         ["Convenios"] = "CONVENIOS",
         ["PlanosSaude"] = "PLANOS_SAUDE",
         ["ClinicaDashboard"] = "CLINICA_DASHBOARD",
+        // R12-B1 (achado r11b2, reproduzido ao vivo 2x): Bi (BI Executivo) era orfa do catalogo —
+        // qualquer usuario autenticado (incl. global admin) caia em CATALOGO_NAO_CONFIGURADO antes
+        // de qualquer checagem de modulo/contratacao. O modulo BI ja existe em modulos_sistema com
+        // suite completa de acoes (incl. BI.VER); todas as acoes do controller resolvem para VER
+        // (tela somente leitura) — sem override. Exposicao em menu segue como decisao de produto.
+        ["Bi"] = "BI",
+        // R12-B1: DashboardsPremium (dashboards executivos por perfil) tinha o mesmo padrao de
+        // orfao. Modulo dono DASHBOARD ("Indicadores e visao geral") esta livre no guard; a
+        // alternativa CLINICA_DASHBOARD foi rejeitada — dominio distinto, dono ClinicaDashboard.
+        ["DashboardsPremium"] = "DASHBOARD",
         // R5-E13: unidades de atendimento usam o modulo grosso SAUDE360 (ja no contrato e nos grants
         // canonicos v2334). O codigo fino UNIDADES so entra no guard quando existir linha propria em
         // modulos_sistema + decisao de expansao de contrato (backlog E13 de granularidade).

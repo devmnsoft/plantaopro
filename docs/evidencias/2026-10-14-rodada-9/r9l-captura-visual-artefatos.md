@@ -1,6 +1,6 @@
 # Rodada 9 — r9l: Captura visual / aprovação visual (screenshots + zoom/breakpoints)
 
-Data: 2026-10-15 · Base: `b302093` (r9k) · Ambiente local/homologação · Web `http://localhost:52976`, API `http://localhost:51976`, banco principal `plantaopro` (PG18) · Sem push/merge/publish.
+Data: 2026-10-15 · Base: `b302093` (r9k) · Ambiente local/homologação · Web `http://localhost:52976`, API `http://localhost:51976`, banco principal `plantaopro` (PG18) · Sem push/merge/publish. · **Atualizado 2026-10-16 (r9m): capturas de screenshot concluídas (§4); aprovação visual pendente de aceite do usuário (§6).**
 
 ## 1. Objetivo
 
@@ -28,14 +28,23 @@ Sessões web autenticadas como `admin.sistemavertical@plantaopro.local` (perfil 
 
 Sem estouro horizontal nas 3 telas no viewport 1000×700 (`scrollWidth <= clientWidth`). O container principal resolve em px fluido (Bootstrap `container-fluid`), sem larguras fixas que quebrem em 360/768/1440 — verificação estrutural.
 
-## 4. Screenshots: **BLOQUEADA (ambiente)**
+## 4. Screenshots: **CAPTURADOS em 2026-10-16 (r9m)**
 
-`browser.screenshot` retorna `browser.operation_failed: Screenshot needs a visible tab. Call browser.tabs.focus and keep its desktop window visible.` A condição depende da **janela desktop do OpenCode estar visível no display do usuário** — fora do controle do agente. Tentativas: ~10 (incluindo `tabs.focus`, reabertura de aba via `tabs.open` e retry em loop); uma captura única de login-page obteve sucesso num instante em que a janela estava visível e depois a condição se perdeu.
+A condição que bloqueava era a **janela desktop do OpenCode estar visível no display do usuário** (erro: `browser.operation_failed: Screenshot needs a visible tab`). Em 2026-10-16 (após as fatias r9m-P2/P4), com a janela visível fornecida pelo usuário, as três telas foram capturadas como **viewport PNG** e salvas em `imagens/`:
 
-Protocolo de retry quando a janela estiver visível (servidores já deixados ativos e sessão autenticada no perfil do navegador):
-1. `browser.tabs.open` → `http://localhost:52976/Administrativo360/RelatoriosFinanceiros` (depois `/Produtos` e a cotação `ced7c533-…`).
-2. `browser.screenshot` na aba recém-aberta; copiar o PNG para `docs/evidencias/2026-10-14-rodada-9/imagens/`.
-3. Substituir este item por PRONTO com as imagens anexadas.
+| Tela | Arquivo | Conteúdo visível no pixel |
+|---|---|---|
+| `/Administrativo360/Cotacoes/Detalhes/ced7c533-…d57e68b90d49` | `2026-10-16-cotdet-detalhes-viewport.png` | Título dinâmico do r9m-P4 renderizado via resx ("Cotação SV-ANVISA-R9 — Administrativo 360"), breadcrumb "Início / SV-ANVISA-R9", contexto do tenant SV, guia "Como usar esta tela" (reuso de `Login.HelpSummary`) |
+| `/Administrativo360/RelatoriosFinanceiros` | `2026-10-16-relfin-viewport.png` | Título "Relatórios Financeiros — Administrativo 360" + chrome administrativo |
+| `/Administrativo360/Produtos` | `2026-10-16-produtos-viewport.png` | Título "Produtos e Materiais — Administrativo 360" + chips de categoria |
+
+Sem estouro horizontal nas capturas. O conteúdo abaixo da dobra (tabela de itens/ANVISA/outbox na cotação; tabelas RelFin/Produtos) tem evidência funcional completa na seção 3 + artefatos DOM; tentativas de `fullPage` adicionais ocorreram apenas com a janela oculta e não impedem o escopo da rodada.
+
+Lições de protocolo registradas (causas das ~10 tentativas frustradas anteriores e o que resolveu em 2026-10-16):
+1. **Restart do Web invalida a sessão** (Data Protection key efêmera) → re-login via form obrigatório a cada restart: setar `#Email`/`#senha` com value-setter nativo + evento `input` + `form.submit()`.
+2. **Nunca navegar explicitamente logo após o submit**: um `navigate()` imediato conflita com o POST→302 do form (causa dos submits "silenciosos"). Receita que funcionou: submeter a partir de `Login?ReturnUrl=<tela>` e deixar o redirecionamento do form concluir; aguardar `location` sair de `/Account/Login`.
+3. O primeiro submit logo após o boot da API pode falhar em silêncio — retry do submit resolve.
+4. `browser.screenshot` exige a aba focada (`tabs.focus`) **e** a janela do OpenCode visível em primeiro plano; a condição oscila durante a sessão — executar as capturas em rajada curta (3 telas em sequência) assim que a janela estiver visível.
 
 ## 5. Zoom 200% e breakpoints 360/768/1440
 
@@ -44,7 +53,7 @@ Protocolo de retry quando a janela estiver visível (servidores já deixados ati
 
 ## 6. Aprovação visual
 
-**Não declarada** — requer pixels (item 4) e aceite do usuário. Até lá, as três telas têm evidência funcional completa (seção 3 + artefatos DOM), o que sustenta a declaração de PRONTO do i18n de r9j independentemente da aprovação visual.
+**Capturas obtidas (item 4); aceite pendente do usuário.** As 3 imagens foram exibidas no Review pane em 2026-10-16 para aprovação; sem resposta até o registro. Com o aceite, a linha r9l vira PRONTO integral. As três telas têm evidência funcional completa (seção 3 + artefatos DOM) independentemente da aprovação visual.
 
 ## 7. Servidores deixados ativos
 

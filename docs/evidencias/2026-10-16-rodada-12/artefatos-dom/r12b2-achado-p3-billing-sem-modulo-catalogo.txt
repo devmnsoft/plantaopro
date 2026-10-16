@@ -1,0 +1,25 @@
+Artefato DOM — R12-B2 · ACHADO P3 novo · /FaturamentoSaas/Index?status=VENCIDA — BILLING inexistente no catálogo
+==============================================================================
+Data: 2026-10-16 · Sessão: admin.sistemavertical@plantaopro.local (ADMINISTRADOR, tenant SV)
+
+URL final (redirect do guard, DEPOIS dos grants HOMOLOG_R12):
+http://localhost:52976/Account/AccessDenied?module=BILLING&reason=MODULO_NAO_CONTRATADO&retorno=%2FFaturamentoSaas%2FIndex
+
+Conteúdo principal:
+------------------------------------------------------------
+Módulo não contratado — "Esta rota exige um módulo contratado e habilitado para o tenant atual…"
+Escopo: BILLING Causa: MODULO_NAO_CONTRATADO
+------------------------------------------------------------
+
+Evidência técnica (fonte canônica, probe 2026-10-16):
+- Guard resolve FaturamentoSaas → BILLING (catálogo web: `["FaturamentoSaas"]="BILLING"`, idem `["Billing"]`).
+- `select … from modulos_sistema where codigo in ('CLIENTES','BILLING','ESCALAS','PLANTOES','ASSINATURAS')`
+  retorna 4 linhas — **sem BILLING** (idêntico para `permissoes`: não existe `BILLING.VER`).
+- Consequência: nenhum tenant pode contratar BILLING via `tenant_modulos` (grants HOMOLOG_R12 só existem
+  para módulos presentes em modulos_sistema) ⇒ para qualquer sessão de tenant o card "Receita Vencida"
+  do BI Executive sempre levará a MODULO_NAO_CONTRATADO. Só o global admin passa por bypass.
+
+Classificação proposta (fila r12z): **P3** — rota honesta porém inalcançável para tenants.
+Opções candidatas: (a) criar módulo BILLING em modulos_sistema (DDL/contrato) e incluí-lo nos planos;
+(b) remapear o card BI para uma rota de faturamento com módulo já contratável. Decisão de produto —
+não resolvida nesta rodada (o fix r12b1 é escopo-catalogo dos controllers órfãos, sem DDL).

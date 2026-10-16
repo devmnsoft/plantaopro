@@ -1,0 +1,22 @@
+Artefato DOM — R12-B2 · MAPA VIVO dos 7 drill-downs §27-L208 (r10b3) após fix r12b1 + grants HOMOLOG_R12
+==============================================================================
+Data: 2026-10-16 · Sessão: admin.sistemavertical@plantaopro.local (ADMINISTRADOR, tenant SV)
+
+| # | Card → link | URL alvo (markup real) | Resultado ao vivo | Classificação |
+|---|---|---|---|---|
+| 1 | BI Clientes Ativos | /Clientes/Index?status=ATIVO | AccessDenied?ReturnUrl=… (sem módulo/razão) — `ClientesController` tem `[Authorize(Roles="ADMINISTRADOR_GLOBAL")]`: central é tela de ADMIN GLOBAL da plataforma; o admin tenant recebe denegação de papel limpa e explicável | Negado-honesto por papel — caveat já registrado em r10b3 §3.4 (escopo global vs tenant); sem defeito novo |
+| 2 | BI Receita Estimada | /Assinaturas/Index?status=ATIVA | **HTTP 200 "Assinaturas SaaS"** (clique real no âncora) | HOMOLOGADO AO VIVO |
+| 2b | BI Receita Vencida | /FaturamentoSaas/Index?status=VENCIDA | AccessDenied module=BILLING&reason=MODULO_NAO_CONTRATADO | **ACHADO P3 novo** — BILLING não existe em `modulos_sistema` (probe 2026-10-16): módulo inexistente no catálogo ⇒ nunca pode ser contratado ⇒ link do card leva a negação permanente p/ tenants (só global admin passa por bypass). Ver artefato dedicado |
+| 4 | BI Escalas confirmadas (JS) | /Escalas?status=confirmado&dataInicio&dataFim (href só após fetch ok) | Âncora d-none (sem href) nesta configuração — fetch '/api/bi/resumo-executivo' 404 na origem Web (deploy single-origin presumido; local roda em portas separadas) | Limitação de configuração local (mesma classe que Operacoes/Index); semântica R8-B19 mantida: sem fetch ok, sem número nem drill. Alvo/URL validados em r10b3 por fonte canônica |
+| 5 | BI Cobertura (JS) | /Plantoes?dataInicio&dataFim (id.) | idem #4 | idem #4 |
+| 6 | Premium Plantões | /Plantoes/Index | **HTTP 200 "Central de Plantões"** (clique real no âncora) | HOMOLOGADO AO VIVO |
+| 7 | Premium Escalas | /Escalas/Index | **HTTP 200 "Escalas"** (clique real no âncora) | HOMOLOGADO AO VIVO |
+
+Resumo: 4 dos 7 homologados ao vivo (2 BI estáticos + 2 Premium); 1 negado-honesto por papel
+(documentado em R10); 1 **achado novo** (BILLING ausente do catálogo); 2 condicionados a origem
+única (fetch client-side) — os 5 alvos permanecem validados por fonte canônica desde a R10.
+
+Notas de método: links 2/6/7 navegados por `.click()` no âncora real; 1 e 2b verificados por navegação
+GET ao href exato do markup (o âncora estava presente na página — `found:true`). Capturas de pixel não
+foram possíveis nesta janela (janela do browser desktop fora de composição — mesma limitação R8/R11);
+evidência = DOM capturado acima + URLs finais de cada destino.

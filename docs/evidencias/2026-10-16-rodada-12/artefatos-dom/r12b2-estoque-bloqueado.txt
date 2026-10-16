@@ -1,0 +1,20 @@
+Artefato DOM — R12-B2 pendências R11 · Estoque BLOQUEADO ao vivo
+==============================================================================
+Data: 2026-10-16 · Web Release :52976 · Sessão: admin.sistemavertical@plantaopro.local (tenant SV)
+Fechando a pendência da R11 (`r11b2` §7 item 1 — capturas pendentes de janela em 1º plano).
+
+URL: http://localhost:52976/Administrativo360/Estoque?condicao=BLOQUEADO
+H1: "Estoque e Lotes — Administrativo 360"
+
+Linhas da tabela (filtro condicao=BLOQUEADO ativo):
+------------------------------------------------------------
+Seroma de Teste p/ Lote	LT-2026-001	31/01/2027	Deposito Central R11 (homologacao)	BLOQUEADO	6	0	0
+Seroma de Teste p/ Lote	LT-2026-001	31/01/2027	Externo R11 (homologacao)	BLOQUEADO	2	0	0
+------------------------------------------------------------
+
+Estado exato do bloqueio imediato A12 mantido ao vivo: DEP(INTERNO) 6 + EXT(EXTERNO) 2 BLOQUEADO,
+reservado 0 / disponível 0 em ambos os locais (colunas físico | reservado | disponível).
+Mesma evidência textível de `r11b2` §3 ("linhas `… DEP … BLOQUEADO 6 0 0` e `… EXT … BLOQUEADO 2 0 0`") —
+estado R11 intacto no banco, visível e filtrável na tela.
+
+Captura de pixel não disponível nesta janela; evidência = DOM capturado (fallback aceito).

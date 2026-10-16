@@ -1,0 +1,30 @@
+Artefato DOM — R12-B2 homologação ao vivo · tela /Bi/Index DEPOIS do fix r12b1 + grants HOMOLOG_R12
+==============================================================================
+Data: 2026-10-16 · Web Release :52976 · Sessão: admin.sistemavertical@plantaopro.local (ADMINISTRADOR, tenant SV)
+
+URL: http://localhost:52976/Bi/Index (HTTP 200 — antes do fix: AccessDenied CATALOGO_NAO_CONFIGURADO;
+     sem grants: AccessDenied module=BI&reason=MODULO_NAO_CONTRATADO)
+
+Conteúdo principal capturado:
+------------------------------------------------------------
+H1: "BI Executivo"
+Cards KPI: Competência exibida "-", Fuso horário aplicado "-", Escalas confirmadas no período "-"
+          (acumulado "-"), Valor pago no período "-", Clientes Ativos "-", Receita Estimada "-",
+          Receita Vencida "-", Cobertura "-"
+Banner de erro (role=alert, visível):
+  "Indicadores indisponíveis no momento: não foi possível consultar o serviço BI neste instante."
+Links "Ver registros" presentes no markup:
+  - /Clientes/Index?status=ATIVO        (card Clientes Ativos)
+  - /Assinaturas/Index?status=ATIVA     (card Receita Estimada)
+  - /FaturamentoSaas/Index?status=VENCIDA (card Receita Vencida)
+  - 2 âncoras d-none (data-drill="escalas" / data-drill="cobertura") — href apenas após fetch ok
+------------------------------------------------------------
+
+Diagnóstico do banner (executado no navegador, com cookies da sessão):
+fetch('/api/bi/resumo-executivo') → HTTP 404 text/html na origem WEB (:52976).
+A view Bi/Index.cshtml (e Operacoes/Index.cshtml — único outro caso no repo) faz fetch client-side de
+'/api/...' presumindo origem única (deploy IIS com /api roteado para a API). Nesta homologação local
+API e Web correm em portas distintas (:51976/:52976) e a Web não tem rota /api/* → 404.
+Semântica R8-B19 respeitada ao vivo: em falha do serviço NÃO há número nem drill (cards "-") e o banner
+é honesto — nenhum indicador demonstrativo. Comportamento coerente com o contrato; classificação =
+limitação da configuração local (não defeito do slice r12b1).

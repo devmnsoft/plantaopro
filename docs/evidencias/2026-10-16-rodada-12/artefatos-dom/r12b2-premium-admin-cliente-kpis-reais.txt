@@ -1,0 +1,24 @@
+Artefato DOM — R12-B2 homologação ao vivo · tela /DashboardsPremium/AdministradorCliente DEPOIS do fix r12b1 + grants
+==============================================================================
+Data: 2026-10-16 · Web Release :52976 · API :51976 · Sessão: admin.sistemavertical@plantaopro.local (ADMINISTRADOR, tenant SV)
+
+URL: http://localhost:52976/DashboardsPremium/AdministradorCliente (HTTP 200 — antes do fix: CATALOGO_NAO_CONFIGURADO)
+
+Conteúdo principal capturado:
+------------------------------------------------------------
+H1: "Dashboard Administrador Cliente"
+Badge: "Fonte: Real" (API /api/dashboards/admin-cliente respondeu 200 em 134ms, KPIs reais)
+Cards KPI (4, todos badge "KPI real"):
+  Plantões     0   [link "Ver registros" → /Plantoes/Index]
+  Escalas      0   [link "Ver registros" → /Escalas/Index]
+  Médicos      0   [sem link — decisão R10: api/medicos é diretório global sem escopo de tenant]
+  Agendamentos 0   [sem link — decisão R10: /agenda é por período; não há rota "todos ativos"]
+Alertas: "Sem alertas retornados pela API."
+Próximos passos: "Revisar pendências reais e filtros do perfil admin-cliente."
+Gráfico simples: Plantões 0 · Escalas 0 · Médicos 0 · Agendamentos 0
+------------------------------------------------------------
+
+Evidência: dados REAIS da API (tenant SV sem registros no momento — zeros honestos, fonte "Real"),
+nenhum número demonstrativo. Drill-downs clicados ao vivo com <a>.click() real:
+  /Plantoes/Index → HTTP 200 "Central de Plantões"
+  /Escalas/Index  → HTTP 200 "Escalas"

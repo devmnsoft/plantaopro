@@ -1,0 +1,23 @@
+Artefato DOM — R12-B2 pendências R11 · Ocorrências ao vivo (ABERTA + ENCERRADA)
+==============================================================================
+Data: 2026-10-16 · Web Release :52976 · Sessão: admin.sistemavertical@plantaopro.local (tenant SV)
+Fechando a pendência da R11 (`r11b2` §7 item 1 — capturas pendentes de janela em 1º plano).
+
+URL: http://localhost:52976/Administrativo360/Ocorrencias
+H1: "Ocorrências e Não Conformidades — Administrativo 360"
+
+Linhas da tabela (innerText bruto, separador \t preservado):
+------------------------------------------------------------
+1) Seroma de Teste p/ Lote | LT-2026-001	Deposito Central R11 (homologacao)	 | QUEBRA	Segunda caixa danificada - homologacao R11 (ciclo p/ captura visual)	8,0000	06/11/2026	Em Aberto		Iniciar Tratamento
+
+2) Seroma de Teste p/ Lote | LT-2026-001	Deposito Central R11 (homologacao)	 | QUEBRA	Caixa danificada na descarga - homologacao R11	8,0000	31/10/2026	Encerrada	Descarte assistido (homologacao R11)
+------------------------------------------------------------
+
+Correspondência com os IDs do cenário vivo preservados no banco:
+- Linha 1 ("Em Aberto", ação primária "Iniciar Tratamento") = ocorrência nº2 ABERTA `0e7b058e-1af0-4c65-a402-abcd00c29f4a`,
+  com bloqueio DEP(INTERNO) 6 + EXT(EXTERNO) 2 ATIVO (confirmado na tela Estoque — artefato separado).
+- Linha 2 ("Encerrada", destino "Descarte assistido (homologacao R11)") = ocorrência nº1 `46c473f9-…` v4,
+  destino+justificativa visíveis na linha (comportamento R11 intacto).
+
+Captura de pixel não disponível nesta janela (janela desktop fora de composição — limitação R8/R11);
+evidência = DOM capturado (fallback aceito pela casa).

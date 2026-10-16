@@ -1,0 +1,23 @@
+Artefato DOM — R12-B2 homologação ao vivo (fallback aceito p/ captura de pixel)
+==============================================================================
+Data: 2026-10-16 · Servidor Web Release :52976 · Sessão: admin.sistemavertical@plantaopro.local (ADMINISTRADOR, tenant SV)
+Fase: ANTES dos grants HOMOLOG_R12 (estado limpo do tenant SV)
+
+URL final (redirect do guard):
+http://localhost:52976/Account/AccessDenied?module=DASHBOARD&reason=MODULO_NAO_CONTRATADO&retorno=%2FDashboardsPremium%2FAdministradorCliente
+
+Conteúdo da área principal (innerText):
+------------------------------------------------------------
+Módulo não contratado
+
+Esta rota exige um módulo contratado e habilitado para o tenant atual. O menu já oculta
+módulos indisponíveis; esta validação protege o acesso direto.
+
+Escopo: DASHBOARD Causa: MODULO_NAO_CONTRATADO
+Ver módulos contratados
+Solicitar contratação
+------------------------------------------------------------
+
+Evidência: o guard RESOLVEU o controller DashboardsPremium para o módulo canônico DASHBOARD
+e negou pelo motivo honesto de contrato (MODULO_NAO_CONTRATADO). Antes do fix r12b1 a mesma
+URL caía em module=CATALOGO_NAO_CONFIGURADO (artefato R11: accessdenied-premium.html).

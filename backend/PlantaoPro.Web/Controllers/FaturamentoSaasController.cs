@@ -23,7 +23,10 @@ public sealed class FaturamentoSaasController : BaseWebController
             if (!string.IsNullOrWhiteSpace(competencia)) endpoint += $"&competencia={Uri.EscapeDataString(competencia)}";
             var faturas = await ReadApiPagedResponseAsync<FaturaSaasViewModel>(client, endpoint, page, 20);
 
-            ViewBag.ErrorMessage = resumo.Error ?? faturas.Error;
+            // O caminho de sucesso do ReadApiResponse* expoe a mensagem do envelope ("Sucesso") como Error —
+            // selecionar pelo status da chamada evita anunciar um resumo saudavel como falha (achado r14b2).
+            var erroCarregamento = resumo.StatusCode >= System.Net.HttpStatusCode.BadRequest ? resumo.Error : faturas.Error;
+            ViewBag.ErrorMessage = erroCarregamento;
             return View(new FaturamentoSaasIndexViewModel
             {
                 Resumo = resumo.Data ?? new FaturamentoSaasResumoViewModel(),

@@ -113,12 +113,15 @@ order by f.competencia desc, f.vencimento desc";
 }
 
 /// <summary>
-/// R14-B1 (degradacao honesta, F13-B): com a API paginada em 500, as views exibem o banner do
+/// R14-B1/B2 (degradacao honesta, F13-B): com a API paginada em 500, as views exibem o banner do
 /// padrao de casa (alert role=alert com a mensagem do envelope) e nao mostram o vazio falso
 /// ("Nenhuma fatura encontrada" / "Nenhum dado encontrado.") — lista vazia por falha != vazia
-/// real. O controle positivo garante que o vazio verdadeiro continua anunciando o estado real
-/// (o fix nao suprime o empty-state legtimo). Colecao web-bff: live-check desligado, decisao
-/// pelos claims da sessao (deterministico).
+/// real. Os controles positivos garantem que o vazio verdadeiro continua anunciando o estado real
+/// (o fix nao suprime o empty-state legitimo). Achado r14b2 (homologacao viva): o caminho de
+/// SUCESSO do ReadApiResponse* expoe a mensagem do envelope ("Sucesso") como Error — os stubs de
+/// resumo usam o envelope real (com "message":"Sucesso") e o contrato cobra que o controller
+/// atribua o erro pelo status da chamada, nunca anunciando sucesso como falha. Colecao web-bff:
+/// live-check desligado, decisao pelos claims da sessao (deterministico).
 /// </summary>
 [Collection("web-bff")]
 public sealed class R14DegradacaoHonestaFaturamentoSaasWebTests : IDisposable
@@ -136,7 +139,7 @@ public sealed class R14DegradacaoHonestaFaturamentoSaasWebTests : IDisposable
         {
             var path = req.RequestUri!.AbsolutePath;
             if (path.EndsWith("/api/faturamento-saas/resumo"))
-                return StubApiHandler.Json(HttpStatusCode.OK, "{\"success\":true,\"data\":{}}");
+                return StubApiHandler.Json(HttpStatusCode.OK, "{\"success\":true,\"message\":\"Sucesso\",\"data\":{}}");
             if (path.EndsWith("/api/faturamento-saas/faturas"))
                 return StubApiHandler.Json(HttpStatusCode.InternalServerError, "{\"message\":\"Não foi possível carregar faturas.\"}");
             return StubApiHandler.Json(HttpStatusCode.OK, "{\"ok\":true}");
@@ -162,8 +165,10 @@ public sealed class R14DegradacaoHonestaFaturamentoSaasWebTests : IDisposable
         _factory.ApiStub.Respond(req =>
         {
             var path = req.RequestUri!.AbsolutePath;
+            // Envelope real do resumo em sucesso: traz "message":"Sucesso". Antes do fix r14b2 essa
+            // mensagem vazava para o banner ("Falha ao carregar. Sucesso") e suprimia o vazio legitimo.
             if (path.EndsWith("/api/faturamento-saas/resumo"))
-                return StubApiHandler.Json(HttpStatusCode.OK, "{\"success\":true,\"data\":{}}");
+                return StubApiHandler.Json(HttpStatusCode.OK, "{\"success\":true,\"message\":\"Sucesso\",\"data\":{}}");
             if (path.EndsWith("/api/faturamento-saas/faturas"))
                 return StubApiHandler.Json(HttpStatusCode.OK, "{\"success\":true,\"data\":{\"items\":[]}}");
             return StubApiHandler.Json(HttpStatusCode.OK, "{\"ok\":true}");
@@ -176,8 +181,36 @@ public sealed class R14DegradacaoHonestaFaturamentoSaasWebTests : IDisposable
 
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
         var html = await resp.Content.ReadAsStringAsync();
+        // Vazio verdadeiro continua anunciando o estado real (sem over-supressao do fix).
         Assert.Contains("Nenhuma fatura encontrada", html);
         Assert.DoesNotContain("Falha ao carregar.", html);
+    }
+
+    [Fact]
+    public async Task IndexDeFaturamento_ResumoEmFalha_MostraBannerDaInstabilidadeESuprimeOVazio()
+    {
+        _factory.ApiStub.Respond(req =>
+        {
+            var path = req.RequestUri!.AbsolutePath;
+            if (path.EndsWith("/api/faturamento-saas/resumo"))
+                return StubApiHandler.Json(HttpStatusCode.InternalServerError, "{\"message\":\"Nao foi possivel carregar o resumo comercial.\"}");
+            if (path.EndsWith("/api/faturamento-saas/faturas"))
+                return StubApiHandler.Json(HttpStatusCode.OK, "{\"success\":true,\"message\":\"Sucesso\",\"data\":{\"items\":[]}}");
+            return StubApiHandler.Json(HttpStatusCode.OK, "{\"ok\":true}");
+        });
+
+        var client = await WebBffTestKit.ClienteAutenticadoAsync(_factory,
+            WebBffTestKit.SigninQuery(("roles", "ADMINISTRADOR"), ("modules", "MEU_DIA,FATURAMENTO_SAAS"), ("permissions", "FATURAMENTO_SAAS.*")));
+
+        var resp = await client.GetAsync("/FaturamentoSaas/Index");
+
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var html = await resp.Content.ReadAsStringAsync();
+        Assert.Contains("Falha ao carregar.", html);
+        // O banner carrega a mensagem atribuida ao endpoint que falhou: para 500 em chamada
+        // simples, a casa mapeia para o literal fixo de instabilidade (BuildApiErrorMessage L523).
+        Assert.Contains("instabilidade interna", html);
+        Assert.DoesNotContain("Nenhuma fatura encontrada", html);
     }
 
     [Fact]

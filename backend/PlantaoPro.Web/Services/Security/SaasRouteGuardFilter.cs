@@ -39,7 +39,13 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
         ["Parametrizacoes"] = "CONFIGURACOES",
         ["Configuracoes"] = "CONFIGURACOES",
         ["AssistenteIa"] = "CONFIGURACOES",
-        ["CentralEscala"] = "CENTRAL_ESCALA",
+        // R17 (r17a0 D1): CENTRAL_ESCALA era codigo fantasma — ausente de modulos_sistema e de
+        // toda camada comercial, e modulos_efetivos() faz inner join com o catalogo: qualquer
+        // usuario nao-global caia em MODULO_NAO_CONTRATADO para sempre. O dono canonico do
+        // dominio de cobertura de escalas e ESCALAS (suite completa + grants dormentes nos
+        // perfis admin, mesmo formato explorado pela R13-D3/FATURAMENTO_SAAS); a jornada de
+        // produto e unica ("o convite nasce na Cobertura Inteligente" — tela Convites).
+        ["CentralEscala"] = "ESCALAS",
         ["Plantoes"] = "PLANTOES",
         ["Convites"] = "CONVITES",
         ["Escalas"] = "ESCALAS",
@@ -51,7 +57,13 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
         ["Financeiro"] = "FINANCEIRO",
         ["Pagamentos"] = "PAGAMENTOS",
         ["Relatorios"] = "RELATORIOS",
+        // R17 (r17a0 D3): MEDICO_AREA segue CONTRATADO-SOMENTE por desenho — sem gêmeo no
+        // catalogo, paginas placeholder Fase2 e landing do medico protegido pelo fallback
+        // resiliente do contrato wpa1 (módulo desabilitado -> Meu Dia, nunca AccessDenied).
         ["MedicoArea"] = "MEDICO_AREA",
+        // R17 (r17a0 D2): MINHA_AGENDA e modulo COMUM em codigo (CommonModules/CoreModules,
+        // Web+Api) — workspace proprio do medico exposto no Meu Dia a todo papel MEDICO; a
+        // audiencia continua restrita por [Authorize(Roles=MEDICO)] do controller. Sem DDL.
         ["MinhaAgenda"] = "MINHA_AGENDA",
         ["MeuDia"] = "MEU_DIA",
         ["Pendencias"] = "MEU_DIA",

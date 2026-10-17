@@ -160,7 +160,10 @@ public sealed class PermissionService : IPermissionService
 
     private static readonly HashSet<string> CommonModules = new(StringComparer.OrdinalIgnoreCase)
     {
-        "MEU_DIA", "AJUDA", "LGPD", "CONTA", "TREINAMENTO"
+        // R17 (r17a0 D2): MINHA_AGENDA = workspace proprio do medico (agenda/plantoes, presencas,
+        // producao), exposto no Meu Dia a todo papel MEDICO; sem DDL/grants — a audiencia segue
+        // restrita por [Authorize(Roles=MEDICO)] do controller. Mantem paridade com os sets da Api.
+        "MEU_DIA", "AJUDA", "LGPD", "CONTA", "TREINAMENTO", "MINHA_AGENDA"
     };
 
     private static readonly HashSet<string> TenantAdministrationModules = new(StringComparer.OrdinalIgnoreCase)
@@ -239,8 +242,9 @@ public sealed class ModuleAccessService : IModuleAccessService
     private static readonly HashSet<string> CoreModules = new(StringComparer.OrdinalIgnoreCase)
     {
         // R5-D9: ver TenantAdministrationModules - jornada de onboarding e core do tenant.
+        // R17 (r17a0 D2): MINHA_AGENDA comum — mesmo raciocinio de CONTA (R7-E1); paridade Api.
         "MEU_DIA", "AJUDA", "LGPD", "CONTA", "TREINAMENTO", "USUARIOS", "PERFIS",
-        "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL", "ONBOARDING"
+        "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL", "ONBOARDING", "MINHA_AGENDA"
     };
 
     private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();

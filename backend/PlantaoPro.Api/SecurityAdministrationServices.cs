@@ -52,8 +52,9 @@ public sealed class EffectivePermissionService : IEffectivePermissionService
         // R5-D9: ONBOARDING e fluxo core do SaaS - nao existe linha propria em
         // modulos_sistema para ele; exige apenas o contexto de tenant (assinatura
         // canonica vigente ja e cobrada pelo materializador da jornada).
+        // R17 (r17a0 D2): MINHA_AGENDA comum - workspace proprio do medico (paridade Web).
         "MEU_DIA", "AJUDA", "LGPD", "CONTA", "TREINAMENTO", "USUARIOS", "PERFIS",
-        "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL", "ONBOARDING"
+        "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL", "ONBOARDING", "MINHA_AGENDA"
     };
     public EffectivePermissionService(IConfiguration cfg) { this.cfg = cfg; }
     public async Task<IEnumerable<string>> ObterPermissoesAsync(Guid usuarioId, Guid? tenantId, CancellationToken ct = default)

@@ -10,7 +10,9 @@
     var operationRoles = RolesConstants.Operacao.Split(',');
     var clinicalRoles = RolesConstants.Saude360Assistencial.Split(',');
     var financeRoles = RolesConstants.FinanceiroArea.Split(',').Concat(RolesConstants.Saude360Financeiro.Split(','));
-    var canOperate = operationRoles.Any(User.IsInRole) || new[] { "PLANTOES", "AGENDA", "CENTRAL_ESCALA", "CONVITES", "ESCALAS", "FECHAMENTOS" }.Any(ModuleAccessService.CanAccessModule);
+    // R17 (r17a0 D1): o elemento morto "CENTRAL_ESCALA" foi extinto do array (fantasma: nunca
+    // contratavel); a Cobertura opera pelo modulo canonico ESCALAS (ja presente no array).
+    var canOperate = operationRoles.Any(User.IsInRole) || new[] { "PLANTOES", "AGENDA", "CONVITES", "ESCALAS", "FECHAMENTOS" }.Any(ModuleAccessService.CanAccessModule);
     var canUseClinical = clinicalRoles.Any(User.IsInRole) || new[] { "SAUDE360_DASHBOARD", "SAUDE360_PACIENTES", "SAUDE360_AGENDAMENTO", "SAUDE360_TRIAGEM", "SAUDE360_CONSULTAS", "CLINICA_DASHBOARD", "PACIENTES", "AGENDAMENTOS", "TRIAGEM", "CONSULTAS" }.Any(ModuleAccessService.CanAccessModule);
     var canUseFinance = financeRoles.Any(User.IsInRole) || new[] { "FINANCEIRO", "SAUDE360_FINANCEIRO", "PAGAMENTOS", "CLINICA_FINANCEIRO" }.Any(ModuleAccessService.CanAccessModule);
     var canManage = User.IsInRole(RolesConstants.AdministradorGlobal) || User.IsInRole(RolesConstants.Administrador) || User.IsInRole(RolesConstants.AdministradorCliente) || User.IsInRole(RolesConstants.Diretor);
@@ -40,7 +42,8 @@
             }
             @if (Can("PLANTOES")) { <a class="nav-link-app @Active("Plantoes")" asp-controller="Plantoes" asp-action="Index"><app-icon name="Shift" size="19" /><span>@UiText.L("Nav.Plantoes")</span></a> }
             @if (Can("AGENDA")) { <a class="nav-link-app @Active("Agenda")" asp-controller="Agenda" asp-action="Index"><app-icon name="Calendar" size="19" /><span>@UiText.L("Nav.Agenda")</span></a> }
-            @if (Can("CENTRAL_ESCALA")) { <a class="nav-link-app @Active("CentralEscala")" asp-controller="CentralEscala" asp-action="Index"><app-icon name="Coverage" size="19" /><span>@UiText.L("Nav.Cobertura")</span></a> }
+            @* R17 (r17a0 D1): modulo canonico da Cobertura e ESCALAS (codigo fantasma CENTRAL_ESCALA extinto). *@
+            @if (Can("ESCALAS")) { <a class="nav-link-app @Active("CentralEscala")" asp-controller="CentralEscala" asp-action="Index"><app-icon name="Coverage" size="19" /><span>@UiText.L("Nav.Cobertura")</span></a> }
             @if (Can("CONVITES")) { <a class="nav-link-app @Active("Convites")" asp-controller="Convites" asp-action="Index"><app-icon name="User" size="19" /><span>@UiText.L("Nav.Convites")</span></a> }
             @if (Can("ESCALAS")) { <a class="nav-link-app @Active("Escalas")" asp-controller="Escalas" asp-action="Index"><app-icon name="Schedule" size="19" /><span>@UiText.L("Nav.Escalas")</span></a> }
             @if (Can("FECHAMENTOS")) { <a class="nav-link-app @Active("Fechamentos")" asp-controller="Fechamentos" asp-action="Index"><app-icon name="Check" size="19" /><span>@UiText.L("Nav.Fechamentos")</span></a> }

@@ -600,7 +600,9 @@ from plantaopro.faturas_saas where reg_status='A' and (@global or cliente_id=@cl
             await AtualizarVencidasAsync(cn);
             var scopedClienteId = ScopedClienteId(clienteId);
             if (!scopedClienteId.HasValue && !_currentUser.IsGlobalAdmin()) return Forbid();
-            var where = "f.reg_status='A' and (@global or f.cliente_id=@scopedClienteId) and (@requestedClienteId is null or f.cliente_id=@requestedClienteId) and (@status is null or f.status=@status) and (@competencia is null or f.competencia=@competencia)";
+            // Convenção de casa (DateOnlyDapperTypeHandler): DateOnly? nulo chega sem tipo no Npgsql e o
+            // PostgreSQL falha no parse com 42P08 (evidence r13b2/r14a0 F1-F2); o cast fecha o contexto de tipo.
+            var where = "f.reg_status='A' and (@global or f.cliente_id=@scopedClienteId) and (@requestedClienteId is null or f.cliente_id=@requestedClienteId) and (@status is null or f.status=@status) and (@competencia::date is null or f.competencia=@competencia::date)";
             var args = new { global = _currentUser.IsGlobalAdmin(), scopedClienteId, requestedClienteId = _currentUser.IsGlobalAdmin() ? clienteId : scopedClienteId, status, competencia, s, offset = (p - 1) * s };
             var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.faturas_saas f where " + where, args);
             var items = await cn.QueryAsync<FaturaSaasDto>(@"select f.id as ""Id"", f.cliente_id as ""ClienteId"", coalesce(c.nome_fantasia,c.razao_social,'') as ""ClienteNome"", f.assinatura_id as ""AssinaturaId"",

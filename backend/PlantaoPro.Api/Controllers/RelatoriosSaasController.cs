@@ -47,13 +47,15 @@ join plantaopro.planos p on p.id=a.plano_id
 where a.reg_status='A' and (@status is null or upper(a.status)=upper(@status))
 order by a.reg_date desc", new { status }, page, pageSize);
 
+    // R14: @competencia nulo exige cast no SQL (convenção de casa, ver DateOnlyDapperTypeHandler) —
+    // sem ele o parse do PostgreSQL falha com 42P08 e esta rota respondia 500 sempre (o Web não envia o parâmetro).
     [HttpGet("faturamento")]
     public Task<IActionResult> Faturamento([FromQuery] DateOnly? competencia, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         => ExecutarRelatorioAsync("faturamento", @"select f.cliente_id as ""ClienteId"", coalesce(c.nome_fantasia,c.razao_social,'') as ""ClienteNome"",
        coalesce(f.status,'') as ""Status"", 'FATURA' as ""Classificacao"", 1::bigint as ""Quantidade"", f.valor as ""Valor"", f.competencia as ""Competencia""
 from plantaopro.faturas_saas f
 join plantaopro.clientes c on c.id=f.cliente_id
-where f.reg_status='A' and (@status is null or upper(f.status)=upper(@status)) and (@competencia is null or f.competencia=@competencia)
+where f.reg_status='A' and (@status is null or upper(f.status)=upper(@status)) and (@competencia::date is null or f.competencia=@competencia::date)
 order by f.competencia desc, f.vencimento desc", new { competencia, status }, page, pageSize);
 
     [HttpGet("inadimplencia")]

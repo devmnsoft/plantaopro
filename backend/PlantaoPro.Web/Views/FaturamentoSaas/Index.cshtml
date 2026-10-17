@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = "Faturamento SaaS";
     var faturas = Model.Faturas.Items ?? Array.Empty<PlantaoPro.Web.Models.FaturaSaasViewModel>();
+    var erroCarregamento = (ViewBag.ErrorMessage as string) ?? (TempData["Error"] as string);
+    var comErro = !string.IsNullOrWhiteSpace(erroCarregamento);
 }
 
 <div class="container-fluid py-3">
@@ -15,6 +17,11 @@
             <a class="btn btn-primary" asp-action="GerarMensal">Gerar mensal</a>
         </div>
     </div>
+
+    @if (comErro)
+    {
+        <div class="alert alert-danger" role="alert"><strong>Falha ao carregar.</strong> @erroCarregamento</div>
+    }
 
     <details class="pp-screen-guide mb-3"><summary><span><i class="bi bi-compass" aria-hidden="true"></i><strong>Como usar esta tela</strong></span><span class="pp-screen-guide__hint">Financeiro SaaS</span></summary><div class="pp-screen-guide__body"><p>Acompanhe pagamentos do cliente e aplique bloqueios quando necessário.</p><ol><li>Use status e competência para localizar a cobrança.</li><li>Abra os detalhes antes de qualquer ação financeira.</li><li>Trate inadimplência pela jornada própria para preservar histórico e auditoria.</li></ol><div class="pp-screen-guide__note"><i class="bi bi-info-circle" aria-hidden="true"></i> A suspensão não deve ser aplicada apenas pela interface: a regra contratual e a autorização são validadas no servidor.</div></div></details>
 
@@ -51,7 +58,12 @@
 
     @if (!faturas.Any())
     {
-        <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-receipt", "Nenhuma fatura encontrada", "Ajuste os filtros ou gere faturas mensais para assinaturas ativas.")' />
+        // Sem vazio falso (F13-B, r13b2): com erro de carregamento a falha ja e anunciada no banner —
+        // dizer "Nenhuma fatura encontrada" quando a consulta falhou orientaria o usuario a gerar faturas.
+        @if (!comErro)
+        {
+            <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-receipt", "Nenhuma fatura encontrada", "Ajuste os filtros ou gere faturas mensais para assinaturas ativas.")' />
+        }
     }
     else
     {

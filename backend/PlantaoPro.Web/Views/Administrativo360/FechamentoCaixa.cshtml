@@ -208,7 +208,7 @@
                         <label class="form-label small text-secondary" for="contaFechamento">Conta Financeira</label>
                         <select id="contaFechamento" name="contaFinanceiraId" class="form-select form-select-sm bg-dark text-light border-secondary" required>
                             <option value="">Selecione uma conta...</option>
-                            @foreach (var c in Model.Contas.Where(c => c.Ativa))
+                            @foreach (var c in Model.Contas.Where(c => c.Ativo))
                             {
                                 <option value="@c.Id">@c.Nome (Saldo Atual: @c.SaldoAtual.ToString("C2", ptBr))</option>
                             }

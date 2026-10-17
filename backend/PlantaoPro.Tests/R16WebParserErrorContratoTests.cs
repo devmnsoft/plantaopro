@@ -193,6 +193,28 @@ public sealed class R16WebParserErrorContratoTests
         Assert.Equal("Especialidade Alfa", items.First().Nome);
     }
 
+    [Fact]
+    public async Task GET_2xx_contas_financeiras_ativo_da_api_popula_vm_regressao_f9d()
+    {
+        // r16b2/F9d: a API serializa "ativo" (ContaFinanceiraDto.Ativo). O parametro
+        // antigo do ViewModel ("Ativa") nunca mapeava — STJ case-insensitive nao ignora
+        // grafia — e toda conta chegava inativa, zerando os 5 consumers .Where(c => c.Ativa):
+        // Pagar Titulo, Receber Titulo, Fechar Caixa, Fluxo de Caixa e totais de Contas.
+        var (ctrl, _, _) = Sonda(_ => StubApiHandler.Json(HttpStatusCode.OK,
+            "[{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"nome\":\"Cofre Smoke\",\"tipo\":\"BANCO\"," +
+            "\"banco\":null,\"agencia\":null,\"conta\":null,\"saldoInicial\":500.0," +
+            "\"dataSaldoInicial\":\"2026-10-17\",\"saldoAtual\":500.0,\"ativo\":true}]"));
+
+        var (data, error, status) = await ctrl.ReadApiResponse<List<ContaFinanceiraViewModel>>(ctrl.CreateApiClient(), "api/administrativo360/caixa/contas");
+
+        Assert.Equal(HttpStatusCode.OK, status);
+        Assert.Null(error);
+        var conta = Assert.Single(data!);
+        Assert.True(conta.Ativo);
+        Assert.Equal("Cofre Smoke", conta.Nome);
+        Assert.Equal(500m, conta.SaldoAtual);
+    }
+
     // ------------------------------------------------------------------
     // Harness: instancia minima de BaseWebController sem host — o parser e [NonAction]
     // publico e usa apenas Logger/User/TempData/HttpClientFactory. No .NET 10 o

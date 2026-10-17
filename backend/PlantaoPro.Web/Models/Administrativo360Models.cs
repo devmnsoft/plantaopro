@@ -600,7 +600,10 @@ public sealed record ContaFinanceiraViewModel(
     decimal SaldoInicial,
     DateOnly DataSaldoInicial,
     decimal SaldoAtual,
-    bool Ativa,
+    // r16b2/F9d: renomeado Ativa -> Ativo para casar com a chave da API ("ativo", DTO
+    // ContaFinanceiraDto.Ativo). Com "Ativa", o STJ (case-insensitive) nunca mapeava a
+    // propriedade e toda conta chegava como inativa nos 5 consumers .Where(c => c.Ativa).
+    bool Ativo,
     DateTime CriadoEm);
 
 public sealed record ExtratoLancamentoViewModel(

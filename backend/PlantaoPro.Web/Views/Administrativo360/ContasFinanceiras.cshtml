@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "Contas Financeiras — Administrativo 360";
     var ptBr = new System.Globalization.CultureInfo("pt-BR");
-    var saldoTotal = Model.Contas.Where(c => c.Ativa).Sum(c => c.SaldoAtual);
+    var saldoTotal = Model.Contas.Where(c => c.Ativo).Sum(c => c.SaldoAtual);
 }
 
 <div class="container-fluid py-3">
@@ -63,7 +63,7 @@
         <div class="col-12 col-md-6 col-lg-4">
             <div class="card bg-dark border-secondary text-light p-3">
                 <span class="text-muted small">Total de Contas</span>
-                <span class="fs-4 fw-bold font-monospace text-light">@Model.Contas.Count (@Model.Contas.Count(c => c.Ativa) ativas)</span>
+                <span class="fs-4 fw-bold font-monospace text-light">@Model.Contas.Count (@Model.Contas.Count(c => c.Ativo) ativas)</span>
             </div>
         </div>
     </div>
@@ -114,7 +114,7 @@
                                     @c.SaldoAtual.ToString("C2", ptBr)
                                 </td>
                                 <td>
-                                    @if (c.Ativa)
+                                    @if (c.Ativo)
                                     {
                                         <span class="badge bg-success">Ativa</span>
                                     }
@@ -129,7 +129,7 @@
                                                 data-bs-toggle="modal" data-bs-target="#editarContaModal-@c.Id">
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                        @if (c.Ativa)
+                                        @if (c.Ativo)
                                         {
                                             <form asp-action="InativarContaFinanceira" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()

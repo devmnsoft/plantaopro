@@ -11,9 +11,12 @@ namespace PlantaoPro.Infrastructure.Administrativo360;
 // Bloqueio imediato (A12 L112: "Bloqueio imediato autorizado pode abranger saldo interno
 // e externo"): ao ABRIR, pernas BLOQUEIO_OCORRENCIA movem até `quantidade` de LIBERADO
 // para BLOQUEADO no lote (locais internos e externos com saldo; local da ocorrência em
-// primeiro lugar). Ao RESOLVER, pernas LIBERACAO_OCORRENCIA invertem; TRATAR e ENCERRAR
-// não mexem em saldo. "Registro de ocorrência não apaga estoque": soma física por
-// (lote, local) invariante no ciclo completo (invariante coberta por teste).
+// primeiro lugar). O efeito físico é decidido no ENCERRAR (rodada 15 r15b1): com
+// DEVOLUCAO, pernas LIBERACAO_OCORRENCIA invertem o bloqueio; com BAIXA, pernas
+// BAIXA_OCORRENCIA consomem fisicamente (única exceção autorizada à soma física nula).
+// TRATAR e RESOLVER são atos administrativos e não mexem em saldo — o bloqueio persiste
+// até o encerrar decidir. "Registro de ocorrência não apaga estoque": o registro nunca
+// apaga; só o descarte escolhido no destino consome (invariantes cobertos por teste).
 public sealed class OcorrenciasRepository : Adm360Repository, IOcorrenciasRepository
 {
     private sealed class EstadoRow
@@ -140,12 +143,12 @@ public sealed class OcorrenciasRepository : Adm360Repository, IOcorrenciasReposi
         return id;
     }
 
-    private async Task TransicionarAsync(Guid tenantId, Guid usuarioId, Guid ocorrenciaId, long versao, string destino, string? destinoItens, string? justificativa, CancellationToken ct)
+    private async Task TransicionarAsync(Guid tenantId, Guid usuarioId, Guid ocorrenciaId, long versao, string destino, string? destinoItens, string? justificativa, string? efeitoFisico, CancellationToken ct)
     {
         await ExecutarComRetrySerializableAsync(async (cn, tx) =>
         {
             if (destino == OcorrenciasA12.Encerrada)
-                OcorrenciasA12.ValidarEncerramento(destinoItens, justificativa);
+                OcorrenciasA12.ValidarEncerramento(destinoItens, justificativa, efeitoFisico);
 
             var row = await cn.QuerySingleOrDefaultAsync<EstadoRow>(new CommandDefinition(@"
                 SELECT situacao AS Situacao, versao AS Versao
@@ -172,21 +175,29 @@ public sealed class OcorrenciasRepository : Adm360Repository, IOcorrenciasReposi
             if (changed == 0)
                 throw new Administrativo360BusinessException("A ocorrência foi alterada por outro usuário. Atualize antes de repetir.");
 
-            // RESOLVIDA inverte o bloqueio imediato (itens tratados voltam à circulação);
-            // TRATAR e ENCERRAR são atos administrativos e não mexem em saldo.
-            if (destino == OcorrenciasA12.Resolvida)
-                await LiberarSaldoBloqueadoAsync(cn, tx, tenantId, usuarioId, ocorrenciaId, ct);
+            // Rodada 15 r15b1 — o efeito físico é decidido no ENCERRAR: no resolver o
+            // destino ainda é desconhecido (spec A12 ancora destino+justificativa ao
+            // encerrar), então TRATAR e RESOLVER são atos administrativos sem efeito em
+            // saldo e o bloqueio persiste até o encerrar decidir: DEVOLUCAO inverte o
+            // bloqueio (itens de volta à circulação) ou BAIXA consome fisicamente.
+            if (destino == OcorrenciasA12.Encerrada)
+            {
+                if (OcorrenciasA12.NormalizarEfeitoFisico(efeitoFisico) == OcorrenciasA12.EfeitoBaixa)
+                    await BaixarSaldoBloqueadoAsync(cn, tx, tenantId, usuarioId, ocorrenciaId, ct);
+                else
+                    await LiberarSaldoBloqueadoAsync(cn, tx, tenantId, usuarioId, ocorrenciaId, ct);
+            }
         }, ct);
     }
 
     public Task TratarAsync(Guid tenantId, Guid usuarioId, Guid ocorrenciaId, long versao, CancellationToken ct)
-        => TransicionarAsync(tenantId, usuarioId, ocorrenciaId, versao, OcorrenciasA12.EmTratamento, null, null, ct);
+        => TransicionarAsync(tenantId, usuarioId, ocorrenciaId, versao, OcorrenciasA12.EmTratamento, null, null, null, ct);
 
     public Task ResolverAsync(Guid tenantId, Guid usuarioId, Guid ocorrenciaId, long versao, CancellationToken ct)
-        => TransicionarAsync(tenantId, usuarioId, ocorrenciaId, versao, OcorrenciasA12.Resolvida, null, null, ct);
+        => TransicionarAsync(tenantId, usuarioId, ocorrenciaId, versao, OcorrenciasA12.Resolvida, null, null, null, ct);
 
     public Task EncerrarAsync(Guid tenantId, Guid usuarioId, Guid ocorrenciaId, EncerrarOcorrenciaCommand c, CancellationToken ct)
-        => TransicionarAsync(tenantId, usuarioId, ocorrenciaId, c.Versao, OcorrenciasA12.Encerrada, c.Destino, c.JustificativaEncerramento, ct);
+        => TransicionarAsync(tenantId, usuarioId, ocorrenciaId, c.Versao, OcorrenciasA12.Encerrada, c.Destino, c.JustificativaEncerramento, c.EfeitoFisico, ct);
 
     // ===== Bloqueio imediato de saldo (A12 L112 + regra global L296) =====
 
@@ -240,15 +251,12 @@ public sealed class OcorrenciasRepository : Adm360Repository, IOcorrenciasReposi
         }
     }
 
-    // Inversão no RESOLVER: espelha exatamente o que foi registrado ao abrir (mesmos
-    // lote/locale/quantidades, lidos dos movimentos — nada recalculado). Se nada foi
-    // bloqueado (abertura sem saldo LIBERADO), não há efeito. Caveat documentado: se um
-    // inventário ajustou a quantidade bloqueada entre abrir e resolver, a liberação
-    // espelha o registrado (fluxo simétrico; divergência física é papel do inventário).
-    private async Task LiberarSaldoBloqueadoAsync(
-        NpgsqlConnection cn, NpgsqlTransaction tx, Guid tenantId, Guid usuarioId, Guid ocorrenciaId, CancellationToken ct)
-    {
-        var blocos = (await cn.QueryAsync<BlocoRegistradoRow>(new CommandDefinition(@"
+    // Espelho único do que foi bloqueado registrado ao abrir (lido dos movimentos — nada
+    // recalculado): alimenta tanto a liberação (efeito DEVOLUCAO) quanto a baixa (BAIXA)
+    // no encerrar. Se nada foi bloqueado (abertura sem saldo LIBERADO), ambos são no-op.
+    private async Task<List<BlocoRegistradoRow>> LerBlocosRegistradosAsync(
+        NpgsqlConnection cn, NpgsqlTransaction tx, Guid tenantId, Guid ocorrenciaId, CancellationToken ct)
+        => (await cn.QueryAsync<BlocoRegistradoRow>(new CommandDefinition(@"
             SELECT produto_id AS ProdutoId, lote_id AS LoteId, local_id AS LocalId,
                    sum(quantidade)::numeric(18,4) AS Quantidade
             FROM plantaopro.adm360_movimentos
@@ -258,6 +266,15 @@ public sealed class OcorrenciasRepository : Adm360Repository, IOcorrenciasReposi
             HAVING sum(quantidade) > 0
             ORDER BY local_id",
             new { tenantId, ocorrenciaId }, tx, cancellationToken: ct))).AsList();
+
+    // Inversão no ENCERRAR com efeito DEVOLUCAO: espelha exatamente o que foi registrado ao
+    // abrir (mesmos lote/locale/quantidades). Caveat documentado: se um inventário ajustou
+    // a quantidade bloqueada entre abrir e encerrar, a liberação espelha o registrado
+    // (fluxo simétrico; divergência física é papel do inventário).
+    private async Task LiberarSaldoBloqueadoAsync(
+        NpgsqlConnection cn, NpgsqlTransaction tx, Guid tenantId, Guid usuarioId, Guid ocorrenciaId, CancellationToken ct)
+    {
+        var blocos = await LerBlocosRegistradosAsync(cn, tx, tenantId, ocorrenciaId, ct);
 
         if (blocos.Count == 0)
             return;
@@ -272,6 +289,58 @@ public sealed class OcorrenciasRepository : Adm360Repository, IOcorrenciasReposi
             await EscreverPernasMudancaCondicaoAsync(cn, tx, tenantId, usuarioId, ocorrenciaId,
                 bloco.ProdutoId, bloco.LoteId, bloco.LocalId, bloco.Quantidade, motivo, liberando: true, ct);
         }
+    }
+
+    // Baixa no ENCERRAR com efeito BAIXA (rodada 15 r15b1): consome fisicamente exatamente
+    // o que foi registrado ao abrir (espelho da liberação). Perna única BLOQUEADO -q: a
+    // soma física cai pela quantidade baixada — o único caso em que a ocorrência apaga
+    // estoque, e só pela decisão explícita de destino no encerrar. Caveat idem liberação:
+    // se um inventário ajustou o bloqueio entre abrir e encerrar, a baixa espelha o
+    // registrado (fluxo simétrico; divergência física é papel do inventário).
+    private async Task BaixarSaldoBloqueadoAsync(
+        NpgsqlConnection cn, NpgsqlTransaction tx, Guid tenantId, Guid usuarioId, Guid ocorrenciaId, CancellationToken ct)
+    {
+        var blocos = await LerBlocosRegistradosAsync(cn, tx, tenantId, ocorrenciaId, ct);
+
+        if (blocos.Count == 0)
+            return;
+
+        var chaves = blocos.Select(x => $"{tenantId}:{x.ProdutoId}:{x.LoteId}:{x.LocalId}").ToArray();
+        await BloquearChavesDeterministasAsync(cn, tx, chaves, ct);
+
+        var motivo = $"Baixa fisica do saldo bloqueado da ocorrencia (ocorrencia {ocorrenciaId})";
+        foreach (var bloco in blocos)
+        {
+            await ValidarBloqueioInventarioAsync(cn, tx, tenantId, bloco.LocalId, ct);
+            await EscreverPernaBaixaAsync(cn, tx, tenantId, usuarioId, ocorrenciaId,
+                bloco.ProdutoId, bloco.LoteId, bloco.LocalId, bloco.Quantidade, motivo, ct);
+        }
+    }
+
+    // Perna única de consumo físico (idioma novo — antes só existiam pares de mudança de
+    // condição somando zero): débito em BLOQUEADO sem crédito, tipo BAIXA_OCORRENCIA,
+    // origem na ocorrência (L296: motivo consultável) e chave idempotência determinística.
+    private async Task EscreverPernaBaixaAsync(
+        NpgsqlConnection cn, NpgsqlTransaction tx, Guid tenantId, Guid usuarioId, Guid ocorrenciaId,
+        Guid produtoId, Guid loteId, Guid localId, decimal qtd, string motivo, CancellationToken ct)
+    {
+        await cn.ExecuteAsync(new CommandDefinition(@"
+            INSERT INTO plantaopro.adm360_movimentos(
+                id, tenant_id, produto_id, lote_id, local_id, tipo, condicao, quantidade, motivo, origem_tipo, origem_id, idempotency_key, created_by
+            ) VALUES(
+                gen_random_uuid(), @tenantId, @produtoId, @loteId, @localId, 'BAIXA_OCORRENCIA', 'BLOQUEADO', -@qtd, @motivo, 'OCORRENCIA', @ocorrenciaId, @key, @usuarioId)",
+            new
+            {
+                tenantId,
+                produtoId,
+                loteId,
+                localId,
+                qtd,
+                motivo,
+                ocorrenciaId,
+                key = $"{ocorrenciaId}:BXA:{localId}:BAIXA_BLOQUEADO",
+                usuarioId
+            }, tx, cancellationToken: ct));
     }
 
     // Idioma da casa (QualidadeRepository/Transferencia): mudança de condição = duas pernas

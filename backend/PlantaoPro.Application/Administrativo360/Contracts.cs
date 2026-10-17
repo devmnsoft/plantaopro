@@ -8,7 +8,7 @@ public sealed record DecidirInspecaoCommand(Guid RecebimentoItemId, decimal Apro
 // A12 — Ocorrências/Não conformidades (writer de adm360_ocorrencias, rodada 10 r10b1)
 public sealed record CriarOcorrenciaCommand(Guid ProdutoId, Guid LoteId, Guid LocalId, string Tipo, string Descricao, decimal Quantidade, Guid? ResponsavelId = null, DateOnly? Prazo = null, Guid? RecebimentoItemId = null);
 public sealed record VersaoOcorrenciaCommand(long Versao);
-public sealed record EncerrarOcorrenciaCommand(long Versao, string? Destino = null, string? JustificativaEncerramento = null);
+public sealed record EncerrarOcorrenciaCommand(long Versao, string? Destino = null, string? JustificativaEncerramento = null, string? EfeitoFisico = null);
 public sealed record OcorrenciaResumo(Guid Id, string Produto, string Lote, string Local, string Tipo, string Descricao, decimal Quantidade, string Situacao, Guid? ResponsavelId, DateOnly? Prazo, string? Destino, string? JustificativaEncerramento, long Versao, DateTimeOffset CriadoEm);
 public sealed record TransferirCommand(Guid ProdutoId, Guid LoteId, Guid OrigemId, Guid DestinoId, decimal Quantidade, string Motivo, string IdempotencyKey);
 public sealed record ReservarCommand(Guid ProdutoId, Guid LoteId, Guid LocalId, decimal Quantidade, string Motivo, Guid? OrigemId, string IdempotencyKey, DateOnly? DataPrevistaUso = null, Guid? OrcamentoItemId = null);

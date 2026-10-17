@@ -341,7 +341,7 @@ public partial class Administrativo360Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> EncerrarOcorrencia(Guid id, long versao, string destino, string justificativa)
+    public async Task<IActionResult> EncerrarOcorrencia(Guid id, long versao, string destino, string justificativa, string efeitoFisico)
     {
         if (string.IsNullOrWhiteSpace(destino) || string.IsNullOrWhiteSpace(justificativa))
         {
@@ -356,7 +356,10 @@ public partial class Administrativo360Controller
         {
             Versao = versao,
             Destino = destino.Trim(),
-            JustificativaEncerramento = justificativa.Trim()
+            JustificativaEncerramento = justificativa.Trim(),
+            // Rodada 15 r15b1: efeito físico canônico escolhido na UI (DEVOLUCAO/BAIXA);
+            // vazio ⇒ DEVOLUCAO pela normalização do domínio (compatibilidade).
+            EfeitoFisico = (efeitoFisico ?? string.Empty).Trim()
         };
 
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/ocorrencias/{id}/encerrar", payload);

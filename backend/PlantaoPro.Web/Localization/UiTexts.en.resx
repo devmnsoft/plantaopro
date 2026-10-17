@@ -3707,6 +3707,15 @@
   <data name="Adm360.Occ.ThDestino" xml:space="preserve">
     <value>Items Destination</value>
   </data>
+  <data name="Adm360.Occ.LabelEfeitoFisico" xml:space="preserve">
+    <value>Physical Effect</value>
+  </data>
+  <data name="Adm360.Occ.EfeitoDevolucao" xml:space="preserve">
+    <value>Return to circulation</value>
+  </data>
+  <data name="Adm360.Occ.EfeitoBaixa" xml:space="preserve">
+    <value>Write off (disposal/consumption)</value>
+  </data>
   <data name="Adm360.Occ.ThAcao" xml:space="preserve">
     <value>Action</value>
   </data>

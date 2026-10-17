@@ -251,13 +251,13 @@ public sealed class R7DF6Admin360I18nContratoTests
     }
 
     [Fact]
-    public void RecursosContemAs650ChavesAdm360EmTodosOsQuatroIdiomas()
+    public void RecursosContemAs653ChavesAdm360EmTodosOsQuatroIdiomas()
     {
         foreach (var arquivo in new[] { "UiTexts.resx", "UiTexts.en.resx", "UiTexts.es.resx", "UiTexts.fr.resx" })
         {
             var resx = Read("backend", "PlantaoPro.Web", "Localization", arquivo);
             var totalAdm360 = Regex.Matches(resx, "<data name=\"Adm360\\.").Count;
-            Assert.Equal(650, totalAdm360);
+            Assert.Equal(653, totalAdm360); // rodada 15 r15b1: +3 chaves Adm360.Occ.LabelEfeitoFisico/EfeitoDevolucao/EfeitoBaixa
             foreach (var chave in new[]
                      {
                          // views

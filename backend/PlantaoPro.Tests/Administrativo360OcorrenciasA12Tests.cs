@@ -10,11 +10,13 @@ namespace PlantaoPro.Tests;
 
 // Rodada 10 r10b1 — writer da adm360_ocorrencias (spec A12); Rodada 11 r11b1 — bloqueio
 // imediato de saldo (A12 L112): abrir gera pernas BLOQUEIO_OCORRENCIA (LIBERADO ->
-// BLOQUEADO, abrangendo saldos internos e externos do lote), resolver inverte as pernas
-// (LIBERACAO_OCORRENCIA); tratar/encerrar não geram pernas. Contrato: progressão estrita
-// ABERTA -> EM_TRATAMENTO -> RESOLVIDA -> ENCERRADA (um passo por vez), encerrar exige
-// destino + justificativa, e a soma física por (lote, local) é invariante no ciclo
-// completo ("Registro de ocorrência não apaga estoque").
+// BLOQUEADO, abrangendo saldos internos e externos do lote). Rodada 15 r15b1 — efeito
+// físico dirigido pelo destino no ENCERRAR: tratar e resolver são atos administrativos
+// (sem pernas); encerrar com DEVOLUCAO inverte o bloqueio (LIBERACAO_OCORRENCIA) e com
+// BAIXA consome fisicamente (perna única BAIXA_OCORRENCIA) — a soma física só cai no
+// descarte escolhido ("Registro de ocorrência não apaga estoque": o registro nunca apaga).
+// Contrato: progressão estrita ABERTA -> EM_TRATAMENTO -> RESOLVIDA -> ENCERRADA (um
+// passo por vez), encerrar exige destino + justificativa + efeito canônico (DEVOLUCAO/BAIXA).
 public sealed class Administrativo360OcorrenciasA12Tests
 {
     private static readonly CancellationToken Ct = CancellationToken.None;
@@ -172,12 +174,19 @@ public sealed class Administrativo360OcorrenciasA12Tests
     }
 
     [Fact]
-    public void A12_ValidarEncerramento_RequiresDestinoEJustificativa()
+    public void A12_ValidarEncerramento_RequiresDestinoJustificativaEEfeitoFisicoCanonical()
     {
         Assert.Throws<Administrativo360BusinessException>(() => OcorrenciasA12.ValidarEncerramento("destino", " "));
         Assert.Throws<Administrativo360BusinessException>(() => OcorrenciasA12.ValidarEncerramento(null, "justificativa"));
+        // Rodada 15: efeito físico fora do par canônico rejeita antes de qualquer efeito
+        Assert.Throws<Administrativo360BusinessException>(() => OcorrenciasA12.ValidarEncerramento("destino", "justificativa", "DESCARTE"));
+        // vazio/nulo ⇒ DEVOLUCAO (compatibilidade com encerramentos anteriores à rodada)
+        Assert.Equal(OcorrenciasA12.EfeitoDevolucao, OcorrenciasA12.NormalizarEfeitoFisico(null));
+        Assert.Equal(OcorrenciasA12.EfeitoDevolucao, OcorrenciasA12.NormalizarEfeitoFisico("  "));
+        Assert.Equal(OcorrenciasA12.EfeitoBaixa, OcorrenciasA12.NormalizarEfeitoFisico("baixa"));
         // sem Assert.DoesNotThrow neste xunit: chamar direto — exceção falha o fato
         OcorrenciasA12.ValidarEncerramento("Devolvido ao fornecedor", "Lote com quebra");
+        OcorrenciasA12.ValidarEncerramento("Descarte assistido", "Quebra confirmada", OcorrenciasA12.EfeitoBaixa);
     }
 
     // ============================ integração — ciclo completo ============================
@@ -205,7 +214,7 @@ public sealed class Administrativo360OcorrenciasA12Tests
             await repo.TratarAsync(fx.Tenant, fx.Usuario, id, 1, Ct);
             await repo.ResolverAsync(fx.Tenant, fx.Usuario, id, 2, Ct);
             await repo.EncerrarAsync(fx.Tenant, fx.Usuario, id,
-                new EncerrarOcorrenciaCommand(3, "Devolvido ao fornecedor", "Fornecedor confirmou reposicao"), Ct);
+                new EncerrarOcorrenciaCommand(3, "Devolvido ao fornecedor", "Fornecedor confirmou reposicao", OcorrenciasA12.EfeitoDevolucao), Ct);
 
             var encerradas = await repo.ListarAsync(fx.Tenant, "ENCERRADA", Ct);
             var fim = Assert.Single(encerradas);
@@ -274,11 +283,16 @@ public sealed class Administrativo360OcorrenciasA12Tests
                 () => repo.EncerrarAsync(fx.Tenant, fx.Usuario, id, new EncerrarOcorrenciaCommand(3, " ", null), Ct));
             await Assert.ThrowsAsync<Administrativo360BusinessException>(
                 () => repo.EncerrarAsync(fx.Tenant, fx.Usuario, id, new EncerrarOcorrenciaCommand(3, "Destino ok", null), Ct));
+            // Rodada 15: efeito físico desconhecido também rejeita — sem efeito colateral
+            await Assert.ThrowsAsync<Administrativo360BusinessException>(
+                () => repo.EncerrarAsync(fx.Tenant, fx.Usuario, id, new EncerrarOcorrenciaCommand(3, "Descarte assistido", "Quebra confirmada", OcorrenciasA12.EfeitoBaixa + "_ERRADA"), Ct));
 
             var resolvida = Assert.Single(await repo.ListarAsync(fx.Tenant, "RESOLVIDA", Ct));
             Assert.Equal(3, resolvida.Versao);
             Assert.Null(resolvida.Destino);
             Assert.Null(resolvida.JustificativaEncerramento);
+            // fixture sem saldo LIBERADO: nenhuma perna em momento algum, mesmo com tentativas de encerrar
+            Assert.Empty(await PernasDaOcorrenciaAsync(cs, fx.Tenant, id));
         }
         finally
         {
@@ -317,11 +331,13 @@ public sealed class Administrativo360OcorrenciasA12Tests
             var id = await repo.AbrirAsync(fx.Tenant, fx.Usuario, Novo(new(fx.Produto, fx.Lote, fx.Local)), Ct);
             await repo.TratarAsync(fx.Tenant, fx.Usuario, id, 1, Ct);
             await repo.ResolverAsync(fx.Tenant, fx.Usuario, id, 2, Ct);
+            // Rodada 15: encerra com BAIXA (o destino de exemplo é descarte) — com bloqueio
+            // zero a baixa consome nada: o ciclo completa sem nenhuma perna nova
             await repo.EncerrarAsync(fx.Tenant, fx.Usuario, id,
-                new EncerrarOcorrenciaCommand(3, "Descarte assistido", "Quebra confirmada"), Ct);
+                new EncerrarOcorrenciaCommand(3, "Descarte assistido", "Quebra confirmada", OcorrenciasA12.EfeitoBaixa), Ct);
             var depois = ContarMovimentos();
 
-            Assert.Equal(antes, depois); // nenhuma perna BLOQUEIO/LIBERACAO_OCORRENCIA gerada
+            Assert.Equal(antes, depois); // nenhuma perna BLOQUEIO/LIBERACAO/BAIXA_OCORRENCIA gerada
         }
         finally
         {
@@ -535,7 +551,7 @@ public sealed class Administrativo360OcorrenciasA12Tests
     }
 
     [Fact]
-    public async Task R11_Resolver_InverteBloqueio_RestauraDisponivelECicloNetZero()
+    public async Task R15_Resolver_NaoTocaSaldo_E_EncerrarDevolucao_RestauraDisponivelECicloNetZero()
     {
         var cs = ObterConnectionString();
         await GarantirConexaoBancoAsync(cs);
@@ -544,14 +560,23 @@ public sealed class Administrativo360OcorrenciasA12Tests
         var estoque = new EstoqueRepository(cs);
         try
         {
-            await SearSaldoLiberadoAsync(cs, fx.Tenant, fx.Usuario, fx.Produto, fx.Lote, fx.Local, 10m, "r11-netz-seed");
+            await SearSaldoLiberadoAsync(cs, fx.Tenant, fx.Usuario, fx.Produto, fx.Lote, fx.Local, 10m, "r15-netz-seed");
             var somaInicial = SomaFisicaTotal(cs, fx.Tenant);
 
             var id = await repo.AbrirAsync(fx.Tenant, fx.Usuario, Novo(new(fx.Produto, fx.Lote, fx.Local), 4m), Ct);
             await repo.TratarAsync(fx.Tenant, fx.Usuario, id, 1, Ct);
             await repo.ResolverAsync(fx.Tenant, fx.Usuario, id, 2, Ct);
 
+            // Rodada 15: resolver sem efeito físico — o bloqueio persiste até o encerrar decidir
             var pernas = await PernasDaOcorrenciaAsync(cs, fx.Tenant, id);
+            Assert.Equal(2, pernas.Count); // só as pernas do bloqueio do abrir
+            Assert.Equal(4m, ConsultarFisicoPorCondicao(cs, fx.Tenant, fx.Produto, fx.Lote, fx.Local, "BLOQUEADO"));
+            Assert.Equal(6m, ConsultarDisponivel(cs, fx.Tenant, fx.Produto, fx.Lote, fx.Local));
+
+            await repo.EncerrarAsync(fx.Tenant, fx.Usuario, id,
+                new EncerrarOcorrenciaCommand(3, "Devolvido ao fornecedor", "Reposicao confirmada", OcorrenciasA12.EfeitoDevolucao), Ct);
+
+            pernas = await PernasDaOcorrenciaAsync(cs, fx.Tenant, id);
             Assert.Equal(4, pernas.Count);
 
             var liberacao = pernas.Where(p => p.Tipo == "LIBERACAO_OCORRENCIA").ToList();
@@ -565,7 +590,7 @@ public sealed class Administrativo360OcorrenciasA12Tests
 
             // itens tratados voltam à circulação: reserva sobre o saldo restaurado é possível
             await estoque.ReservarAsync(fx.Tenant, fx.Usuario,
-                new ReservarCommand(fx.Produto, fx.Lote, fx.Local, 4m, "Reserva pos-resolucao", Guid.NewGuid(), "r11-netz-res"), Ct);
+                new ReservarCommand(fx.Produto, fx.Lote, fx.Local, 4m, "Reserva pos-encerramento", Guid.NewGuid(), "r15-netz-res"), Ct);
         }
         finally
         {
@@ -574,7 +599,7 @@ public sealed class Administrativo360OcorrenciasA12Tests
     }
 
     [Fact]
-    public async Task R11_TrataryEncerrar_NaoGeraPernasNovas()
+    public async Task R15_TrataryResolver_NaoGeramPernas_E_EncerrarDevolucao_GeraInversao()
     {
         var cs = ObterConnectionString();
         await GarantirConexaoBancoAsync(cs);
@@ -582,7 +607,7 @@ public sealed class Administrativo360OcorrenciasA12Tests
         var repo = new OcorrenciasRepository(cs);
         try
         {
-            await SearSaldoLiberadoAsync(cs, fx.Tenant, fx.Usuario, fx.Produto, fx.Lote, fx.Local, 10m, "r11-tc-seed");
+            await SearSaldoLiberadoAsync(cs, fx.Tenant, fx.Usuario, fx.Produto, fx.Lote, fx.Local, 10m, "r15-tc-seed");
 
             var id = await repo.AbrirAsync(fx.Tenant, fx.Usuario, Novo(new(fx.Produto, fx.Lote, fx.Local), 4m), Ct);
             Assert.Equal(2, (await PernasDaOcorrenciaAsync(cs, fx.Tenant, id)).Count);
@@ -590,12 +615,14 @@ public sealed class Administrativo360OcorrenciasA12Tests
             await repo.TratarAsync(fx.Tenant, fx.Usuario, id, 1, Ct);
             Assert.Equal(2, (await PernasDaOcorrenciaAsync(cs, fx.Tenant, id)).Count); // TRATAR sem efeito em saldo
 
+            // Rodada 15: RESOLVER também virou ato administrativo — a inversão das pernas
+            // acontece no ENCERRAR, quando o destino decide o efeito físico
             await repo.ResolverAsync(fx.Tenant, fx.Usuario, id, 2, Ct);
-            Assert.Equal(4, (await PernasDaOcorrenciaAsync(cs, fx.Tenant, id)).Count); // RESOLVER inverte
+            Assert.Equal(2, (await PernasDaOcorrenciaAsync(cs, fx.Tenant, id)).Count); // RESOLVER sem efeito em saldo
 
             await repo.EncerrarAsync(fx.Tenant, fx.Usuario, id,
-                new EncerrarOcorrenciaCommand(3, "Descarte assistido", "Quebra confirmada"), Ct);
-            Assert.Equal(4, (await PernasDaOcorrenciaAsync(cs, fx.Tenant, id)).Count); // ENCERRAR sem efeito em saldo
+                new EncerrarOcorrenciaCommand(3, "Devolvido ao fornecedor", "Reposicao confirmada", OcorrenciasA12.EfeitoDevolucao), Ct);
+            Assert.Equal(4, (await PernasDaOcorrenciaAsync(cs, fx.Tenant, id)).Count); // ENCERRAR DEVOLUCAO inverte
         }
         finally
         {
@@ -627,6 +654,132 @@ public sealed class Administrativo360OcorrenciasA12Tests
         finally
         {
             await LimparAsync(cs, a.Tenant, b.Tenant);
+        }
+    }
+
+    // ============================ R15b1 — efeito físico no encerrar (D1–D5) ============================
+
+    [Fact]
+    public async Task R15_EncerrarBaixa_ConomeExatamenteOBloqueado_SomaFisicaCaiEBloqueadoZera()
+    {
+        var cs = ObterConnectionString();
+        await GarantirConexaoBancoAsync(cs);
+        var fx = await CriarFixturesAsync(cs, "baixa");
+        var repo = new OcorrenciasRepository(cs);
+        try
+        {
+            await SearSaldoLiberadoAsync(cs, fx.Tenant, fx.Usuario, fx.Produto, fx.Lote, fx.Local, 10m, "r15-baixa-seed");
+            var somaInicial = SomaFisicaTotal(cs, fx.Tenant);
+
+            var id = await repo.AbrirAsync(fx.Tenant, fx.Usuario, Novo(new(fx.Produto, fx.Lote, fx.Local), 4m), Ct);
+            await repo.TratarAsync(fx.Tenant, fx.Usuario, id, 1, Ct);
+            await repo.ResolverAsync(fx.Tenant, fx.Usuario, id, 2, Ct);
+            // bloqueio persiste até o encerrar (resolver sem efeito físico)
+            Assert.Equal(4m, ConsultarFisicoPorCondicao(cs, fx.Tenant, fx.Produto, fx.Lote, fx.Local, "BLOQUEADO"));
+
+            await repo.EncerrarAsync(fx.Tenant, fx.Usuario, id,
+                new EncerrarOcorrenciaCommand(3, "Descarte assistido", "Quebra confirmada no descarte", OcorrenciasA12.EfeitoBaixa), Ct);
+
+            var pernas = await PernasDaOcorrenciaAsync(cs, fx.Tenant, id);
+            Assert.Equal(3, pernas.Count); // 2 do bloqueio + 1 da baixa (perna única)
+
+            var baixa = Assert.Single(pernas, p => p.Tipo == "BAIXA_OCORRENCIA");
+            Assert.Equal("BLOQUEADO", baixa.Condicao);
+            Assert.Equal(-4m, baixa.Quantidade);
+            // L296 — motivo consultável, com origem na ocorrência
+            Assert.Contains("ocorrencia", baixa.Motivo);
+            Assert.Contains(id.ToString(), baixa.Motivo);
+
+            Assert.Equal(0m, ConsultarFisicoPorCondicao(cs, fx.Tenant, fx.Produto, fx.Lote, fx.Local, "BLOQUEADO"));
+            Assert.Equal(6m, ConsultarDisponivel(cs, fx.Tenant, fx.Produto, fx.Lote, fx.Local)); // LIBERADO intacto
+            Assert.Equal(somaInicial - 4m, SomaFisicaTotal(cs, fx.Tenant)); // consumo físico: a soma cai só pela baixa
+
+            var encerrada = Assert.Single(await repo.ListarAsync(fx.Tenant, "ENCERRADA", Ct));
+            Assert.Equal("Descarte assistido", encerrada.Destino);
+            Assert.Equal("Quebra confirmada no descarte", encerrada.JustificativaEncerramento);
+        }
+        finally
+        {
+            await LimparAsync(cs, fx.Tenant);
+        }
+    }
+
+    [Fact]
+    public async Task R15_EncerrarBaixa_BloqueioParcial_ConomeApenasAParteBloqueada()
+    {
+        var cs = ObterConnectionString();
+        await GarantirConexaoBancoAsync(cs);
+        var fx = await CriarFixturesAsync(cs, "bp");
+        var repo = new OcorrenciasRepository(cs);
+        try
+        {
+            await SearSaldoLiberadoAsync(cs, fx.Tenant, fx.Usuario, fx.Produto, fx.Lote, fx.Local, 3m, "r15-bp-seed");
+
+            var id = await repo.AbrirAsync(fx.Tenant, fx.Usuario, Novo(new(fx.Produto, fx.Lote, fx.Local), 10m), Ct);
+            Assert.Equal(3m, ConsultarFisicoPorCondicao(cs, fx.Tenant, fx.Produto, fx.Lote, fx.Local, "BLOQUEADO")); // bloqueio parcial
+
+            await repo.TratarAsync(fx.Tenant, fx.Usuario, id, 1, Ct);
+            await repo.ResolverAsync(fx.Tenant, fx.Usuario, id, 2, Ct);
+
+            await repo.EncerrarAsync(fx.Tenant, fx.Usuario, id,
+                new EncerrarOcorrenciaCommand(3, "Descarte assistido", "Quebra confirmada no descarte", OcorrenciasA12.EfeitoBaixa), Ct);
+
+            var pernas = await PernasDaOcorrenciaAsync(cs, fx.Tenant, id);
+            Assert.Equal(-3m, pernas.Where(p => p.Tipo == "BAIXA_OCORRENCIA").Sum(p => p.Quantidade)); // consome só a parte bloqueada
+
+            Assert.Equal(0m, ConsultarFisicoPorCondicao(cs, fx.Tenant, fx.Produto, fx.Lote, fx.Local, "BLOQUEADO"));
+            Assert.Equal(0m, ConsultarDisponivel(cs, fx.Tenant, fx.Produto, fx.Lote, fx.Local));
+            Assert.Equal(0m, SomaFisicaTotal(cs, fx.Tenant)); // 3 - 3: nada devolvido a LIBERADO
+
+            // abertura registrada integralmente; a diferença (7) ficou visível nas pernas — paridade com A12
+            var encerrada = Assert.Single(await repo.ListarAsync(fx.Tenant, "ENCERRADA", Ct));
+            Assert.Equal(10m, encerrada.Quantidade);
+        }
+        finally
+        {
+            await LimparAsync(cs, fx.Tenant);
+        }
+    }
+
+    [Fact]
+    public async Task R15_EncerrarBaixa_MultiLocal_ConomePorLocalEspelhandoOBloqueio()
+    {
+        var cs = ObterConnectionString();
+        await GarantirConexaoBancoAsync(cs);
+        var fx = await CriarFixturesAsync(cs, "mb"); // local da ocorrência (INTERNO)
+        var localExterno = await CriarLocalExtraAsync(cs, fx.Tenant, "A15-multi-EXT", "EXTERNO");
+        var repo = new OcorrenciasRepository(cs);
+        try
+        {
+            await SearSaldoLiberadoAsync(cs, fx.Tenant, fx.Usuario, fx.Produto, fx.Lote, fx.Local, 3m, "r15-mb-a");
+            await SearSaldoLiberadoAsync(cs, fx.Tenant, fx.Usuario, fx.Produto, fx.Lote, localExterno, 5m, "r15-mb-b");
+
+            var id = await repo.AbrirAsync(fx.Tenant, fx.Usuario, Novo(new(fx.Produto, fx.Lote, fx.Local), 6m), Ct);
+            await repo.TratarAsync(fx.Tenant, fx.Usuario, id, 1, Ct);
+            await repo.ResolverAsync(fx.Tenant, fx.Usuario, id, 2, Ct);
+
+            await repo.EncerrarAsync(fx.Tenant, fx.Usuario, id,
+                new EncerrarOcorrenciaCommand(3, "Descarte assistido", "Quebra confirmada no descarte", OcorrenciasA12.EfeitoBaixa), Ct);
+
+            var baixasPorLocal = (await PernasDaOcorrenciaAsync(cs, fx.Tenant, id))
+                .Where(p => p.Tipo == "BAIXA_OCORRENCIA")
+                .GroupBy(p => p.LocalId)
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantidade));
+
+            // espelho exato do bloqueio: 3 no local da ocorrência + 3 no externo (ordem de cobertura)
+            Assert.Equal(2, baixasPorLocal.Count);
+            Assert.Equal(-3m, baixasPorLocal[fx.Local]);
+            Assert.Equal(-3m, baixasPorLocal[localExterno]);
+
+            Assert.Equal(0m, ConsultarFisicoPorCondicao(cs, fx.Tenant, fx.Produto, fx.Lote, fx.Local, "BLOQUEADO"));
+            Assert.Equal(0m, ConsultarFisicoPorCondicao(cs, fx.Tenant, fx.Produto, fx.Lote, localExterno, "BLOQUEADO"));
+            Assert.Equal(0m, ConsultarDisponivel(cs, fx.Tenant, fx.Produto, fx.Lote, fx.Local));
+            Assert.Equal(2m, ConsultarDisponivel(cs, fx.Tenant, fx.Produto, fx.Lote, localExterno)); // 5 - 3 intactos na circulação
+            Assert.Equal(2m, SomaFisicaTotal(cs, fx.Tenant)); // 8 - 6 baixados
+        }
+        finally
+        {
+            await LimparAsync(cs, fx.Tenant);
         }
     }
 }

@@ -139,6 +139,15 @@
                                                     <input type="text" name="destino" required maxlength="200" class="form-control form-control-sm bg-dark text-light border-secondary"
                                                            placeholder="@UiText.L("Adm360.Occ.ThDestino")" />
                                                 </div>
+                                                <!-- Rodada 15 r15b1: efeito fisico do saldo bloqueado (DEVOLUCAO volta a
+                                                     circulacao; BAIXA consome fisicamente - descarte/consumo). -->
+                                                <div class="col-auto">
+                                                    <label class="form-label small text-secondary mb-0">@UiText.L("Adm360.Occ.LabelEfeitoFisico")</label>
+                                                    <select name="efeitoFisico" required class="form-select form-select-sm bg-dark text-light border-secondary">
+                                                        <option value="DEVOLUCAO" selected>@UiText.L("Adm360.Occ.EfeitoDevolucao")</option>
+                                                        <option value="BAIXA">@UiText.L("Adm360.Occ.EfeitoBaixa")</option>
+                                                    </select>
+                                                </div>
                                                 <div class="col-auto">
                                                     <input type="text" name="justificativa" required maxlength="400" class="form-control form-control-sm bg-dark text-light border-secondary"
                                                            placeholder="@UiText.L("Adm360.Occ.LabelJustificativa")" />

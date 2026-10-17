@@ -155,7 +155,7 @@
                                                 <div class="modal-content bg-dark text-light border-secondary">
                                                     <form asp-action="ReabrirCaixa" method="post">
                                                         @Html.AntiForgeryToken()
-                                                        <input type="hidden" name="id" value="@f.Id" />
+                                                        <input type="hidden" name="fechamentoId" value="@f.Id" />
                                                         <div class="modal-header border-secondary">
                                                             <h5 class="modal-title h6 text-warning" id="reabrirModalLabel-@f.Id">
                                                                 <i class="bi bi-unlock me-2"></i>Reabrir Caixa @f.ContaNome
@@ -206,7 +206,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label small text-secondary" for="contaFechamento">Conta Financeira</label>
-                        <select id="contaFechamento" name="contaId" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                        <select id="contaFechamento" name="contaFinanceiraId" class="form-select form-select-sm bg-dark text-light border-secondary" required>
                             <option value="">Selecione uma conta...</option>
                             @foreach (var c in Model.Contas.Where(c => c.Ativa))
                             {

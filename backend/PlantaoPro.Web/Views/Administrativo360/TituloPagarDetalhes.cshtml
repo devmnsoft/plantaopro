@@ -284,7 +284,7 @@
             <div class="modal-content bg-dark text-light border-secondary">
                 <form asp-action="PagarTitulo" method="post">
                     @Html.AntiForgeryToken()
-                    <input type="hidden" name="tituloId" value="@t.Id" />
+                    <input type="hidden" name="id" value="@t.Id" />
                     <div class="modal-header border-secondary">
                         <h5 class="modal-title h6 text-info" id="pagamentoModalLabel">
                             <i class="bi bi-cash me-2"></i>Registrar Pagamento Manual
@@ -311,7 +311,7 @@
                         <div class="row g-3 mb-3">
                             <div class="col-6">
                                 <label class="form-label small text-secondary" for="valorPago">Valor a Pagar (R$)</label>
-                                <input type="number" step="0.01" min="0.01" max="@t.SaldoAberto" id="valorPago" name="valor"
+                                <input type="number" step="0.01" min="0.01" max="@t.SaldoAberto" id="valorPago" name="valorPago"
                                        class="form-control form-control-sm bg-dark text-light border-secondary"
                                        value="@t.SaldoAberto.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)" required />
                                 <span class="form-text text-muted small">Saldo aberto: @t.SaldoAberto.ToString("C2", ptBr)</span>

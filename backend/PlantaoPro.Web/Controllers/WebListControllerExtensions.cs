@@ -30,7 +30,9 @@ public static class WebListControllerExtensions
         return controller.View(new ListPageViewModel<T>(
             Items: items,
             ErrorMessage: errorMessage,
-            InfoMessage: result.StatusCode == HttpStatusCode.OK ? result.Error : null,
+            // r16a0/D2: apos D1 o Error em 2xx e sempre null — a mensagem do envelope era ruído
+            // (banner "Sucesso") e nenhum layout de lista renderiza InfoMessage. Literal nulo.
+            InfoMessage: null,
             Total: total,
             Page: page,
             PageSize: pageSize
@@ -58,7 +60,8 @@ public static class WebListControllerExtensions
         return controller.View(new ListPageViewModel<T>(
             Items: data?.Items ?? Array.Empty<T>(),
             ErrorMessage: errorMessage,
-            InfoMessage: result.StatusCode == HttpStatusCode.OK ? result.Error : null,
+            // r16a0/D2: idem RenderList — Error em 2xx e null apos D1; InfoMessage fica literal.
+            InfoMessage: null,
             Total: data?.Total ?? 0,
             Page: data?.Page ?? 1,
             PageSize: data?.PageSize ?? 20

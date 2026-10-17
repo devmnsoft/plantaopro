@@ -299,7 +299,12 @@ public abstract class BaseWebController : Controller
                 return (default, envelopeMessage, response.StatusCode);
             }
 
-            return (DeserializeApiPayload<T>(content), TryParseMessage(content), response.StatusCode);
+            // F-R14-C (r16a0/D1): no 2xx com sucesso a `message` do envelope é chapa da API
+            // (padrao "Sucesso" de ApiResponse.Ok), nao erro — devolve-la em Error fazia telas
+            // exibirem sucesso como falha (reproduzido ao vivo na R14 no banner de Faturamento SaaS).
+            // Semantica canonica: Error nao-nulo <=> a chamada NAO deu certo. Precedente:
+            // ReadApiPagedResponseAsync ja devolve null neste ramo (L173).
+            return (DeserializeApiPayload<T>(content), null, response.StatusCode);
         }
         catch (JsonException ex)
         {

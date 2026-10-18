@@ -368,7 +368,8 @@ public sealed class ProvisionamentoB5Tests : IDisposable
         var audit = new B5FakeAuditService();
         return new SelfServiceSaasService(cfg, new TenantContextService(new HttpContextAccessor(), cfg, NullLogger<TenantContextService>.Instance),
             audit, new AssinaturaGuardService(cfg, audit, NullLogger<AssinaturaGuardService>.Instance),
-            NullLogger<SelfServiceSaasService>.Instance);
+            NullLogger<SelfServiceSaasService>.Instance,
+            new CobrancaService(cfg, audit, Array.Empty<ICobrancaProvider>(), NullLogger<CobrancaService>.Instance));
     }
 
     private static ConvitesEquipeService NovoConvites(Guid tenant, bool admin) =>

@@ -26,8 +26,14 @@ public sealed class AssinaturaMetricaViewModel
 
 public sealed class AssinaturaCobrancaViewModel
 {
+    public Guid FaturaId { get; set; }
     public DateTimeOffset? Data { get; set; }
+    public string? Origem { get; set; }
     public string? Status { get; set; }
+    /// <summary>R47: rótulo em linguagem simples para exibição (nunca o código cru na tela).</summary>
+    public string? StatusExibicao { get; set; }
+    /// <summary>R47: só fatura mensal do plano com status pagável oferece ação de pagamento.</summary>
+    public bool PagarDisponivel { get; set; }
     public string? Valor { get; set; }
 }
 
@@ -89,4 +95,8 @@ public sealed class FaturasAssinaturaWebViewModel
 {
     public IReadOnlyList<AssinaturaCobrancaViewModel> Faturas { get; set; } = Array.Empty<AssinaturaCobrancaViewModel>();
     public string? ErrorMessage { get; set; }
+    /// <summary>R47: página de pagamento pronta após "Pagar agora" (aberta em nova aba).</summary>
+    public string? PagamentoUrl { get; set; }
+    /// <summary>R47: aviso honesto quando o pagamento não pôde ser preparado.</summary>
+    public string? PagamentoAviso { get; set; }
 }

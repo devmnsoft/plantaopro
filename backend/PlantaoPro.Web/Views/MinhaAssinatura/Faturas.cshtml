@@ -1,6 +1,17 @@
 @model PlantaoPro.Web.Models.FaturasAssinaturaWebViewModel
 <section class="container py-4">
     <h1>Faturas</h1>
+    @if (!string.IsNullOrWhiteSpace(Model.PagamentoUrl))
+    {
+        <div class="alert alert-success d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="me-2">O pagamento está pronto. A fatura passa a aparecer como Paga assim que o pagamento for confirmado.</div>
+            <a class="btn btn-primary btn-sm" href="@Model.PagamentoUrl" target="_blank" rel="noopener">Abrir página de pagamento</a>
+        </div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.PagamentoAviso))
+    {
+        <div class="alert alert-warning">@Model.PagamentoAviso</div>
+    }
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
         <div class="alert alert-danger">@Model.ErrorMessage</div>
@@ -11,11 +22,31 @@
     }
     else
     {
-        <div class="card"><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Vencimento</th><th>Status</th><th>Valor</th></tr></thead><tbody>
+        <div class="card"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Vencimento</th><th>Status</th><th>Valor</th><th class="text-end">Ação</th></tr></thead><tbody>
         @foreach (var f in Model.Faturas)
         {
-            <tr><td>@(f.Data?.ToString("dd/MM/yyyy") ?? "—")</td><td>@f.Status</td><td>@f.Valor</td></tr>
+            <tr>
+                <td>@(f.Data?.ToString("dd/MM/yyyy") ?? "—")</td>
+                <td>
+                    <span class="badge @(f.Status == "PAGA" ? "bg-success" : f.Status == "VENCIDA" ? "bg-danger" : f.Status == "ABERTA" ? "bg-warning text-dark" : f.Status == "EM_CONTESTACAO" ? "bg-info text-dark" : "bg-secondary")">@f.StatusExibicao</span>
+                </td>
+                <td>@f.Valor</td>
+                <td class="text-end">
+                    @if (f.PagarDisponivel)
+                    {
+                        <form asp-action="PagarFatura" asp-route-faturaId="@f.FaturaId" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-primary">Pagar agora</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                </td>
+            </tr>
         }
         </tbody></table></div></div>
+        <p class="text-muted small mt-2 mb-0">Para pagar, escolha <strong>Pagar agora</strong> na fatura e confirme na página de pagamento aberta em seguida. Faturas de cadastro não são pagadas por aqui — elas fazem parte da contratação inicial.</p>
     }
 </section>

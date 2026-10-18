@@ -250,6 +250,8 @@ public sealed class MinhaAssinaturaFaturaDto
     public decimal Valor { get; set; }
     public string Status { get; set; } = string.Empty;
     public string Descricao { get; set; } = string.Empty;
+    /// <summary>R47: origem da fatura — SAAS (fatura mensal do plano, cobrável) ou CADASTRO (pagamentos iniciais).</summary>
+    public string Origem { get; set; } = string.Empty;
 }
 
 public sealed class SolicitacaoCancelamentoAssinaturaRequest

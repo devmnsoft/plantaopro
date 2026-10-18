@@ -166,14 +166,46 @@ public sealed class MinhaAssinaturaController : BaseWebController
         {
             Faturas = result.Data.Select(f => new AssinaturaCobrancaViewModel
             {
+                FaturaId = f.Id,
+                Origem = f.Origem,
                 Data = new DateTimeOffset(DateTime.SpecifyKind(f.Vencimento, DateTimeKind.Utc)),
                 Status = f.Status,
+                StatusExibicao = StatusFaturaAmigavel(f.Status),
+                PagarDisponivel = string.Equals(f.Origem, "SAAS", StringComparison.Ordinal) && (f.Status == "ABERTA" || f.Status == "VENCIDA"),
                 Valor = f.Valor.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
             }).ToArray(),
+            PagamentoUrl = TempData["PagamentoUrl"] as string,
+            PagamentoAviso = TempData["PagamentoAviso"] as string,
             ErrorMessage = result.Error
         };
         return View("Faturas", model);
     }
+
+    /// <summary>R47: prepara o pagamento da fatura e devolve a tela com a página de pagamento.</summary>
+    [HttpPost("PagarFatura/{faturaId:guid}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> PagarFatura(Guid faturaId)
+    {
+        var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var result = await SendApiAsync<object, FaturaCobrancaCriadaDto>(client, HttpMethod.Post, $"api/minha-assinatura/faturas/{faturaId}/cobrar", new object());
+        if (result.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+        if (result.Data is not null)
+            TempData["PagamentoUrl"] = $"{client.BaseAddress?.ToString().TrimEnd('/')}{result.Data.CheckoutPath}";
+        else
+            TempData["PagamentoAviso"] = result.Error ?? "Não foi possível preparar o pagamento agora.";
+        return RedirectToAction(nameof(Faturas));
+    }
+
+    private static string StatusFaturaAmigavel(string status) => status switch
+    {
+        "ABERTA" => "Em aberto",
+        "VENCIDA" => "Vencida",
+        "PAGA" => "Paga",
+        "CANCELADA" => "Cancelada",
+        "EM_CONTESTACAO" => "Em análise",
+        _ => string.IsNullOrWhiteSpace(status) ? "Sem status" : status
+    };
 
     [HttpGet("Cancelamento")]
     public IActionResult Cancelamento() => View("Cancelamento");
@@ -266,7 +298,8 @@ public sealed class MinhaAssinaturaController : BaseWebController
     }
 
     private sealed record AssinaturaDto(Guid AssinaturaId, Guid ClienteId, Guid PlanoId, string PlanoNome, string Status, decimal ValorContratado, DateTime DataInicio, DateTime? DataFim);
-    private sealed record FaturaDto(Guid Id, Guid ClienteId, Guid AssinaturaId, DateTime Vencimento, decimal Valor, string Status, string Descricao);
+    private sealed record FaturaDto(Guid Id, Guid ClienteId, Guid AssinaturaId, DateTime Vencimento, decimal Valor, string Status, string Descricao, string Origem);
+    private sealed record FaturaCobrancaCriadaDto(Guid CobrancaId, string Referencia, string CheckoutPath, decimal Valor, string Status, bool JaExistia);
     private sealed record SolicitarMudancaPlanoRequest(Guid PlanoDestinoId, string Motivo);
     private sealed record SolicitarCancelamentoRequest(string Motivo);
 }

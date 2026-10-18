@@ -421,6 +421,14 @@ public sealed class MinhaAssinaturaController : ControllerBase
         return StatusCode(result.StatusCode, result);
     }
 
+    /// <summary>R47: prepara o pagamento de uma fatura do próprio cliente (idempotente).</summary>
+    [HttpPost("faturas/{faturaId:guid}/cobrar")]
+    public async Task<IActionResult> CobrarFatura(Guid faturaId)
+    {
+        var result = await _service.CobrarFaturaMinhaAssinaturaAsync(faturaId, HttpContext.Connection.RemoteIpAddress?.ToString());
+        return StatusCode(result.StatusCode, result);
+    }
+
     [HttpPost("solicitar-upgrade")]
     public async Task<IActionResult> Upgrade([FromBody] SolicitacaoMudancaPlanoRequest request)
     {

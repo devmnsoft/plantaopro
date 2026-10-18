@@ -142,14 +142,16 @@ public sealed class SelfServiceSaasService
     private readonly IAuditService _audit;
     private readonly ILogger<SelfServiceSaasService> _logger;
     private readonly AssinaturaGuardService _assinaturaGuard;
+    private readonly CobrancaService _cobranca;
 
-    public SelfServiceSaasService(IConfiguration cfg, TenantContextService tenantContext, IAuditService audit, AssinaturaGuardService assinaturaGuard, ILogger<SelfServiceSaasService> logger)
+    public SelfServiceSaasService(IConfiguration cfg, TenantContextService tenantContext, IAuditService audit, AssinaturaGuardService assinaturaGuard, ILogger<SelfServiceSaasService> logger, CobrancaService cobranca)
     {
         _cfg = cfg;
         _tenantContext = tenantContext;
         _audit = audit;
         _assinaturaGuard = assinaturaGuard;
         _logger = logger;
+        _cobranca = cobranca;
     }
 
     public async Task<ApiResponse<IEnumerable<PlanoPublicoDto>>> ListarPlanosPublicosAsync()
@@ -646,17 +648,55 @@ and plantaopro.modulo_efetivo(@tenantId,m.codigo)", new { permissionIds, tenantI
             var assinatura = await MinhaAssinaturaAsync();
             if (!assinatura.Success || assinatura.Data is null) return ApiResponse<IEnumerable<MinhaAssinaturaFaturaDto>>.Fail(assinatura.Message, assinatura.StatusCode);
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var rows = await cn.QueryAsync<MinhaAssinaturaFaturaDto>(@"select id as ""Id"", cliente_id as ""ClienteId"", assinatura_id as ""AssinaturaId"", vencimento as ""Vencimento"", valor as ""Valor"", coalesce(status,'') as ""Status"", coalesce(descricao,'Fatura SaaS') as ""Descricao""
-from plantaopro.cadastro_cliente_pagamentos_iniciais
-where cliente_id=@clienteId and assinatura_id=@assinaturaId and reg_status='A'
-order by vencimento desc
-limit 24", new { clienteId = assinatura.Data.ClienteId, assinaturaId = assinatura.Data.AssinaturaId });
+            var rows = await cn.QueryAsync<MinhaAssinaturaFaturaDto>(@"select f.id as ""Id"", f.cliente_id as ""ClienteId"", f.assinatura_id as ""AssinaturaId"", f.vencimento as ""Vencimento"", f.valor as ""Valor"", coalesce(f.status,'') as ""Status"", 'Fatura mensal do plano' as ""Descricao"", 'SAAS' as ""Origem""
+from plantaopro.faturas_saas f
+where f.cliente_id=@clienteId and f.reg_status='A'
+union all
+select p.id as ""Id"", p.cliente_id as ""ClienteId"", p.assinatura_id as ""AssinaturaId"", p.vencimento as ""Vencimento"", p.valor as ""Valor"", coalesce(p.status,'') as ""Status"", coalesce(p.descricao,'Pagamento de cadastro') as ""Descricao"", 'CADASTRO' as ""Origem""
+from plantaopro.cadastro_cliente_pagamentos_iniciais p
+where p.cliente_id=@clienteId and p.reg_status='A'
+order by ""Vencimento"" desc
+limit 24", new { clienteId = assinatura.Data.ClienteId });
             return ApiResponse<IEnumerable<MinhaAssinaturaFaturaDto>>.Ok(rows);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro ao carregar faturas da minha assinatura");
             return ApiResponse<IEnumerable<MinhaAssinaturaFaturaDto>>.Fail("Não foi possível carregar as faturas.", 500);
+        }
+    }
+
+    /// <summary>
+    /// R47 - Pagamento self-service: verifica que a fatura pertence ao cliente autenticado
+    /// (escopo de dono na própria query) e delega ao motor de cobrança existente
+    /// (idempotente, provedores e eventos sem cópia de regra).
+    /// </summary>
+    public async Task<ApiResponse<CobrancaCriadaDto>> CobrarFaturaMinhaAssinaturaAsync(Guid faturaId, string? ip)
+    {
+        try
+        {
+            var ctx = await _tenantContext.ObterAtualAsync();
+            if (!ctx.Success || ctx.Data is null || !ctx.Data.ClienteId.HasValue)
+                return ApiResponse<CobrancaCriadaDto>.Fail("Sua conta ainda não está vinculada para pagar faturas.", 404);
+            var clienteId = ctx.Data.ClienteId.Value;
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var estado = await cn.QueryFirstOrDefaultAsync<string>(new CommandDefinition(
+                @"select upper(coalesce(status,'')) from plantaopro.faturas_saas where id=@faturaId and cliente_id=@clienteId and reg_status='A'",
+                new { faturaId, clienteId }, cancellationToken: CancellationToken.None));
+            if (estado is null)
+                return ApiResponse<CobrancaCriadaDto>.Fail("Fatura não encontrada para a sua conta.", 404);
+            if (estado == "PAGA")
+                return ApiResponse<CobrancaCriadaDto>.Fail("Esta fatura já está paga.", 409);
+            if (estado == "CANCELADA")
+                return ApiResponse<CobrancaCriadaDto>.Fail("Esta fatura foi cancelada e não precisa ser paga.", 409);
+            if (estado == "EM_CONTESTACAO")
+                return ApiResponse<CobrancaCriadaDto>.Fail("Esta fatura está em análise pelo financeiro. Tente novamente mais tarde.", 409);
+            return await _cobranca.CobrarAsync(faturaId, null, ip, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao preparar pagamento da minha assinatura");
+            return ApiResponse<CobrancaCriadaDto>.Fail("Não foi possível preparar o pagamento.", 500);
         }
     }
 

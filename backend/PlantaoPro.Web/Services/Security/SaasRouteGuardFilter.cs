@@ -321,6 +321,7 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
         ["MinhaAssinatura/SolicitarUpgrade"] = "CRIAR",
         ["MinhaAssinatura/SolicitarDowngrade"] = "CRIAR",
         ["MinhaAssinatura/SolicitarCancelamento"] = "CANCELAR",
+        ["MinhaAssinatura/PagarFatura"] = "CRIAR",
         ["ConvitesEquipe/Index"] = "VER",
         ["ConvitesEquipe/Criar"] = "CONVIDAR",
         ["ConvitesEquipe/Revogar"] = "CONVIDAR",

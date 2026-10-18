@@ -140,9 +140,10 @@ order by a.reg_date desc", new { }, page, pageSize);
             var p = Math.Max(1, page);
             var s = Math.Clamp(pageSize, 1, 100);
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-            var items = await cn.QueryAsync<RelatorioSaasLinhaDto>(sql + "\nlimit @s offset @offset", UnirParametros(parametros, new { s, offset = (p - 1) * s }));
-            var total = items.LongCount();
-            return Ok(ApiResponse<PagedResult<RelatorioSaasLinhaDto>>.Ok(new PagedResult<RelatorioSaasLinhaDto>(items, p, s, total), "Relatório SaaS carregado."));
+            // D-R24-2 (F-R14-B): total REAL via count subquery compartilhada (antes: apenas o
+            // tamanho da pagina contado em memoria); a query de itens e o sufixo "limit/offset" sao
+            // inalterados (contrato versionado em R14FaturasCompetenciaNullContratoTests).
+            return Ok(ApiResponse<PagedResult<RelatorioSaasLinhaDto>>.Ok(await ExecutarPaginadoAsync(cn, sql, parametros, p, s), "Relatório SaaS carregado."));
         }
         catch (Exception ex)
         {
@@ -157,8 +158,15 @@ order by a.reg_date desc", new { }, page, pageSize);
         await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
         var p = Math.Max(1, page);
         var s = Math.Clamp(pageSize, 1, 500);
-        var items = await cn.QueryAsync<RelatorioSaasLinhaDto>(sql + " limit @s offset @offset", new { s, offset = (p - 1) * s });
-        return ApiResponse<PagedResult<RelatorioSaasLinhaDto>>.Ok(new PagedResult<RelatorioSaasLinhaDto>(items, p, s, items.LongCount()));
+        // D-R24-2 (F-R14-B): mesmo caminho paginado da listagem (total real via count subquery).
+        return ApiResponse<PagedResult<RelatorioSaasLinhaDto>>.Ok(await ExecutarPaginadoAsync(cn, sql, new { }, p, s), "Dados carregados para exportação.");
+    }
+
+    private static async Task<PagedResult<RelatorioSaasLinhaDto>> ExecutarPaginadoAsync(NpgsqlConnection cn, string sql, object parametros, int p, int s)
+    {
+        var total = await cn.ExecuteScalarAsync<long>("select count(*)::bigint from (" + sql + ") as __contagem", parametros);
+        var items = await cn.QueryAsync<RelatorioSaasLinhaDto>(sql + "\nlimit @s offset @offset", UnirParametros(parametros, new { s, offset = (p - 1) * s }));
+        return new PagedResult<RelatorioSaasLinhaDto>(items, p, s, total);
     }
 
     private static DynamicParameters UnirParametros(object a, object b)

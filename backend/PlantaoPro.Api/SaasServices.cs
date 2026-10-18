@@ -57,6 +57,8 @@ coalesce(c.cnpj,'') as ""Cnpj"",coalesce(c.cidade,'') as ""Cidade"",coalesce(c.e
 -- R19 (r19b1 F7d): unnest(SRF) em expressao e rejeitado pelo PG18 ('funcao unnest(record) nao
 -- existe') e quebrava a central de clientes para todo superadmin; a forma canonica da casa
 -- (r18b3 F7c / docs/arquitetura/adr/adr-0002) chama a SRF em posicao FROM via cross join lateral.
+-- Segunda etapa do F7d: sum() de contagem e numeric no PG; cast ::bigint alinha o reader ao
+-- record ClienteCentralTotais (parametros long), que falhava no mesmo endpoint por mismatch de assinatura.
 coalesce((select string_agg(distinct coalesce(m.nome, ef.codigo),' · ' order by coalesce(m.nome, ef.codigo))
   from plantaopro.tenants t
   cross join lateral plantaopro.modulos_efetivos(t.id) ef
@@ -64,8 +66,8 @@ coalesce((select string_agg(distinct coalesce(m.nome, ef.codigo),' · ' order by
   where t.cliente_id=c.id and t.reg_status='A'),'') as ""ModulosVigentes""
 " + filtered + @" order by coalesce(c.nome_fantasia,c.razao_social),c.id limit @take offset @skip;
 select count(*) as ""Clientes"",count(*) filter(where upper(c.status)='ATIVO') as ""Ativos"",count(*) filter(where upper(c.status)='SUSPENSO') as ""Suspensos"",
-coalesce(sum((select count(distinct u.id) from plantaopro.usuarios u left join plantaopro.tenants tu on tu.id=u.tenant_id where u.reg_status='A' and coalesce(u.status,'ATIVO')='ATIVO' and coalesce(u.cliente_id,tu.cliente_id,u.tenant_id)=c.id)),0) as ""UsuariosAtivos"",
-coalesce(sum((select count(*) from plantaopro.tenant_onboarding_checklist oc left join plantaopro.tenants ot on ot.id=oc.tenant_id where oc.reg_status='A' and oc.status='PENDENTE' and coalesce(oc.cliente_id,ot.cliente_id)=c.id)),0) as ""Pendencias"" " + filtered + ";";
+coalesce(sum((select count(distinct u.id) from plantaopro.usuarios u left join plantaopro.tenants tu on tu.id=u.tenant_id where u.reg_status='A' and coalesce(u.status,'ATIVO')='ATIVO' and coalesce(u.cliente_id,tu.cliente_id,u.tenant_id)=c.id)),0)::bigint as ""UsuariosAtivos"",
+coalesce(sum((select count(*) from plantaopro.tenant_onboarding_checklist oc left join plantaopro.tenants ot on ot.id=oc.tenant_id where oc.reg_status='A' and oc.status='PENDENTE' and coalesce(oc.cliente_id,ot.cliente_id)=c.id)),0)::bigint as ""Pendencias"" " + filtered + ";";
             using var multi = await cn.QueryMultipleAsync(sql, args);
             var items = (await multi.ReadAsync<ClienteCentralDto>()).AsList();
             var totals = await multi.ReadSingleAsync<ClienteCentralTotais>();

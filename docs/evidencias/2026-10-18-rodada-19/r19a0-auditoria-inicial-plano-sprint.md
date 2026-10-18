@@ -31,9 +31,11 @@ Falsos positivos explicados no censo: (a) supercaptura de bloco em files sem cha
 
 Precedentes que o censo confirmou: `NotificationService.cs` já trazia a NOTE idêntica à adotada aqui; `PilotoOcorrenciaDto` já nasceu com `DateTime`.
 
-### F3 (F7d) — `unnest(SRF)` na central de clientes (novo, P2)
+### F3 (F7d) — `unnest(SRF)` na central de clientes (novo, P2; em duas etapas)
 
 `SaasServices.ListCentralAsync` (`GET /api/clientes/central`, superadmin) usava `select unnest(plantaopro.modulos_efetivos(t.id)) as codigo` dentro de derived table. Probe no banco operacional: **`função unnest(record) não existe`** — erro de parse para todo o endpoint (a SRF retorna `TABLE(codigo, modulo_id, pacote_codigo)`, não array). Forma validada no banco (equivalência semântica + velocidade): subconsulta escalar com `cross join lateral plantaopro.modulos_efetivos(t.id)` — Santa Casa Demonstração devolveu os 17 módulos vigentes (mesma lista que o catálogo R18 expõe); varredura dos 88 clientes: 8 ms (1 cliente com módulos).
+
+Segunda etapa (exposta pelo smoke vivo pós-fix da primeira): a statement de totais falhava em runtime com a assinatura F7b — `sum()` de contagem é `numeric` no Postgres e o reader devolve `Decimal`, mas o record `ClienteCentralTotais` declara os dois campos como `long`; corrigido com cast `::bigint` na SQL (contratos JSON/DTO intocados). Ambas as etapas ficam cobertas por um fato que extrai as statements exatas da fonte e executa via `QueryMultipleAsync` contra o schema real.
 
 ### F4 — Guardas globais definidas (item 15 da fila)
 

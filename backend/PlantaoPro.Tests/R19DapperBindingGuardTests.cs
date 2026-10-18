@@ -268,6 +268,51 @@ public sealed class R19DapperBindingGuardTests
     }
 
     [Fact]
+    public async Task Db_CentralClientes_SqlCompletaDaFonte_MaterializaItensETotais()
+    {
+        // Extrai as duas statements exatas de ClienteService.ListCentralAsync (mesma tecnica r18b4)
+        // e executa contra o schema real: trava os dois estagios do F7d — o label via cross join
+        // lateral e o totais (sum() de contagem e numeric no PG; cast ::bigint para o record de longs).
+        var src = File.ReadAllText(Path.Combine(Root, "backend", "PlantaoPro.Api", "SaasServices.cs"));
+        var filtro = ExtrairVerbatim(src, "const string filtered = @\"");
+        var itens = ExtrairVerbatim(src, "var sql = @\"");
+        var totais = ExtrairVerbatim(src, "+ filtered + @\"");
+        var sql = itens + filtro + totais + filtro + ";"; // a fonte concatena filtered uma vez por statement
+        Assert.Contains("cross join lateral plantaopro.modulos_efetivos(t.id) ef", sql);
+        Assert.Contains("::bigint as \"UsuariosAtivos\"", sql);
+        Assert.Contains("::bigint as \"Pendencias\"", sql);
+
+        await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
+        using var multi = await cn.QueryMultipleAsync(sql, new { search = (string?)null, status = (string?)null, take = 100, skip = 0 });
+        var itensLidos = (await multi.ReadAsync<PlantaoPro.Api.Models.ClienteCentralDto>()).AsList();
+        var totaisLidos = await multi.ReadSingleAsync<PlantaoPro.Api.Models.ClienteCentralTotais>();
+
+        Assert.NotNull(itensLidos);
+        Assert.True(itensLidos.Count <= 100, "pagina maior que take");
+        Assert.True(totaisLidos.Clientes >= itensLidos.Count, "totais inferior a pagina lida");
+        Assert.True(itensLidos.Any(i => !string.IsNullOrEmpty(i.ModulosVigentes)),
+            "nenhum item com label de modulos vigentes — a seed demo deveria expor modulos efetivos via SRF");
+    }
+
+    private static string ExtrairVerbatim(string src, string marcador)
+    {
+        var i = src.IndexOf(marcador, StringComparison.Ordinal);
+        Assert.True(i >= 0, "marcador nao encontrado na fonte: " + marcador);
+        var j = i + marcador.Length; // char apos a aspa inicial do literal verbatim
+        var k = j;
+        while (k < src.Length)
+        {
+            if (src[k] == '"')
+            {
+                if (k + 1 < src.Length && src[k + 1] == '"') { k += 2; continue; } // "" escapada
+                break;
+            }
+            k++;
+        }
+        return src.Substring(j, k - j).Replace("\"\"", "\"");
+    }
+
+    [Fact]
     public async Task Db_FavoritosProdutoividade_InsertReturning_MaterializaRecordComData()
     {
         var tenant = Guid.NewGuid();

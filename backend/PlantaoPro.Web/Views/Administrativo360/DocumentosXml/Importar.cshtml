@@ -28,7 +28,7 @@
                 <li>O XML deve ser um documento fiscal eletrônico <strong>NF-e (modelo 55)</strong>, <strong>NFC-e (modelo 65)</strong>, <strong>NFS-e (modelo 67)</strong> ou prescrição eletrônica <strong>ABRASF</strong>. Um único arquivo pode conter <strong>múltiplos documentos</strong>: cada um é processado e reportado individualmente.</li>
                 <li>O CNPJ do destinatário deve coincidir com um dos <strong>estabelecimentos cadastrados e autorizados</strong> da empresa (prescrições ABRASF são documentos clínicos, sem verificação de destinatário).</li>
                 <li>Processamento com proteção contra ataques XML: o DOCTYPE/DTD é <strong>aceito sem busca ou validação externa</strong> (DTD proibida no parse) e as entidades externas são desabilitadas (XXE). O encoding declarado no XML (UTF-8/Latin-1) é respeitado na leitura.</li>
-                <li>Os <strong>bytes originais do arquivo</strong> (incluindo BOM) são preservados: download idêntico ao enviado, com hash SHA-256 verificado. O nome do arquivo original fica registrado no documento.</li>
+                <li>Os <strong>bytes originais do arquivo</strong> são preservados: o download é idêntico ao enviado, com integridade verificada (SHA-256). O nome do arquivo original fica registrado no documento.</li>
                 <li>Documentos malformados, com modelo não suportado, incompletos ou com destinatário não autorizado são direcionados para a <strong>quarentena</strong> para auditoria — nenhum deles registra estoque antes da conferência autorizada.</li>
             </ul>
         </div>

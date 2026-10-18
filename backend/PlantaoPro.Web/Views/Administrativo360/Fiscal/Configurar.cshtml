@@ -130,7 +130,7 @@
                     <label class="form-label text-light small">Credencial de emissão (nome do segredo)</label>
                     <input type="text" name="certificadoReferencia" maxlength="120" value="@Model.CertificadoReferencia"
                            placeholder="CNPJ do emitente" class="form-control form-control-sm bg-black text-light border-secondary font-monospace" />
-                    <div class="form-text text-secondary">Só o NOME da referência (A33). O valor fica no ambiente da API (<code>Fiscal:Credenciais:&lt;nome&gt;</code> no pool da API) — nunca no banco, nunca no Web.</div>
+                    <div class="form-text text-secondary">Só o nome da referência (A33). O valor do certificado fica em configuração separada, nunca no banco de dados nem nas telas.</div>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
                     <div class="form-check form-switch mb-1">

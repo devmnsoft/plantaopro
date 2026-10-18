@@ -130,7 +130,7 @@
                             <tr>
                                 <th>Produto <span class="text-danger">*</span></th>
                                 <th>Lote <span class="text-danger">*</span></th>
-                                <th>Reserva Vinculada (UUID)</th>
+                                <th>Reserva vinculada</th>
                                 <th style="width: 130px;">Quantidade <span class="text-danger">*</span></th>
                                 <th style="width: 140px;">Preço Unit. (R$)</th>
                                 <th style="width: 60px;"></th>
@@ -158,7 +158,7 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <input type="text" name="Itens[0].ReservaId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID da reserva ativa (opcional)" />
+                                    <input type="text" name="Itens[0].ReservaId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="Código da reserva ativa (opcional)" />
                                 </td>
                                 <td>
                                     <input type="number" step="0.0001" min="0.0001" name="Itens[0].QuantidadeSolicitada" value="1.0000" class="form-control form-control-sm bg-dark text-light border-secondary text-end" required />
@@ -233,7 +233,7 @@
             tr.className = "item-linha";
             tr.innerHTML = '<td><select name="Itens[' + index + '].ProdutoId" class="form-select form-select-sm bg-dark text-light border-secondary select-prod" required>' + prodHtml + '</select></td>' +
                 '<td><select name="Itens[' + index + '].LoteId" class="form-select form-select-sm bg-dark text-light border-secondary select-lote" required>' + loteHtml + '</select></td>' +
-                '<td><input type="text" name="Itens[' + index + '].ReservaId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID da reserva ativa (opcional)" /></td>' +
+                '<td><input type="text" name="Itens[' + index + '].ReservaId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="Código da reserva ativa (opcional)" /></td>' +
                 '<td><input type="number" step="0.0001" min="0.0001" name="Itens[' + index + '].QuantidadeSolicitada" value="1.0000" class="form-control form-control-sm bg-dark text-light border-secondary text-end" required /></td>' +
                 '<td><input type="number" step="0.01" min="0" name="Itens[' + index + '].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-dark text-light border-secondary text-end" /></td>' +
                 '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-remover" title="Remover item"><i class="bi bi-trash"></i></button></td>';

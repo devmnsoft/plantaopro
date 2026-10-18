@@ -34,8 +34,10 @@ public class R33E6LookupsReservaEPedidoContratoTests
         Assert.Contains("reserva-planejamento", controller, StringComparison.Ordinal);
 
         var models = ReadRelative("backend", "PlantaoPro.Web", "Models", "Administrativo360Models.cs");
-        Assert.Contains("public IReadOnlyList<ReservaAtivaResumoViewModel> ReservasAtivas { get; set; }", models, StringComparison.Ordinal);
-        Assert.Contains("public sealed record ReservaAtivaResumoViewModel(Guid Id, string Produto, string Lote, decimal Quantidade);", models, StringComparison.Ordinal);
+        Assert.Contains("public IReadOnlyList<ReservaAtivaPlanejamentoViewModel> ReservasAtivas { get; set; }", models, StringComparison.Ordinal);
+        // O registro consumido pela view e o mesmo espelho ja versionado no contrato BFF (R20/ADR-0003)
+        // do endpoint reserva-planejamento — sem tipo duplicado.
+        Assert.Contains("public sealed record ReservaAtivaPlanejamentoViewModel(", models, StringComparison.Ordinal);
     }
 
     [Fact]

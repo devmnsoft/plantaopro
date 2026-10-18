@@ -369,7 +369,7 @@ public sealed class ValeFormViewModel
     public IReadOnlyList<OrcamentoResumoViewModel> Orcamentos { get; set; } = Array.Empty<OrcamentoResumoViewModel>();
     public IReadOnlyList<Produto360ViewModel> ProdutosDisponiveis { get; set; } = Array.Empty<Produto360ViewModel>();
     public IReadOnlyList<Lote360ViewModel> LotesDisponiveis { get; set; } = Array.Empty<Lote360ViewModel>();
-    public IReadOnlyList<ReservaAtivaResumoViewModel> ReservasAtivas { get; set; } = Array.Empty<ReservaAtivaResumoViewModel>();
+    public IReadOnlyList<ReservaAtivaPlanejamentoViewModel> ReservasAtivas { get; set; } = Array.Empty<ReservaAtivaPlanejamentoViewModel>();
 }
 
 public sealed class ValeItemInputModel
@@ -381,13 +381,8 @@ public sealed class ValeItemInputModel
     public decimal PrecoUnitario { get; set; }
 }
 
-// E6 (rodada 33): reserva ativa do planejamento do orçamento aprovado — o vale escolhe por nome, não por UUID.
-public sealed record ReservaAtivaResumoViewModel(Guid Id, string Produto, string Lote, decimal Quantidade);
-
-public sealed class PlanejamentoReservaOrcamentoDto
-{
-    public IReadOnlyList<ReservaAtivaResumoViewModel> ReservasAtivas { get; set; } = Array.Empty<ReservaAtivaResumoViewModel>();
-}
+// E6 (rodada 33): reserva ativa do planejamento do orçamento aprovado — o vale escolhe por nome,
+// não por UUID. Reusa o espelho já versionado no contrato BFF (R20/ADR-0003, linha reserva-planejamento).
 
 public sealed class EventoValeInputModel
 {

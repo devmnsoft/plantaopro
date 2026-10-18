@@ -72,10 +72,11 @@ public partial class Administrativo360Controller : BaseWebController
 
         // E6 (rodada 33): reservas ativas do planejamento do orçamento aprovado — vale escolhe por nome,
         // não por UUID. 404 (orçamento ainda não aprovado) vira lista vazia: só "Sem reserva".
+        // O contrato BFF versionado (R20/ADR-0003) fixa este endpoint no PlanejamentoReservaOrcamentoViewModel.
         if (model.OrcamentoId.HasValue)
         {
-            var plano = await ReadApiResponse<PlanejamentoReservaOrcamentoDto>(client, $"api/administrativo360/orcamentos/{model.OrcamentoId.Value}/reserva-planejamento");
-            model.ReservasAtivas = plano.Data?.ReservasAtivas ?? Array.Empty<ReservaAtivaResumoViewModel>();
+            var plano = await ReadApiResponse<PlanejamentoReservaOrcamentoViewModel>(client, $"api/administrativo360/orcamentos/{model.OrcamentoId.Value}/reserva-planejamento");
+            model.ReservasAtivas = plano.Data?.ReservasAtivas ?? Array.Empty<ReservaAtivaPlanejamentoViewModel>();
         }
     }
 

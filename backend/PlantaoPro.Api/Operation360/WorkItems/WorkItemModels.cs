@@ -11,9 +11,14 @@ public static class WorkItemStatus
     public static readonly IReadOnlySet<string> All = new HashSet<string>(new[] { Entrada, Prioridade, EmAndamento, Aguardando, Concluido, Cancelado }, StringComparer.Ordinal);
 }
 
+// R18 (r18b3 F7b): datas como DateTime — o reader do Npgsql devolve DateTime para timestamptz e o
+// Dapper nao faz a conversao para DateTimeOffset. Com record (constructor unico) a binding falha na
+// materializacao e /api/minha-central caia em 500 para todo papel nao-global, mesmo com zero linhas
+// (o deserializer e gerado antes da primeira linha). Padrao da casa: todos os DTOs ligados ao Dapper
+// usam DateTime (ver CobrancaPublicaDto, TimelineClinicaDto etc.).
 public sealed record WorkItemDto(Guid Id, string Tipo, string Titulo, string Descricao, string Status,
-    string Prioridade, Guid? ResponsavelId, Guid? UnidadeId, int Posicao, DateTimeOffset? VenceEm,
-    int Versao, DateTimeOffset CriadoEm, DateTimeOffset AtualizadoEm);
+    string Prioridade, Guid? ResponsavelId, Guid? UnidadeId, int Posicao, DateTime? VenceEm,
+    int Versao, DateTime CriadoEm, DateTime AtualizadoEm);
 public sealed record WorkItemHistoryDto(Guid Id, string Acao, string? Origem, string? Destino, Guid UsuarioId, DateTimeOffset CriadoEm);
 public sealed record WorkItemMoveRequest(Guid ItemId, string Source, string Destination, int Position, int Version, Guid IdempotencyKey);
 public sealed record WorkItemVersionRequest(int Version, Guid IdempotencyKey);

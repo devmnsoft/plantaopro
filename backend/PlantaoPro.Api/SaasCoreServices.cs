@@ -74,15 +74,22 @@ public sealed class SaasModuleCatalogService
         var tenantId = TenantScope(requestedTenantId);
         if (!currentUser.IsGlobalAdmin() && !tenantId.HasValue)
             return ApiResponse<IEnumerable<SaasModuleDto>>.Fail("Tenant não identificado para consultar os módulos contratados.", 403);
+        // R18 (r18b3 F7c): o contador de clientes ativos usava a SRF modulos_efetivos() dentro de
+        // any() em WHERE — PG18 rejeita (0A000) e /api/modulos caia em 500 para todo papel (o BFF
+        // mostrava o catálogo vazio sem erro visível). EXISTS no lugar do any() resolvia o parse,
+        // mas custava ~4min23s (SRF por módulo x tenant, acima do Command Timeout de 60s); a forma
+        // final calcula os módulos efetivos UMA vez por tenant e agrupa por codigo (count distinct
+        // equivalente — validado 12/12 contra a versão lenta e ~180ms em 1142 módulos x 5196 tenants).
         const string sql = @"select m.id as ""Id"", m.codigo as ""Codigo"", m.nome as ""Nome"",
 coalesce(m.descricao,'') as ""Descricao"", coalesce(m.categoria,'OPERACAO') as ""Categoria"",
 coalesce(m.preco_base,0) as ""PrecoBase"", coalesce(m.essencial,false) as ""Essencial"",
 coalesce(m.status,'ATIVO') as ""Status"", coalesce(m.funcionalidades,'[]'::jsonb)::text as ""FuncionalidadesJson"",
 m.limite_padrao as ""LimitePadrao"",
-(select count(distinct t2.id) from plantaopro.tenants t2 where t2.reg_status='A' and m.codigo = any(plantaopro.modulos_efetivos(t2.id))) as ""ClientesAtivos"",
+coalesce(ca.cnt,0)::bigint as ""ClientesAtivos"",
 case when @tenantId is null then false else plantaopro.modulo_efetivo(@tenantId, m.codigo) end as ""Contratado"", coalesce(tm.habilitado,false) as ""Habilitado"",
 tm.preco_contratado as ""PrecoContratado"", tm.limite_contratado as ""LimiteContratado""
 from plantaopro.modulos_sistema m
+left join (select e.codigo, count(distinct t2.id) as cnt from plantaopro.tenants t2 cross join lateral plantaopro.modulos_efetivos(t2.id) e where t2.reg_status='A' group by e.codigo) ca on ca.codigo = m.codigo
 left join plantaopro.tenant_modulos tm on tm.modulo_id=m.id and tm.tenant_id=@tenantId and tm.reg_status='A'
 where m.reg_status='A'
 order by m.essencial desc, m.ordem, m.nome";

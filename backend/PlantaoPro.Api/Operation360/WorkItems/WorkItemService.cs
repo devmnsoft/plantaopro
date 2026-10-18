@@ -41,7 +41,7 @@ public sealed class WorkItemService : IWorkItemService
             Claim("unidade"), ResolveProfile(), GlobalView: false, now);
         var summary = new CentralSummaryDto(items.Length, items.Count(x => x.DueAt < now),
             items.Count(x => x.Priority == "CRITICA"), items.Count(x => x.Status == WorkItemStatus.Aguardando),
-            persisted.Count(x => x.Status == WorkItemStatus.Concluido && x.AtualizadoEm.UtcDateTime.Date == now.UtcDateTime.Date));
+            persisted.Count(x => x.Status == WorkItemStatus.Concluido && x.AtualizadoEm.Date == now.UtcDateTime.Date)); // R18 F7b: AtualizadoEm agora e DateTime (Npgsql devolve UTC)
         return new MinhaCentralDto(context, summary, items, BuildShortcuts());
     }
 

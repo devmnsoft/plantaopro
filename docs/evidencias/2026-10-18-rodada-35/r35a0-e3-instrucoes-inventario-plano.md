@@ -55,5 +55,5 @@ e as quatro seções (`1. Para que serve`, `2. Como utilizar`, `3.` e `4. Próxi
 | r35b1 | 7 guias do fluxo cirúrgico/compras | 1 fato (7 asserts) |
 | r35z | Consolidado + suíte + push | — |
 
-Antes de redigir cada guia, ler a ação correspondente (controller) para descrever com fidelidade o
+Antes de redigir cada guia, ler a ação correspondente (controller) para descrever com precisão o
 efeito real da operação (mesmo critério E1/E6: texto não pode prometer o que a tela não faz).

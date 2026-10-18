@@ -60,6 +60,12 @@
                     <i class="bi bi-award me-1"></i> Concluir Reconciliação
                 </button>
             }
+            @if (Model.Situacao is "RASCUNHO" or "EM_SEPARACAO" or "PRONTO_PARA_EXPEDICAO")
+            {
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalCancelarVale">
+                    <i class="bi bi-x-circle me-1"></i> Cancelar Vale
+                </button>
+            }
         </div>
     </div>
 
@@ -346,6 +352,41 @@
                     <div class="modal-footer border-secondary">
                         <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
                         <button type="submit" class="btn btn-sm btn-success">Concluir Reconciliação</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal Cancelar Vale -->
+@if (Model.Situacao is "RASCUNHO" or "EM_SEPARACAO" or "PRONTO_PARA_EXPEDICAO")
+{
+    <div class="modal fade" id="modalCancelarVale" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-light border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title h6">Confirmar Cancelamento do Vale</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <form asp-action="ValeCancelar" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body small">
+                        <p class="text-danger fw-bold mb-2">Atenção ao efeito da confirmação:</p>
+                        <ul class="text-secondary ps-3 mb-3">
+                            <li>O vale sai de circulação e não pode mais ser expedido.</li>
+                            <li>Tarefas móveis ainda pendentes são canceladas junto.</li>
+                            <li>O cancelamento fica registrado nas observações do vale com o motivo informado.</li>
+                        </ul>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Motivo do Cancelamento <span class="text-danger">*</span></label>
+                            <textarea name="motivo" class="form-control bg-dark text-light border-secondary" rows="3" required
+                                      placeholder="Informe o motivo do cancelamento do vale..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="submit" class="btn btn-sm btn-danger">Confirmar Cancelamento</button>
                     </div>
                 </form>
             </div>

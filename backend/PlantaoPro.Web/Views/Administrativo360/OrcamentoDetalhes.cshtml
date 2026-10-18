@@ -54,6 +54,18 @@
                     <i class="bi bi-pencil-square me-1"></i> Criar Revisão
                 </a>
             }
+            @if (Model.Situacao is "RASCUNHO" or "ENVIADO")
+            {
+                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalRejeitar">
+                    <i class="bi bi-x-circle me-1"></i> Rejeitar Orçamento
+                </button>
+            }
+            @if (Model.Situacao is "RASCUNHO" or "ENVIADO" or "APROVADO")
+            {
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCancelarOrcamento">
+                    <i class="bi bi-archive me-1"></i> Cancelar Orçamento
+                </button>
+            }
         </div>
     </div>
 
@@ -191,6 +203,76 @@
                             }
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Modal Rejeitar Orçamento -->
+    @if (Model.Situacao is "RASCUNHO" or "ENVIADO")
+    {
+        <div class="modal fade" id="modalRejeitar" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content bg-dark text-light border-secondary">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title h6">Confirmar Rejeição do Orçamento</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <form asp-action="OrcamentoRejeitar" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="modal-body small">
+                            <p class="text-danger fw-bold mb-2">Atenção ao efeito da confirmação:</p>
+                            <ul class="text-secondary ps-3 mb-3">
+                                <li>O orçamento deixa de poder ser aprovado ou receber reservas de materiais.</li>
+                                <li>O motivo fica registrado nas observações e o histórico comercial avança para a próxima revisão.</li>
+                                <li>Nenhum movimento de estoque ou financeiro é gerado pela rejeição.</li>
+                            </ul>
+                            <div class="mb-3">
+                                <label class="form-label text-secondary">Motivo da Rejeição <span class="text-danger">*</span></label>
+                                <textarea name="motivo" class="form-control bg-dark text-light border-secondary" rows="3" required
+                                          placeholder="Informe o motivo da rejeição do orçamento..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-secondary">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                            <button type="submit" class="btn btn-sm btn-danger">Confirmar Rejeição</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Modal Cancelar Orçamento -->
+    @if (Model.Situacao is "RASCUNHO" or "ENVIADO" or "APROVADO")
+    {
+        <div class="modal fade" id="modalCancelarOrcamento" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content bg-dark text-light border-secondary">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title h6">Confirmar Cancelamento do Orçamento</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <form asp-action="OrcamentoCancelar" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="modal-body small">
+                            <p class="text-danger fw-bold mb-2">Atenção ao efeito da confirmação:</p>
+                            <ul class="text-secondary ps-3 mb-3">
+                                <li>O cancelamento é permanente e libera apenas as reservas ativas ainda não expedidas.</li>
+                                <li>Materiais já expedidos permanecem sob controle até seu retorno e reconciliação.</li>
+                                <li>O motivo fica registrado nas observações do orçamento.</li>
+                            </ul>
+                            <div class="mb-3">
+                                <label class="form-label text-secondary">Motivo do Cancelamento <span class="text-danger">*</span></label>
+                                <textarea name="motivo" class="form-control bg-dark text-light border-secondary" rows="3" required
+                                          placeholder="Informe o motivo do cancelamento do orçamento..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-secondary">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                            <button type="submit" class="btn btn-sm btn-danger">Confirmar Cancelamento</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

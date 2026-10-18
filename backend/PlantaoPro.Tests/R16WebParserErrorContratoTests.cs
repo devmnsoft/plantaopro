@@ -367,18 +367,14 @@ public sealed class R16ScanFormBindingFonteTests
     };
 
     // FANTASMA — zero pontos de chamada no Web (nem <form>, nem literal de URL) com a cadeia
-    // BFF->API completa: gap funcional documentado (r21a0 F-R21-B; fila R22 decide ligar ou
-    // remover). Se um form for ligado, o fato auto-verificador falha e a saida daqui e obrigatoria.
+    // BFF->API completa: gap funcional documentado (r21a0 F-R21-B). Se um form for ligado, o
+    // fato auto-verificador falha e a saida daqui e obrigatoria (precedente r22b1: Rejeitar/
+    // Cancelar orcamento e ValeCancelar ligadas nas views de detalhe). Set vazio por design apos R22.
     private static readonly HashSet<string> AcoesFantasmaSemChamador = new()
     {
-        // -> POST   api/administrativo360/orcamentos/{id}/rejeitar         (Adm360OrcamentosController L82)
-        "OrcamentoRejeitar",
-        // -> POST   api/administrativo360/orcamentos/{id}/cancelar         (ibid. L91)
-        "OrcamentoCancelar",
-        // -> DELETE api/administrativo360/orcamentos/{id}/reservas/{reservaId} (ibid. L126)
-        "OrcamentoCancelarReserva",
-        // -> POST   api/administrativo360/vales/{id}/cancelar              (Adm360ValesController L143)
-        "ValeCancelar"
+        // -> DELETE api/administrativo360/orcamentos/{id}/reservas/{reservaId} (Adm360OrcamentosController L126)
+        // R22b2: aguarda extensao da superficie reserva-planejamento (reservas individuais) para ligar o botao.
+        "OrcamentoCancelarReserva"
     };
 
     private static readonly HashSet<string> AcoesSemFormEstatico =
@@ -434,11 +430,13 @@ public sealed class R16ScanFormBindingFonteTests
 
         // Antivacuidade: o scan precisa estar olhando a superficie real. Baseline r16 (12 files
         // Administrativo360Controller*): 54 pareamentos / 141 parametros. Extensao R20 aos 4
-        // Adm360*WebController* (medido em r20b1): 79 / 203 / 76 acoes. Os pisos travam
-        // regressao de scan (ex.: glob que volta a ignorar os *WebController*).
-        Assert.True(pareadas >= 75, $"Scan suspeito: apenas {pareadas} formacoes action×form (superficie R20: 79).");
-        Assert.True(parametrosVerificados >= 190, $"Scan suspeito: apenas {parametrosVerificados} parametros (superficie R20: 203).");
-        Assert.True(acoes.Count >= 70, $"Scan suspeito: apenas {acoes.Count} acoes com escalares implicitos (superficie R20: 76).");
+        // Adm360*WebController* (medido em r20b1): 79 / 203 / 76 acoes. r22b1 ligou as 3 acoes
+        // fantasma diretas (Rejeitar/Cancelar orcamento, Cancelar vale) nas views de detalhe:
+        // 82 / 209 / 76. Os pisos travam regressao de scan (ex.: glob que volta a ignorar os
+        // *WebController* ou forms que desaparecem dos modais).
+        Assert.True(pareadas >= 75, $"Scan suspeito: apenas {pareadas} formacoes action×form (superficie R22b1: 82).");
+        Assert.True(parametrosVerificados >= 190, $"Scan suspeito: apenas {parametrosVerificados} parametros (superficie R22b1: 209).");
+        Assert.True(acoes.Count >= 70, $"Scan suspeito: apenas {acoes.Count} acoes com escalares implicitos (superficie R22b1: 76).");
         Assert.Empty(violacoes);
 
         var semForm = acoes.Keys.Except(mapeadas)
@@ -485,8 +483,8 @@ public sealed class R16ScanFormBindingFonteTests
             Assert.True(hits.Count == 0,
                 $"{acao}: fantasma com ponto de chamada (" + string.Join(", ", hits) + ") — ligacao feita; tire do set de fantasmas e deixe o scan principal parear (r21a0 D1).");
         }
-        Assert.True(AcoesFantasmaSemChamador.Count >= 4,
-            $"Catalogo suspeito: apenas {AcoesFantasmaSemChamador.Count} classificadas fantasma (baseline R21: 4).");
+        Assert.True(AcoesFantasmaSemChamador.Count >= 1,
+            $"Catalogo suspeito: apenas {AcoesFantasmaSemChamador.Count} classificadas fantasma (baseline R22b1: 1 — OrcamentoCancelarReserva; r22b2 liga a ultima).");
     }
 
     /// <summary>Casa uma URL estatica de form (/Administrativo360/&lt;Area&gt;/&lt;path&gt;) com a acao

@@ -8,7 +8,7 @@ namespace PlantaoPro.Web.Controllers;
 [Authorize(Roles = "ADMINISTRADOR_GLOBAL")]
 public sealed class ExecutivoController : Controller
 {
-    public IActionResult Index() => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Dashboard executivo B2B", "MRR, receita, clientes, operação, comercial, produto e alertas críticos.", "Executivo", "Alertas"));
+    public IActionResult Index() => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Painel executivo B2B", "MRR, receita, clientes, operação, comercial, produto e alertas críticos.", "Executivo", "Alertas"));
     public IActionResult Receita() => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Receita executiva", "Receita prevista, recebida, faturas vencidas, trials e upgrades, sempre a partir da fonte financeira.", "Executivo", "Index"));
     public IActionResult Clientes() => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Clientes executivos", "Ativos, trial, onboarding, piloto, risco, críticos e alto uso.", "Executivo", "Index"));
     public IActionResult Operacao() => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Operação executiva", "Plantões publicados, descobertos, escalas, médicos, hospitais e chamados.", "Executivo", "Index"));

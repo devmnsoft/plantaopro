@@ -1360,6 +1360,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2355_r56_nome_modulo_painel",
+      "source": "database/migrations/2026_10_v2355_r56_nome_modulo_painel.sql",
+      "checksum": "43a6f366353e6fda2a53e4222ba6c8aa8cf15b118c81ba25a68b8904681715b7",
+      "dependsOn": [
+        "2026_10_v2354_r55_indice_reservas_saldo"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

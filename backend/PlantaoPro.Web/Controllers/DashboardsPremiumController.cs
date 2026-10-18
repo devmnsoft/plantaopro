@@ -34,7 +34,7 @@ public sealed class DashboardsPremiumController : BaseWebController
             var result = await ReadApiResponseAsync<DashboardPremiumApiViewModel>(client, "api/dashboards/" + perfilApi);
             if (result.Data == null)
             {
-                model.ErrorMessage = ApiErrorPresenter.ToFriendlyMessage(result.Error ?? "Dashboard indisponível no momento.");
+                model.ErrorMessage = ApiErrorPresenter.ToFriendlyMessage(result.Error ?? "Painel indisponível no momento.");
                 return View("Perfil", model);
             }
 

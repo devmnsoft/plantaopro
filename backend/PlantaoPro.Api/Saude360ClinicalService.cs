@@ -707,7 +707,7 @@ values(@id,@tenantId,@tenantOrigem,@pacienteId,@consultaId,coalesce(@medicoId,@u
 (select count(1) from plantaopro.agendamentos where reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and status='FALTOU' and data_inicio::date=current_date) as faltas_dia,
 (select count(1) from plantaopro.agendamentos where reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and status='CANCELADO' and data_inicio::date=current_date) as cancelamentos_dia", new { tenantId = TenantId, isGlobal = IsGlobal });
             await AuditAsync("clinica_dashboard", Guid.Empty, "RESUMO", new { modulo = "DASHBOARD_CLINICO" });
-            return ApiResponse<object>.Ok(resumo, "Dashboard clínico carregado.");
+            return ApiResponse<object>.Ok(resumo, "Painel clínico carregado.");
         }
         catch (PostgresException ex) when (IsUndefinedTable(ex))
         {

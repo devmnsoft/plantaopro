@@ -192,7 +192,7 @@ where c.id=@clienteId and c.reg_status='A'", new { clienteId });
         catch (Exception ex)
         {
             logger.LogError(ex, "Erro ao gerar resumo executivo SaaS");
-            return ApiResponse<SaasResumoExecutivoDto>.Fail("Não foi possível carregar o dashboard SaaS.", 500);
+            return ApiResponse<SaasResumoExecutivoDto>.Fail("Não foi possível carregar o painel SaaS.", 500);
         }
     }
 

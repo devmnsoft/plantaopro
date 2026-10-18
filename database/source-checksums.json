@@ -69,6 +69,7 @@
   "database/migrations/2026_10_v2352_r9c_cadastro_anvisa_produtos.sql": "455574771556eff4a86cd33522e56e1acbf9e4470c62f2e1461412a8a7d027eb",
   "database/migrations/2026_10_v2353_r9d_precificacao_preco_venda.sql": "4580ee72997a604d765b78cdefd05d40e268679c738275e0ca0786c802be7283",
   "database/migrations/2026_10_v2354_r55_indice_reservas_saldo.sql": "31ab4e426a5f88fe7d249c1ee4ed59f627e894e7b795cca8907a486e37259ea5",
+  "database/migrations/2026_10_v2355_r56_nome_modulo_painel.sql": "43a6f366353e6fda2a53e4222ba6c8aa8cf15b118c81ba25a68b8904681715b7",
   "database/migrations/2026_v113_operacional_real.sql": "5b07ca155fe5d588f683c49f6682b2eb860d9d6c2dababc872dfdbb726bb8f32",
   "database/migrations/2026_v114_consolidacao_produto.sql": "f96f73e12ff6e9c528de10d15ec461b5ebde658472f8b473701ce5c86e588e53",
   "database/migrations/2026_v115_regras_faturamento_repasses.sql": "ca01dae4c1382100894795ceb3d4b08816a6b5301c21d20b0a82f53965c39a4f",

@@ -32,7 +32,7 @@ public sealed class FechamentosController : BaseWebController
 [Authorize, ApiController, Route("bff")]
 public sealed class V1420BffController : ControllerBase
 {
-    [HttpGet("dashboard")] public ActionResult<BffDashboardResponse> Dashboard() => Ok(ResponseFor("Dashboard executivo", "Sem pendências para o perfil atual."));
+    [HttpGet("dashboard")] public ActionResult<BffDashboardResponse> Dashboard() => Ok(ResponseFor("Painel executivo", "Sem pendências para o perfil atual."));
     [HttpGet("cobertura")] public ActionResult<BffDashboardResponse> Cobertura() => Ok(ResponseFor("Central de cobertura", "Nenhum plantão crítico encontrado."));
     [HttpGet("escalas")] public ActionResult<BffDashboardResponse> Escalas() => Ok(ResponseFor("Escalas", "Nenhuma escala aguardando ação."));
     [HttpGet("fechamentos")] public ActionResult<BffDashboardResponse> Fechamentos() => Ok(ResponseFor("Fechamentos", "Nenhum fechamento pendente."));

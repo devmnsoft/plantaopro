@@ -139,7 +139,8 @@ public sealed class R12GuardBiPremiumAcessoWebTests : IDisposable
 
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
         var html = await resp.Content.ReadAsStringAsync();
-        Assert.Contains("Dashboard Administrador Cliente", html);
+        // R56 (D-R56-1): a copia do h1 trocou de "Dashboard" para "Painel" (titulo do perfil inalterado).
+        Assert.Contains("Painel Administrador Cliente", html);
         // KPIs vazios -> estado vazio honesto (nenhum numero demonstrativo exibido).
         Assert.Contains("Sem indicadores reais", html);
     }

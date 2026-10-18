@@ -1,11 +1,11 @@
 @model PlantaoPro.Web.Models.DashboardPremiumPageViewModel
 @{
-    ViewData["Title"] = "Dashboard " + Model.Titulo;
+    ViewData["Title"] = "Painel " + Model.Titulo;
     var badgeClass = Model.Fonte == "Real" ? "bg-success" : Model.Fonte == "Parcial" ? "bg-warning text-dark" : "bg-secondary";
 }
 <section class="pp-hero premium-hero pp-strategic-surface">
-    <p class="text-uppercase text-primary fw-bold">Dashboard executivo</p>
-    <h1>Dashboard @Model.Titulo</h1>
+    <p class="text-uppercase text-primary fw-bold">Painel executivo</p>
+    <h1>Painel @Model.Titulo</h1>
     <p>Indicadores do seu perfil, plano e módulos contratados.</p>
     <span class="badge @badgeClass">Fonte: @Model.Fonte</span>
 </section>

@@ -10226,3 +10226,18 @@ comment on column plantaopro.adm360_produtos.preco_venda is
 -- R55: índice de apoio à view adm360_saldos — cobre o padrão da subquery correlacionada das
 -- reservas ativas (sem ele cada grupo de saldo refaz scan completo de adm360_reservas duas vezes).
 CREATE INDEX IF NOT EXISTS ix_adm360_reservas_saldo ON plantaopro.adm360_reservas(tenant_id,produto_id,lote_id,local_id) INCLUDE(quantidade) WHERE situacao='ATIVA';
+-- ============================================================
+-- Seção 126 — R56 Nome Modulo Painel v2.21.10
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2355_r56_nome_modulo_painel.sql
+-- SOURCE-SHA256: 43a6f366353e6fda2a53e4222ba6c8aa8cf15b118c81ba25a68b8904681715b7
+-- R56 (r53b1 §7 item 2): decisão de produto de copy "Dashboard" -> "Painel" (D-R56-1).
+-- Catálogo de módulos/capacidades modulos_sistema: renomeia os NOME DE EXIBIÇÃO das linhas cujo
+-- nome usava o empréstimo inglês — é esse nome que o tenant vê em Minha Assinatura (Módulos), no
+-- fluxo de contratação e nas telas de gestão de permissões. Os códigos permanecem estáveis:
+-- grants/permissões referenciam modulo_id/codigo (permissões DASHBOARD.* inalteradas).
+-- Convenção da tabela: nomes em ASCII (sem acentos), alinhado às linhas existentes.
+-- Idempotente: só atualiza linhas cujo nome ainda não seja o valor renomeado.
+update plantaopro.modulos_sistema set nome='Painel' where upper(codigo)='DASHBOARD' and nome <> 'Painel';
+update plantaopro.modulos_sistema set nome='Painel Clinico' where upper(codigo)='CLINICA_DASHBOARD' and nome <> 'Painel Clinico';

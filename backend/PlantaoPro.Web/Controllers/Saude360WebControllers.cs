@@ -89,7 +89,7 @@ public abstract class Saude360WebControllerBase : BaseWebController
 public sealed class ClinicaDashboardController : Saude360WebControllerBase
 {
     public ClinicaDashboardController(IHttpClientFactory f, ILogger<ClinicaDashboardController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
-    public Task<IActionResult> Index() { return ModuloAsync("Dashboard clínico", "Dashboard clínico", "KPIs reais da jornada Paciente -> Agendamento -> Check-in -> Painel -> Triagem -> Consulta -> Prescrição.", "api/clinica-dashboard/resumo", Links(Link("Fluxo de Atendimento", "FluxoAtendimento", "bi-signpost-2"), LinkTo("Pacientes", "Pacientes", "Index", "bi-people"), LinkTo("Agendamentos", "Agendamentos", "Index", "bi-calendar3"), LinkTo("Triagem", "Triagem", "Index", "bi-clipboard2-pulse"), LinkTo("Consultas", "Consultas", "Index", "bi-journal-medical"))); }
+    public Task<IActionResult> Index() { return ModuloAsync("Painel clínico", "Painel clínico", "KPIs reais da jornada Paciente -> Agendamento -> Check-in -> Painel -> Triagem -> Consulta -> Prescrição.", "api/clinica-dashboard/resumo", Links(Link("Fluxo de Atendimento", "FluxoAtendimento", "bi-signpost-2"), LinkTo("Pacientes", "Pacientes", "Index", "bi-people"), LinkTo("Agendamentos", "Agendamentos", "Index", "bi-calendar3"), LinkTo("Triagem", "Triagem", "Index", "bi-clipboard2-pulse"), LinkTo("Consultas", "Consultas", "Index", "bi-journal-medical"))); }
     public IActionResult FluxoAtendimento() { return View("~/Views/ClinicaDashboard/FluxoAtendimento.cshtml"); }
 }
 
@@ -290,7 +290,7 @@ public sealed class ClinicaFinanceiroController : Saude360WebControllerBase
 public sealed class ConveniosController : Saude360WebControllerBase
 {
     public ConveniosController(IHttpClientFactory f, ILogger<ConveniosController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
-    public Task<IActionResult> Index() { return ModuloAsync("Convênios", "Convênios", "Visão de convênios, contratos, planos vinculados e faturamento.", "api/convenios", Links(Link("Dashboard", "Dashboard", "bi-speedometer2"), Link("Novo convênio", "Create", "bi-plus-circle"), Link("Autorizações", "Autorizacoes", "bi-check2-square"))); }
+    public Task<IActionResult> Index() { return ModuloAsync("Convênios", "Convênios", "Visão de convênios, contratos, planos vinculados e faturamento.", "api/convenios", Links(Link("Painel", "Dashboard", "bi-speedometer2"), Link("Novo convênio", "Create", "bi-plus-circle"), Link("Autorizações", "Autorizacoes", "bi-check2-square"))); }
     public Task<IActionResult> Dashboard() { return ModuloAsync("Dashboard de convênios", "Convênios", "Contratos, planos, autorizações, glosas e faturamento integrados ao financeiro.", "api/convenios/resumo", Links(Link("Novo convênio", "Create", "bi-plus-circle"), Link("Autorizações", "Autorizacoes", "bi-check2-square"), Link("Faturamento", "Faturamento", "bi-file-earmark-bar-graph"), LinkTo("Planos de saúde", "PlanosSaude", "Index", "bi-card-checklist"))); }
     public IActionResult Create() { return Formulario("Novo convênio", "api/convenios"); }
     public IActionResult Edit(Guid id) { return Formulario("Editar convênio", "api/convenios/" + id, id); }

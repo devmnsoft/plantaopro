@@ -218,7 +218,7 @@
     <value>Meu dia</value>
   </data>
   <data name="Nav.Dashboard" xml:space="preserve">
-    <value>Dashboard</value>
+    <value>Painel</value>
   </data>
   <data name="Nav.Pendencias" xml:space="preserve">
     <value>Central de Pendências</value>
@@ -1985,10 +1985,10 @@
     <value>Abrir Cotação</value>
   </data>
   <data name="Adm360.Dash.PageTitle" xml:space="preserve">
-    <value>Dashboard Gerencial — Administrativo 360</value>
+    <value>Painel Gerencial — Administrativo 360</value>
   </data>
   <data name="Adm360.Dash.Heading" xml:space="preserve">
-    <value>Dashboard Gerencial &amp; Estatístico 360</value>
+    <value>Painel Gerencial &amp; Estatístico 360</value>
   </data>
   <data name="Adm360.Dash.Subheading" xml:space="preserve">
     <value>Indicadores reais e consolidados de cotações de portais, documentos fiscais NF-e e integrações.</value>
@@ -2024,7 +2024,7 @@
     <value>Importação NF-e mod 55 e sincronização DF-e Sefaz.</value>
   </data>
   <data name="Adm360.Dash.CapDashboardTitle" xml:space="preserve">
-    <value>Dashboard Gerencial</value>
+    <value>Painel Gerencial</value>
   </data>
   <data name="Adm360.Dash.CapDashboardDesc" xml:space="preserve">
     <value>Métricas e estatísticas apuradas via consultas reais em SQL.</value>

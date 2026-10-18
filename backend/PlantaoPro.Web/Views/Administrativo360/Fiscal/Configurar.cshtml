@@ -17,13 +17,38 @@
                 <i class="bi bi-gear text-warning me-2"></i>Configuração Fiscal de Emissão
             </h2>
             <p class="text-muted small mb-0">
-                Parâmetros do cliente para emissão de NF-e. A decisão comercial ausente vira pendência P2 explícita;
-                a credencial entra apenas como NOME de segredo — nunca o valor (A33).
+                Parâmetros da instituição para emissão de NF-e. O que estiver em aberto aparece como pendência visível;
+                a credencial fica guardada apenas pelo nome — nunca o valor.
             </p>
         </div>
         <a href="/Administrativo360/Fiscal/Notas" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-receipt me-1"></i>Pré-Emissão de NF-e
         </a>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-2"><i class="bi bi-info-circle me-2"></i>Como configurar a emissão fiscal</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">1. Para que serve</strong>
+                    Manter os dados da empresa para emitir NF-e: quem emite, o certificado, o ambiente e os tipos de nota.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">2. Como utilizar</strong>
+                    Revise cada seção, complete o que faltar e salve. Decisões em aberto aparecem como pendências visíveis, sem ficar ocultas.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">3. O que acontece ao salvar</strong>
+                    A configuração passa a valer para todas as pré-notas seguintes; o certificado fica guardado só pelo nome, sem o segredo.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">4. Próxima ação</strong>
+                    Com a configuração pronta, vá até a pré-emissão de NF-e e crie a primeira nota em rascunho.
+                </div>
+            </div>
+        </div>
     </div>
 
     @if (Model.Erro is not null)
@@ -51,7 +76,7 @@
             }
             else if (Model.JaCadastrado && !string.IsNullOrWhiteSpace(Model.Provedor))
             {
-                <span class="badge bg-warning text-dark ms-1">Conector '@Model.Provedor' não integrado (P1)</span>
+                <span class="badge bg-warning text-dark ms-1">Conector '@Model.Provedor' ainda não integrado</span>
             }
         </div>
     }
@@ -68,7 +93,7 @@
             </ul>
             <span class="text-secondary">
                 Enquanto houver pendência, o status permanece <code>PENDENTE_DE_CONFIGURACAO</code> e o botão
-                "Emitir" devolve o motivo real — nenhum sucesso fictício (L33/H19).
+                "Emitir" devolve o motivo real — nenhum sucesso fictício.
             </span>
         </div>
     }
@@ -130,7 +155,7 @@
                     <label class="form-label text-light small">Credencial de emissão (nome do segredo)</label>
                     <input type="text" name="certificadoReferencia" maxlength="120" value="@Model.CertificadoReferencia"
                            placeholder="CNPJ do emitente" class="form-control form-control-sm bg-black text-light border-secondary font-monospace" />
-                    <div class="form-text text-secondary">Só o nome da referência (A33). O valor do certificado fica em configuração separada, nunca no banco de dados nem nas telas.</div>
+                    <div class="form-text text-secondary">Só o nome da referência. O valor do certificado fica em configuração separada, nunca no banco de dados nem nas telas.</div>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
                     <div class="form-check form-switch mb-1">

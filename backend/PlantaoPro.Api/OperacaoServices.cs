@@ -35,6 +35,11 @@ public sealed class OperacaoService
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
 
             var tenantParams = new { userId, clienteId, isAdminGlobal };
+            // R18 (r18a0 D5): o scoping da tabela notificacoes e por tenant_id/usuario_id — a coluna
+            // cliente_id nunca existiu nela (raiz do 42703 que quebrava o resumo para todo tenant
+            // atingivel, reproduzido ao vivo no r17b2). O writer atual nao popula tenant_id
+            // (tolerancia is null preserva o comportamento de broadcast); se passar a populá-la,
+            // usar o tenant_id do contexto do usuario.
             var resumo = await cn.QueryFirstOrDefaultAsync<OperacaoResumoContadoresRow>(@"
 select
   (select count(1) from plantaopro.plantoes p where p.reg_status='A' and (@isAdminGlobal or p.cliente_id=@clienteId) and date_trunc('day', p.data_inicio)=date_trunc('day', now())) as TotalPlantoesHoje,
@@ -52,7 +57,7 @@ select
      and p1.data_inicio < p2.data_fim and p2.data_inicio < p1.data_fim) as TotalConflitos,
   (select count(1) from plantaopro.pagamentos pg join plantaopro.plantoes p on p.id=pg.plantao_id where pg.reg_status='A' and p.reg_status='A' and (@isAdminGlobal or p.cliente_id=@clienteId) and lower(coalesce(pg.status,'')) in ('pendente','atrasado')) as TotalPagamentosPendentes,
   (select coalesce(sum(pg.valor_previsto),0) from plantaopro.pagamentos pg join plantaopro.plantoes p on p.id=pg.plantao_id where pg.reg_status='A' and p.reg_status='A' and (@isAdminGlobal or p.cliente_id=@clienteId) and lower(coalesce(pg.status,'')) in ('pendente','atrasado')) as ValorPendente,
-  (select count(1) from plantaopro.notificacoes n where n.reg_status='A' and (@isAdminGlobal or n.cliente_id=@clienteId or n.cliente_id is null) and coalesce(n.lida,false)=false and (n.usuario_id=@userId or n.usuario_id is null)) as NotificacoesNaoLidas", tenantParams) ?? new OperacaoResumoContadoresRow();
+  (select count(1) from plantaopro.notificacoes n where n.reg_status='A' and (@isAdminGlobal or n.tenant_id=@clienteId or n.tenant_id is null) and coalesce(n.lida,false)=false and (n.usuario_id=@userId or n.usuario_id is null)) as NotificacoesNaoLidas", tenantParams) ?? new OperacaoResumoContadoresRow();
 
             var plantoesCriticos = await cn.QueryAsync<OperacaoPlantaoCriticoDto>(@"
 select p.id, h.nome_fantasia as HospitalNome, e.nome as EspecialidadeNome, p.data_inicio as DataInicio, p.data_fim as DataFim, p.vagas_disponiveis as VagasDisponiveis, p.status

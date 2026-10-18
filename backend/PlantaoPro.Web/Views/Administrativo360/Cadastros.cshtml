@@ -283,11 +283,11 @@
             <div class="modal-body">
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Nome / Razão Social *</label>
-                    <input type="text" name="nome" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: Hospital Municipal Central" required />
+                    <input type="text" name="nome" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: Hospital Municipal Central" maxlength="160" required />
                 </div>
                 <div class="mb-3">
                     <label class="form-label small">Documento (CNPJ / CPF)</label>
-                    <input type="text" name="documento" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Apenas números ou formatado" />
+                    <input type="text" name="documento" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Apenas números ou formatado" maxlength="20" pattern="[0-9./ -]*" />
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Tipo de Relação *</label>
@@ -318,25 +318,25 @@
                 <div class="row g-2 mb-3">
                     <div class="col-4">
                         <label class="form-label small fw-bold">SKU *</label>
-                        <input type="text" name="sku" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: STENT-01" required />
+                        <input type="text" name="sku" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: STENT-01" maxlength="40" required />
                     </div>
                     <div class="col-8">
                         <label class="form-label small fw-bold">Nome do Material *</label>
-                        <input type="text" name="nome" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: Stent Coronário Sirolimus" required />
+                        <input type="text" name="nome" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: Stent Coronário Sirolimus" maxlength="180" required />
                     </div>
                 </div>
                 <div class="row g-2 mb-3">
                     <div class="col-4">
                         <label class="form-label small fw-bold">Unidade *</label>
-                        <input type="text" name="unidade" value="UN" class="form-control form-control-sm bg-black text-light border-secondary" required />
+                        <input type="text" name="unidade" value="UN" class="form-control form-control-sm bg-black text-light border-secondary" maxlength="12" required />
                     </div>
                     <div class="col-4">
                         <label class="form-label small">Preço Custo (R$)</label>
-                        <input type="number" step="0.01" name="precoCusto" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary" />
+                        <input type="number" step="0.01" min="0" name="precoCusto" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary" />
                     </div>
                     <div class="col-4">
                         <label class="form-label small">Cód. Barras</label>
-                        <input type="text" name="codigoBarras" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="EAN-13" />
+                        <input type="text" name="codigoBarras" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="EAN-13" maxlength="80" pattern="[0-9 -]*" />
                     </div>
                 </div>
                 <div class="form-check form-switch mb-2">
@@ -368,11 +368,11 @@
             <div class="modal-body">
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Código do Local *</label>
-                    <input type="text" name="codigo" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: ALMOX-CENTRAL" required />
+                    <input type="text" name="codigo" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: ALMOX-CENTRAL" maxlength="30" required />
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Nome / Descrição *</label>
-                    <input type="text" name="nome" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: Almoxarifado Central de Cirurgia" required />
+                    <input type="text" name="nome" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: Almoxarifado Central de Cirurgia" maxlength="120" required />
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Tipo *</label>

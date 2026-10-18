@@ -16,7 +16,9 @@ public sealed class PosRcUxFinalQaContractTests
         Assert.Contains("ReadApiResponseAsync<DashboardPremiumApiViewModel>", controller);
         var view = Read("backend/PlantaoPro.Web/Views/DashboardsPremium/Perfil.cshtml");
         Assert.Contains("Fonte:", view);
-        Assert.Contains("Nenhum número demonstrativo", view);
+        // R25 (epic E8): o empty state foi reescrito em linguagem simples mantendo a MESMA intencao
+        // do contrato original (a tela nao inventa numeros quando a API nao retorna KPIs).
+        Assert.Contains("Somente indicadores reais são exibidos.", view);
         Assert.DoesNotContain("i * 7", view);
     }
 

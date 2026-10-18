@@ -57,13 +57,16 @@ public sealed class R4C11BreadcrumbTrailTests
     }
 
     [Fact]
-    public void Homologacao_Area_Uses_Web_Controller_Key()
+    public void Compatibilidade_Area_Uses_Web_Controller_Key()
     {
+        // R25 (epic E8): a area V112Web saiu do rotulo "Homologacao" para "Compatibilidade" (linguagem
+        // simples, sem sugerir ambiente de teste); a regra de chave do controller e o resto da trail
+        // sao os mesmos.
         var service = NewService();
 
         var trail = service.ResolveTrail("V112Web", "Dashboard", "Dashboard");
 
-        Assert.Equal(new[] { "Início", "Homologação", "Dashboard" }, trail.Select(t => t.Label).ToArray());
+        Assert.Equal(new[] { "Início", "Compatibilidade", "Dashboard" }, trail.Select(t => t.Label).ToArray());
         Assert.DoesNotContain("V112Web", trail.Select(t => t.Label));
     }
 

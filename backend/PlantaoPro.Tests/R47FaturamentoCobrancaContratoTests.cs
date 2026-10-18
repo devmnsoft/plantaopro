@@ -42,6 +42,13 @@ public sealed class R47FaturamentoCobrancaContratoTests
         Assert.Contains("from plantaopro.cadastro_cliente_pagamentos_iniciais", regiao);
         Assert.Contains("'SAAS' as \"\"Origem\"\"", regiao);
         Assert.Contains("'CADASTRO' as \"\"Origem\"\"", regiao);
+        // Colunas 'date' saem como timestamptz: o Npgsql 10 devolve 'date' em tipo que o
+        // ChangeType do Dapper não converte para DateTime (bug latente B4 exposto na smoke
+        // viva da R47 — Error parsing column DataInicio). O mesmo cast protege a consulta
+        // de assinatura que alimenta uso/faturas/solicitações.
+        Assert.Contains("vencimento::timestamptz as \"\"Vencimento\"\"", regiao);
+        Assert.Contains("a.data_inicio::timestamptz as \"\"DataInicio\"", servico);
+        Assert.Contains("a.data_fim::timestamptz as \"\"DataFim\"", servico);
     }
 
     [Fact]

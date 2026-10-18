@@ -555,7 +555,7 @@ and plantaopro.modulo_efetivo(@tenantId,m.codigo)", new { permissionIds, tenantI
         // explícito: 404 honesto, propagado por uso/faturas/solicitações.
         if (ctx.Data?.ClienteId is null) return ApiResponse<MinhaAssinaturaDto>.Fail("Organização sem cliente vinculado para a assinatura.", 404);
         await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-        var dto = await cn.QueryFirstOrDefaultAsync<MinhaAssinaturaDto>(@"select a.id as ""AssinaturaId"", a.cliente_id as ""ClienteId"", a.plano_id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", coalesce(a.status,'') as ""Status"", a.valor_contratado as ""ValorContratado"", a.data_inicio as ""DataInicio"", a.data_fim as ""DataFim"" from plantaopro.assinaturas a join plantaopro.planos p on p.id=a.plano_id where a.cliente_id=@clienteId and a.reg_status='A' order by a.reg_date desc limit 1", new { clienteId = ctx.Data.ClienteId.Value });
+        var dto = await cn.QueryFirstOrDefaultAsync<MinhaAssinaturaDto>(@"select a.id as ""AssinaturaId"", a.cliente_id as ""ClienteId"", a.plano_id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", coalesce(a.status,'') as ""Status"", a.valor_contratado as ""ValorContratado"", a.data_inicio::timestamptz as ""DataInicio"", a.data_fim::timestamptz as ""DataFim"" from plantaopro.assinaturas a join plantaopro.planos p on p.id=a.plano_id where a.cliente_id=@clienteId and a.reg_status='A' order by a.reg_date desc limit 1", new { clienteId = ctx.Data.ClienteId.Value });
         return dto is null ? ApiResponse<MinhaAssinaturaDto>.Fail("Assinatura não encontrada.", 404) : ApiResponse<MinhaAssinaturaDto>.Ok(dto);
     }
 
@@ -648,11 +648,11 @@ and plantaopro.modulo_efetivo(@tenantId,m.codigo)", new { permissionIds, tenantI
             var assinatura = await MinhaAssinaturaAsync();
             if (!assinatura.Success || assinatura.Data is null) return ApiResponse<IEnumerable<MinhaAssinaturaFaturaDto>>.Fail(assinatura.Message, assinatura.StatusCode);
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var rows = await cn.QueryAsync<MinhaAssinaturaFaturaDto>(@"select f.id as ""Id"", f.cliente_id as ""ClienteId"", f.assinatura_id as ""AssinaturaId"", f.vencimento as ""Vencimento"", f.valor as ""Valor"", coalesce(f.status,'') as ""Status"", 'Fatura mensal do plano' as ""Descricao"", 'SAAS' as ""Origem""
+            var rows = await cn.QueryAsync<MinhaAssinaturaFaturaDto>(@"select f.id as ""Id"", f.cliente_id as ""ClienteId"", f.assinatura_id as ""AssinaturaId"", f.vencimento::timestamptz as ""Vencimento"", f.valor as ""Valor"", coalesce(f.status,'') as ""Status"", 'Fatura mensal do plano' as ""Descricao"", 'SAAS' as ""Origem""
 from plantaopro.faturas_saas f
 where f.cliente_id=@clienteId and f.reg_status='A'
 union all
-select p.id as ""Id"", p.cliente_id as ""ClienteId"", p.assinatura_id as ""AssinaturaId"", p.vencimento as ""Vencimento"", p.valor as ""Valor"", coalesce(p.status,'') as ""Status"", coalesce(p.descricao,'Pagamento de cadastro') as ""Descricao"", 'CADASTRO' as ""Origem""
+select p.id as ""Id"", p.cliente_id as ""ClienteId"", p.assinatura_id as ""AssinaturaId"", p.vencimento::timestamptz as ""Vencimento"", p.valor as ""Valor"", coalesce(p.status,'') as ""Status"", coalesce(p.descricao,'Pagamento de cadastro') as ""Descricao"", 'CADASTRO' as ""Origem""
 from plantaopro.cadastro_cliente_pagamentos_iniciais p
 where p.cliente_id=@clienteId and p.reg_status='A'
 order by ""Vencimento"" desc

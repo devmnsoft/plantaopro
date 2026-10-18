@@ -20,7 +20,7 @@
     <value>Close menu</value>
   </data>
   <data name="Auth.DemoNotice" xml:space="preserve">
-    <value>Demo environment active. Credentials are not displayed for security.</value>
+    <value>Example environment: the data shown here is not real data from your organization.</value>
   </data>
   <data name="Auth.LoginTitle" xml:space="preserve">
     <value>Sign in</value>

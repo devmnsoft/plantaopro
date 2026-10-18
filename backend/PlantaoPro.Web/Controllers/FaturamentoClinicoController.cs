@@ -36,7 +36,7 @@ public sealed class FaturamentoClinicoController : BaseWebController
     public Task<IActionResult> ContasReceber() => Index(null, null, null, null);
 
     [HttpGet("Titulos")]
-    public IActionResult Titulos() => Produto("Títulos", "Títulos financeiros retornados pela API; boleto permanece somente demonstrativo.", "api/v114/faturamento/titulos");
+    public IActionResult Titulos() => Produto("Títulos", "Títulos financeiros retornados pela API; o boleto exibido é ilustrativo e não representa cobrança real.", "api/v114/faturamento/titulos");
 
     [HttpGet("RepassesMedicos")]
     public IActionResult RepassesMedicos() => Produto("Repasses Médicos", "Repasses por plantão realizado e atendimento faturado.", "api/v115/repasses-medicos");
@@ -45,10 +45,10 @@ public sealed class FaturamentoClinicoController : BaseWebController
     public IActionResult Glosas() => Produto("Glosas", "Registro e acompanhamento de glosas por convênio.", "api/v115/glosas");
 
     [HttpGet("DemoBoleto")]
-    public IActionResult DemoBoleto() => Produto("Demo Boleto", "Demonstração sem emissão de cobrança real.", "api/v114/faturamento/titulos");
+    public IActionResult DemoBoleto() => Produto("Boleto (exemplo)", "Mostra como o boleto ficará sem lançar cobrança real.", "api/v114/faturamento/titulos");
 
     [HttpGet("Regras")]
-    public IActionResult Regras() => Produto("Regras", "Regras reais de faturamento configuradas para o tenant.", "api/v115/faturamento/regras");
+    public IActionResult Regras() => Produto("Regras", "Regras reais de faturamento configuradas para a sua instituição.", "api/v115/faturamento/regras");
 
     [HttpGet("Recebimentos")]
     public Task<IActionResult> Recebimentos() => Index(null, null, null, null);

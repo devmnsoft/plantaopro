@@ -35,7 +35,7 @@
 </div>
 @if (!Model.Itens.Any())
 {
-    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar-check", "Agenda sem registros", "Nenhum agendamento real retornado para os filtros atuais. A tela não exibe pacientes demonstrativos por padrão.")' />
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar-check", "Agenda sem registros", "Nenhum agendamento retornado para os filtros atuais. A agenda exibe apenas pacientes reais.")' />
 }
 else
 {

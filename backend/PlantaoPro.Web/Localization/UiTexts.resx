@@ -20,7 +20,7 @@
     <value>Fechar menu</value>
   </data>
   <data name="Auth.DemoNotice" xml:space="preserve">
-    <value>Ambiente de demonstração ativo. Credenciais não são exibidas por segurança.</value>
+    <value>Ambiente de exemplo: os dados exibidos aqui não são dados reais da sua instituição.</value>
   </data>
   <data name="Auth.LoginTitle" xml:space="preserve">
     <value>Entrar</value>

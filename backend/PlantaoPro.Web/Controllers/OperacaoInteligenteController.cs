@@ -29,7 +29,7 @@ public sealed class OperacaoInteligenteController : BaseWebController
 
             if (configuration.GetValue<bool>("DemoMode"))
             {
-                TempData["Warning"] = "API indisponível; exibindo modo demonstração explicitamente habilitado.";
+                TempData["Warning"] = "API indisponível; exibindo o modo de exemplo habilitado para este ambiente.";
                 return View(OperacaoInteligenteViewModel.Demo());
             }
 

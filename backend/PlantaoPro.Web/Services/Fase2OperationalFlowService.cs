@@ -38,7 +38,7 @@ public sealed class Fase2OperationalFlowService : IFase2OperationalFlowService
             Subtitle = descriptor.Subtitle
         };
 
-        model.Alerts.Add("Esta rota de compatibilidade não possui uma fonte operacional própria. Nenhum indicador ou item demonstrativo é exibido.");
+        model.Alerts.Add("Esta tela ainda não está conectada a uma fonte operacional própria. Nenhum indicador sem fonte é exibido.");
         if (descriptor.Action is not null)
         {
             model.PrimaryActions.Add(descriptor.Action);
@@ -55,7 +55,7 @@ public sealed class Fase2OperationalFlowService : IFase2OperationalFlowService
         "PENDENCIAS" => ("Central de Ações", "As ações são derivadas do estado real dos módulos contratados.", null),
         "CLIENTE" => ("Portal do cliente", "Os dados do tenant são apresentados apenas por módulos com fonte persistida.", Link("Gerenciar usuários", "Usuarios", "Index")),
         "PARCEIRO" => ("Portal do parceiro", "Nenhum indicador comercial é estimado nesta página.", null),
-        _ => ("Operação", "Nenhum dado demonstrativo é usado em páginas operacionais.", null)
+        _ => ("Operação", "Páginas operacionais exibem apenas dados reais.", null)
     };
 
     private static Fase2ActionViewModel Link(string label, string controller, string action) => new()

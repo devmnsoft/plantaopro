@@ -27,7 +27,7 @@ public sealed class AssistenteContextualService : IAssistenteContextualService
         else if (key.Contains("relatorios")) Configurar(model, "Relatórios", "Use os relatórios executivos para demonstrar volume, eficiência, receita e riscos da operação.", "Relatório executivo", "/Relatorios/Executivo", "GESTOR");
         else if (key.Contains("manual")) Configurar(model, "Manual", "Consulte o roteiro do seu perfil quando precisar revisar o fluxo ou treinar a equipe.", "Abrir manual do perfil", "/Manual/Perfil", perfil);
 
-        model.Alertas = registros == 0 ? new List<string> { "Nenhum registro carregado nesta tela. Use a ação principal ou aplique a massa demo em ambiente de desenvolvimento." } : Array.Empty<string>();
+        model.Alertas = registros == 0 ? new List<string> { "Nenhum registro nesta tela ainda. Use a ação principal para registrar o primeiro." } : Array.Empty<string>();
         return model;
     }
 

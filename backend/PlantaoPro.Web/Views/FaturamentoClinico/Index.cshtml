@@ -7,7 +7,7 @@
     <partial name="_PageIntroduction" model='new PlantaoPro.Web.Models.PageIntroductionViewModel(
         "Faturamento Clínico",
         "Confira contas geradas a partir das jornadas assistenciais antes do fluxo financeiro.",
-        "Os dados abaixo são retornados pela API do tenant; campos não fornecidos pela origem não são estimados.",
+        "Os dados abaixo vêm do sistema da sua instituição; campos não fornecidos pela origem não são estimados.",
         Steps: new[] { "Confira a referência e a competência.", "Investigue pendências na jornada de origem.", "Prossiga no Financeiro somente com dados consistentes." },
         Eyebrow: "Receita assistencial")' />
 
@@ -47,7 +47,7 @@
     {
         <section class="pp-empty-state" role="status" aria-labelledby="billing-empty-title">
             <h2 id="billing-empty-title">@(Model.HasActiveFilters ? "Nenhuma conta corresponde aos filtros" : "Nenhuma conta clínica encontrada")</h2>
-            <p>@(Model.HasActiveFilters ? "Ajuste ou limpe os filtros para consultar novamente os dados retornados pela API." : "A API não retornou contas para este tenant. Nenhum valor ou histórico demonstrativo foi criado.")</p>
+            <p>@(Model.HasActiveFilters ? "Ajuste ou limpe os filtros para consultar novamente os dados retornados pela API." : "Nenhum valor ou histórico foi criado para este cliente.")</p>
             <a class="btn btn-outline-primary" asp-controller="Consultas" asp-action="Index">Revisar consultas</a>
         </section>
     }

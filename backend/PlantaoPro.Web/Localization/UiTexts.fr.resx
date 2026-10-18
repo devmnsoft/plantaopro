@@ -20,7 +20,7 @@
     <value>Fermer le menu</value>
   </data>
   <data name="Auth.DemoNotice" xml:space="preserve">
-    <value>Environnement de démonstration actif. Les identifiants ne sont pas affichés pour des raisons de sécurité.</value>
+    <value>Environnement d'exemple : les données affichées ici ne sont pas des données réelles de votre organisation.</value>
   </data>
   <data name="Auth.LoginTitle" xml:space="preserve">
     <value>Connexion</value>

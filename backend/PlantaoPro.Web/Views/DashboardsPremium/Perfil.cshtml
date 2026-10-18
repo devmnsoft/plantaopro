@@ -15,7 +15,7 @@
 }
 @if (!Model.Kpis.Any())
 {
-    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-bar-chart", "Sem indicadores reais", "A API não retornou KPIs para este contexto. Nenhum número demonstrativo foi exibido.")' />
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-bar-chart", "Sem indicadores reais", "A API não retornou KPIs para este contexto. Somente indicadores reais são exibidos.")' />
 }
 else
 {

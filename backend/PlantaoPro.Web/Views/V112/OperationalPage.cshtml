@@ -1,5 +1,5 @@
 @{
-    var title = (string)(ViewData["Title"] ?? "Homologação v1.12");
+    var title = (string)(ViewData["Title"] ?? "Compatibilidade 1.12");
     var description = (string)(ViewData["Description"] ?? "Tela operacional");
     var endpoint = (string)(ViewData["Endpoint"] ?? "/api/dashboard");
     var action = (string)(ViewData["PrimaryAction"] ?? "Executar");
@@ -11,8 +11,8 @@
     </div>
     <div id="v112Toast" class="alert alert-success d-none" role="status">Ação executada com sucesso.</div>
     <div id="v112Error" class="alert alert-danger d-none" role="alert"></div>
-    <div id="v112Loading" class="alert alert-info">Carregando dados reais PostgreSQL...</div>
-    <div class="mb-3"><span class="badge bg-success">Dados reais PostgreSQL</span> <span class="badge bg-info text-dark">Demo explícito quando indicado</span></div>
+    <div id="v112Loading" class="alert alert-info">Carregando dados da sua instituição...</div>
+    <div class="mb-3"><span class="badge bg-success">Dados reais</span> <span class="badge bg-info text-dark">Dados de exemplo aparecem sempre marcados</span></div>
     <div class="row g-2 mb-3"><div class="col-sm-8"><input class="form-control" id="v112Filter" placeholder="Filtro local" /></div><div class="col-sm-4"><button class="btn btn-outline-secondary w-100" id="v112Refresh" type="button">Atualizar</button></div></div>
     <div id="v112Empty" class="alert alert-warning d-none">Nenhum dado retornado para os filtros atuais.</div>
     <pre id="v112Payload" class="border rounded p-3 bg-light text-break">Estado vazio: clique em "@action" para consultar a API.</pre>

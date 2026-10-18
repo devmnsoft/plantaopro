@@ -15,6 +15,14 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
         ["Clientes"] = "CLIENTES",
         ["Planos"] = "PLANOS",
         ["Assinaturas"] = "ASSINATURAS",
+        // R18 (r18a0 D2): administracao global da plataforma (Central Global e Catalogo de Modulos,
+        // incl. contratos por tenant em Modulos/Tenant) ficava orfa do dicionario e caia em
+        // CATALOGO_NAO_CONFIGURADO ate para o ADMINISTRADOR_GLOBAL (reproduzido ao vivo no r18a0):
+        // o lookup precede o bypass de global-admin, que so vale em HasPermission/IsModuleEnabled.
+        // SAAS e pai do catalogo com suite completa (nao vendido hoje, r18a0 F3); tenant-admin por
+        // URL direta recebe MODULO_NAO_CONTRATADO honesto. Sem DDL.
+        ["SaasDashboard"] = "SAAS",
+        ["Modulos"] = "SAAS",
         // R13-B1 (achado r12b2, reproduzido ao vivo): o guard cobrava o codigo fantasma BILLING,
         // ausente de modulos_sistema — o modulo canonico do dominio e FATURAMENTO_SAAS ("Faturamento
         // SaaS", ATIVO/A, ordem 200, seed 2026_plantao_pro_self_service_white_label.sql) com suite
@@ -49,6 +57,20 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
         ["Plantoes"] = "PLANTOES",
         ["Convites"] = "CONVITES",
         ["Escalas"] = "ESCALAS",
+        // R18 (r18a0 D3): operadores da secao Operacao orfanos (F7, reproduzidos ao vivo; alcance
+        // real medido em 9 controllers, nao 3). Donos canonicos medidos no catalogo: FECHAMENTO e
+        // COBERTURA existem como pais com suite completa — o plural FECHAMENTOS era fantasma no
+        // sidebar (corrigido junto, r18a0 F5); OPERACAO360 e o unico modulo operacional com suite
+        // completa (o pai OPERACAO tem suite vazia). Zero contratos hoje (F3) => denegacao honesta
+        // ate decisao comercial — mesmo estado do ESCALAS pre-R17. Sem DDL.
+        ["Fechamentos"] = "FECHAMENTO",
+        ["Cobertura"] = "COBERTURA",
+        ["CommandCenter"] = "OPERACAO360",
+        // R18 (r18a0 D4): pin CONTRATADO-SOMENTE (mesmo desenho do R17-D3/MEDICO_AREA) — sem gêmeo
+        // no catalogo, pagina stub Fase2, audiencia restrita pelo papel-gate Roles.Operacao; a
+        // denegacao passa de CATALOGO_NAO_CONFIGURADO (bug, loga ERROR) para MODULO_NAO_CONTRATADO
+        // (estado canonico, loga WARN). Sem DDL.
+        ["Coordenacao"] = "COORDENACAO",
         ["Medicos"] = "MEDICOS",
         ["Hospitais"] = "HOSPITAIS",
         ["Especialidades"] = "ESPECIALIDADES",
@@ -67,6 +89,15 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
         ["MinhaAgenda"] = "MINHA_AGENDA",
         ["MeuDia"] = "MEU_DIA",
         ["Pendencias"] = "MEU_DIA",
+        // R18 (r18a0 D1): infraestrutura do login orfa para TODO papel autenticado (inclusive
+        // global-admin, reproduzido ao vivo): Minha Central (botao HOME do sidebar + rota de fuga
+        // das telas de erro), centro de notificacoes e Ajuda (icone do topbar + botao "Acionar
+        // suporte" da propria tela de recusa). Comuns-em-codigo (precedentes CONTA R7-E1, AJUDA/LGPD
+        // ja nos sets, MINHA_AGENDA R17-D2): NOTIFICACOES/MINHA_CENTRAL entraram nos
+        // CommonModules/CoreModules Web+Api. Sem DDL.
+        ["MinhaCentral"] = "MINHA_CENTRAL",
+        ["Notificacoes"] = "NOTIFICACOES",
+        ["Ajuda"] = "AJUDA",
         ["HospitalArea"] = "HOSPITAL_AREA",
         ["ParceiroPortal"] = "PARCEIRO",
         ["Comercial"] = "COMERCIAL",
@@ -293,6 +324,10 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
         ["ConvitesEquipe/Index"] = "VER",
         ["ConvitesEquipe/Criar"] = "CONVIDAR",
         ["ConvitesEquipe/Revogar"] = "CONVIDAR",
+        // R18 (r18a0 D3): POST /fechamentos/{id}/acao concentra as escritas (iniciar/concluir
+        // conferencia, aprovar, devolver, rejeitar, gerar financeiro) — o mapeamento generico
+        // resolveria tudo como VER.
+        ["Fechamentos/Acao"] = "CONFIRMAR",
         ["Adm360DocumentosXmlWeb/Importar"] = "IMPORTAR_XML",
         ["Adm360DocumentosXmlWeb/Conferir"] = "CONFERIR",
         ["Adm360DocumentosXmlWeb/Manifestar"] = "MANIFESTAR_DFE",

@@ -8,6 +8,10 @@ using PlantaoPro.Web.Services;
 namespace PlantaoPro.Web.Controllers;
 
 [Authorize]
+// R18 (r18a0 D6): a rota nua /CentralEscala voltou a resolver (antes 404) — o estilo da casa e
+// attribute-route nos controllers da secao Operacao; as demais acoes sem template herdam
+// {controller}/{action} e preservam os RedirectToAction existentes.
+[Route("CentralEscala")]
 public sealed class CentralEscalaController : BaseWebController
 {
     private readonly IFase2OperationalFlowService flowService;
@@ -17,7 +21,18 @@ public sealed class CentralEscalaController : BaseWebController
         this.flowService = flowService;
     }
 
-    public async Task<IActionResult> Index()
+    // D6: a rota nua /CentralEscala resolve (era 404). O corpo e um metodo privado com nome de
+    // view explicito porque View() resolveria a view pelo nome da acao chamadora; a URL legado
+    // /CentralEscala/Index continua valendo (link hardcoded em OperacaoInteligenteViewModel +
+    // contrato R17) sem duplicar logica.
+    [HttpGet("")]
+    public Task<IActionResult> Index() => CarregarResumoAsync();
+
+    // R18 (r18a0 D6): URL legado — delega para o mesmo fluxo da rota nua.
+    [HttpGet("Index")]
+    public Task<IActionResult> IndexLegacy() => CarregarResumoAsync();
+
+    private async Task<IActionResult> CarregarResumoAsync()
     {
         try
         {
@@ -33,16 +48,16 @@ public sealed class CentralEscalaController : BaseWebController
             if (data is null)
             {
                 ViewBag.ErrorMessage = error ?? UiText.L("Coverage.LoadFailed");
-                return View(OperacaoResumoDto.Empty());
+                return View("Index", OperacaoResumoDto.Empty());
             }
 
-            return View(data);
+            return View("Index", data);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Falha ao carregar Central de Escala.");
             ViewBag.ErrorMessage = UiText.L("Coverage.LoadUnexpected");
-            return View(OperacaoResumoDto.Empty());
+            return View("Index", OperacaoResumoDto.Empty());
         }
     }
 

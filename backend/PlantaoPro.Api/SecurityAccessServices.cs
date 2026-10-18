@@ -159,7 +159,8 @@ public sealed class ModulePermissionService : IPermissionService, IModuleAccessS
     }
 
     // R17 (r17a0 D2): MINHA_AGENDA comum - workspace proprio do medico (paridade com os sets Web).
-    private static readonly HashSet<string> CommonModules = new(StringComparer.OrdinalIgnoreCase) { "MEU_DIA", "AJUDA", "LGPD", "CONTA", "TREINAMENTO", "MINHA_AGENDA" };
+    // R18 (r18a0 D1): NOTIFICACOES/MINHA_CENTRAL comuns - infraestrutura do login (paridade Web).
+    private static readonly HashSet<string> CommonModules = new(StringComparer.OrdinalIgnoreCase) { "MEU_DIA", "AJUDA", "LGPD", "CONTA", "TREINAMENTO", "MINHA_AGENDA", "NOTIFICACOES", "MINHA_CENTRAL" };
     private static readonly HashSet<string> TenantAdministrationModules = new(StringComparer.OrdinalIgnoreCase) { "USUARIOS", "PERFIS", "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL", "ONBOARDING" }; // R5-D9: ONBOARDING = fluxo core do tenant (jornada so materializa etapas de modulo com assinatura vigente)
     private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
     private static string NormalizeAccessCode(string? value) => Normalize(value).Replace(':', '.');

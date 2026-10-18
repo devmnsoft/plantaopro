@@ -53,8 +53,9 @@ public sealed class EffectivePermissionService : IEffectivePermissionService
         // modulos_sistema para ele; exige apenas o contexto de tenant (assinatura
         // canonica vigente ja e cobrada pelo materializador da jornada).
         // R17 (r17a0 D2): MINHA_AGENDA comum - workspace proprio do medico (paridade Web).
+        // R18 (r18a0 D1): NOTIFICACOES/MINHA_CENTRAL comuns - infraestrutura do login (paridade Web).
         "MEU_DIA", "AJUDA", "LGPD", "CONTA", "TREINAMENTO", "USUARIOS", "PERFIS",
-        "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL", "ONBOARDING", "MINHA_AGENDA"
+        "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL", "ONBOARDING", "MINHA_AGENDA", "NOTIFICACOES", "MINHA_CENTRAL"
     };
     public EffectivePermissionService(IConfiguration cfg) { this.cfg = cfg; }
     public async Task<IEnumerable<string>> ObterPermissoesAsync(Guid usuarioId, Guid? tenantId, CancellationToken ct = default)

@@ -163,7 +163,9 @@ public sealed class PermissionService : IPermissionService
         // R17 (r17a0 D2): MINHA_AGENDA = workspace proprio do medico (agenda/plantoes, presencas,
         // producao), exposto no Meu Dia a todo papel MEDICO; sem DDL/grants — a audiencia segue
         // restrita por [Authorize(Roles=MEDICO)] do controller. Mantem paridade com os sets da Api.
-        "MEU_DIA", "AJUDA", "LGPD", "CONTA", "TREINAMENTO", "MINHA_AGENDA"
+        // R18 (r18a0 D1): NOTIFICACOES e MINHA_CENTRAL comuns — infraestrutura do login (centro de
+        // notificacoes + Minha Central, rota de fuga das telas de erro); AJUDA ja constava aqui.
+        "MEU_DIA", "AJUDA", "LGPD", "CONTA", "TREINAMENTO", "MINHA_AGENDA", "NOTIFICACOES", "MINHA_CENTRAL"
     };
 
     private static readonly HashSet<string> TenantAdministrationModules = new(StringComparer.OrdinalIgnoreCase)
@@ -243,8 +245,9 @@ public sealed class ModuleAccessService : IModuleAccessService
     {
         // R5-D9: ver TenantAdministrationModules - jornada de onboarding e core do tenant.
         // R17 (r17a0 D2): MINHA_AGENDA comum — mesmo raciocinio de CONTA (R7-E1); paridade Api.
+        // R18 (r18a0 D1): NOTIFICACOES/MINHA_CENTRAL comuns — mesmo raciocinio; paridade Api.
         "MEU_DIA", "AJUDA", "LGPD", "CONTA", "TREINAMENTO", "USUARIOS", "PERFIS",
-        "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL", "ONBOARDING", "MINHA_AGENDA"
+        "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL", "ONBOARDING", "MINHA_AGENDA", "NOTIFICACOES", "MINHA_CENTRAL"
     };
 
     private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();

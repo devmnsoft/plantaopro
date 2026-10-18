@@ -12,7 +12,9 @@
     var financeRoles = RolesConstants.FinanceiroArea.Split(',').Concat(RolesConstants.Saude360Financeiro.Split(','));
     // R17 (r17a0 D1): o elemento morto "CENTRAL_ESCALA" foi extinto do array (fantasma: nunca
     // contratavel); a Cobertura opera pelo modulo canonico ESCALAS (ja presente no array).
-    var canOperate = operationRoles.Any(User.IsInRole) || new[] { "PLANTOES", "AGENDA", "CONVITES", "ESCALAS", "FECHAMENTOS" }.Any(ModuleAccessService.CanAccessModule);
+    // R18 (r18a0 F5/D3): o codigo FECHAMENTOS (plural) era fantasma ausente do catalogo — o
+    // codigo canonico e FECHAMENTO (singular), pai com suite completa em modulos_sistema.
+    var canOperate = operationRoles.Any(User.IsInRole) || new[] { "PLANTOES", "AGENDA", "CONVITES", "ESCALAS", "FECHAMENTO" }.Any(ModuleAccessService.CanAccessModule);
     var canUseClinical = clinicalRoles.Any(User.IsInRole) || new[] { "SAUDE360_DASHBOARD", "SAUDE360_PACIENTES", "SAUDE360_AGENDAMENTO", "SAUDE360_TRIAGEM", "SAUDE360_CONSULTAS", "CLINICA_DASHBOARD", "PACIENTES", "AGENDAMENTOS", "TRIAGEM", "CONSULTAS" }.Any(ModuleAccessService.CanAccessModule);
     var canUseFinance = financeRoles.Any(User.IsInRole) || new[] { "FINANCEIRO", "SAUDE360_FINANCEIRO", "PAGAMENTOS", "CLINICA_FINANCEIRO" }.Any(ModuleAccessService.CanAccessModule);
     var canManage = User.IsInRole(RolesConstants.AdministradorGlobal) || User.IsInRole(RolesConstants.Administrador) || User.IsInRole(RolesConstants.AdministradorCliente) || User.IsInRole(RolesConstants.Diretor);
@@ -46,7 +48,8 @@
             @if (Can("ESCALAS")) { <a class="nav-link-app @Active("CentralEscala")" asp-controller="CentralEscala" asp-action="Index"><app-icon name="Coverage" size="19" /><span>@UiText.L("Nav.Cobertura")</span></a> }
             @if (Can("CONVITES")) { <a class="nav-link-app @Active("Convites")" asp-controller="Convites" asp-action="Index"><app-icon name="User" size="19" /><span>@UiText.L("Nav.Convites")</span></a> }
             @if (Can("ESCALAS")) { <a class="nav-link-app @Active("Escalas")" asp-controller="Escalas" asp-action="Index"><app-icon name="Schedule" size="19" /><span>@UiText.L("Nav.Escalas")</span></a> }
-            @if (Can("FECHAMENTOS")) { <a class="nav-link-app @Active("Fechamentos")" asp-controller="Fechamentos" asp-action="Index"><app-icon name="Check" size="19" /><span>@UiText.L("Nav.Fechamentos")</span></a> }
+            @* R18 (r18a0 F5): codigo canonico FECHAMENTO (singular) — o plural nao existia no catalogo. *@
+            @if (Can("FECHAMENTO")) { <a class="nav-link-app @Active("Fechamentos")" asp-controller="Fechamentos" asp-action="Index"><app-icon name="Check" size="19" /><span>@UiText.L("Nav.Fechamentos")</span></a> }
         }
         @if (canUseClinical)
         {

@@ -557,13 +557,15 @@ public sealed class FaturamentoSaasController : ControllerBase
     private readonly IAuditService _audit;
     private readonly ICurrentUserService _currentUser;
     private readonly ILogger<FaturamentoSaasController> _logger;
+    private readonly NotificacaoService _notificacao;
 
-    public FaturamentoSaasController(IConfiguration cfg, IAuditService audit, ICurrentUserService currentUser, ILogger<FaturamentoSaasController> logger)
+    public FaturamentoSaasController(IConfiguration cfg, IAuditService audit, ICurrentUserService currentUser, ILogger<FaturamentoSaasController> logger, NotificacaoService notificacao)
     {
         _cfg = cfg;
         _audit = audit;
         _currentUser = currentUser;
         _logger = logger;
+        _notificacao = notificacao;
     }
 
     [HttpGet("resumo")]
@@ -812,8 +814,7 @@ where not exists (select 1 from plantaopro.pagamentos_saas where fatura_id=@id a
             }
             else if (string.Equals(status, "VENCIDA", StringComparison.OrdinalIgnoreCase))
             {
-                await RegistrarEventoCobrancaAsync(cn, tx, fatura.ClienteId, id, "FATURA_VENCIDA", "Fatura SaaS vencida identificada no faturamento.");
-                await RegistrarAlertaFinanceiroAsync(cn, tx, fatura.ClienteId, "INADIMPLENCIA", "Fatura SaaS vencida", "Cliente possui fatura vencida e deve ser acompanhado pelo financeiro.", "ALTA");
+                await RegistrarVencimentoFaturaAsync(cn, tx, id, fatura.ClienteId);
             }
             else if (string.Equals(status, "CANCELADA", StringComparison.OrdinalIgnoreCase))
             {
@@ -835,8 +836,44 @@ where not exists (select 1 from plantaopro.pagamentos_saas where fatura_id=@id a
         }
     }
 
-    private static Task AtualizarVencidasAsync(NpgsqlConnection cn)
-        => cn.ExecuteAsync("update plantaopro.faturas_saas set status='VENCIDA', atualizado_em=now() where status='ABERTA' and vencimento < current_date and reg_status='A'");
+    // R48 (D-R48-2): o sweep de faturas abertas além do vencimento para de ser ponto cego —
+    // identifica antes quem vai p/ VENCIDA e registra os efeitos colaterais pelo dono único
+    // RegistrarVencimentoFaturaAsync (evento + alerta MNSOFT + notificação ao admin do cliente).
+    private async Task AtualizarVencidasAsync(NpgsqlConnection cn)
+    {
+        // R48: os reads de casa passam a conexao fechada e deixam o Dapper abrir/fechar por
+        // statement; BeginTransaction exige conexao aberta, entao abre-se aqui se necessario.
+        if (cn.State != System.Data.ConnectionState.Open) await cn.OpenAsync();
+        var vencendo = (await cn.QueryAsync<FaturaVencidaRow>("select id as Id, cliente_id as ClienteId from plantaopro.faturas_saas where status='ABERTA' and vencimento < current_date and reg_status='A'")).ToList();
+        await cn.ExecuteAsync("update plantaopro.faturas_saas set status='VENCIDA', atualizado_em=now() where status='ABERTA' and vencimento < current_date and reg_status='A'");
+        if (vencendo.Count == 0) return;
+        await using var tx = await cn.BeginTransactionAsync();
+        foreach (var f in vencendo) await RegistrarVencimentoFaturaAsync(cn, tx, f.Id, f.ClienteId);
+        await tx.CommitAsync();
+    }
+
+    // R48 (D-R48-1): dono unico dos efeitos colaterais do vencimento de fatura SaaS. Chamado pelo
+    // sweep e pela transicao explicita; nenhum outro lugar registra FATURA_VENCIDA. A notificacao
+    // usa o dedupe do indice parcial da convencao R8-B2 -> uma por fatura por usuario.
+    private async Task RegistrarVencimentoFaturaAsync(NpgsqlConnection cn, NpgsqlTransaction tx, Guid faturaId, Guid clienteId)
+    {
+        var fatura = await cn.QueryFirstOrDefaultAsync<(DateOnly? Vencimento, decimal? Valor)>("select vencimento, valor from plantaopro.faturas_saas where id=@id and reg_status='A'", new { id = faturaId }, tx);
+        await RegistrarEventoCobrancaAsync(cn, tx, clienteId, faturaId, "FATURA_VENCIDA", "Fatura SaaS vencida identificada no faturamento.");
+        await RegistrarAlertaFinanceiroAsync(cn, tx, clienteId, "INADIMPLENCIA", "Fatura SaaS vencida", "Cliente possui fatura vencida e deve ser acompanhado pelo financeiro.", "ALTA");
+        var ptBr = System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
+        var mensagem = fatura.Vencimento.HasValue && fatura.Valor.HasValue
+            ? $"Sua fatura de R$ {fatura.Valor.Value.ToString("N2", ptBr)} venceu em {fatura.Vencimento.Value.ToString("dd/MM/yyyy")}. Para regularizar, acesse Minha Assinatura."
+            : "Sua fatura venceu. Para regularizar, acesse Minha Assinatura.";
+        var admins = (await cn.QueryAsync<Guid>("select distinct u.id from plantaopro.usuarios u join plantaopro.usuarios_perfis up on up.usuario_id=u.id and up.reg_status='A' join plantaopro.perfis pf on pf.id=up.perfil_id where u.cliente_id=@clienteId and u.reg_status='A' and pf.codigo='ADMINISTRADOR_CLIENTE'", new { clienteId }, tx)).ToList();
+        foreach (var uid in admins)
+            await _notificacao.CriarNotificacaoAsync(uid, "Fatura vencida", mensagem, "financeiro", tx, "fatura_saas", faturaId);
+    }
+
+    private sealed class FaturaVencidaRow
+    {
+        public Guid Id { get; set; }
+        public Guid ClienteId { get; set; }
+    }
 
     private Guid? ScopedClienteId(Guid? requestedClienteId = null) => _currentUser.IsGlobalAdmin() ? requestedClienteId : _currentUser.ClienteId;
 

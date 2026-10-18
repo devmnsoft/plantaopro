@@ -348,18 +348,41 @@ public sealed class R16ScanFormBindingFonteTests
     private static readonly string Root = RepositoryPathResolver.RepoRoot;
     private static readonly string ScalarRegex = @"^(string|Guid|int|long|double|float|decimal|bool|DateOnly|DateTime)$";
 
-    // Actions invocadas por construcao dinamica de URL em JS (formImp.action =
-    // '/Administrativo360/AtivarCargo' nos modais Inativar* — mesmo form, mesmos
-    // parametros) ou ainda sem ponto de chamada estatico (candidatos ao catalogo de
-    // fantasmas, itens 2/8 da fila R17). Nomes novos aqui falham o teste de proposito.
-    private static readonly HashSet<string> AcoesSemFormEstatico = new()
+    // Actions sem <form> estatico apontando para elas. Desde R21 (r21a0) o catalogo esta
+    // dividido em dois sets versionados, cada um auto-verificado pelo fato permanente
+    // whitelist_acoes_sem_form_estatico_e_auto_verificada — nome novo deve ser classificado
+    // (JS-driven x fantasma) com evidencia file:line. A uniao segue consumida pelo scan principal.
+    //
+    // JS_DRIVEN — invocadas por construcao dinamica de URL na view; os parametros trafegam
+    // pelo MESMO form HTML da acao estatica pareada (mesma classe de risco).
+    private static readonly HashSet<string> AcoesJsDrivenSemFormEstatico = new()
     {
-        "OrcamentoRejeitar", "OrcamentoCancelar", "OrcamentoCancelarReserva",
-        "ValeCancelar", "AtivarDepartamento", "AtivarCargo",
-        // R20 (extensao F-R15-A): painel IA dos detalhes de cotação POST via fetch (data-ai-url),
-        // nao existe <form>; segue no catalogo de superficies JS-driven (item 2 da fila).
+        // Cargos.cshtml L256: formImp.action = inativar ? '.../InativarCargo' : '.../AtivarCargo'
+        "AtivarCargo",
+        // Departamentos.cshtml L231: formImp.action = inativar ? '.../InativarDepartamento' : '.../AtivarDepartamento'
+        "AtivarDepartamento",
+        // Cotacoes/Detalhes.cshtml L572: painel IA POST via fetch (data-ai-url
+        // /Administrativo360/Cotacoes/{id}/AnaliseIa, R20) — nao existe <form>.
         "AnaliseIa"
     };
+
+    // FANTASMA — zero pontos de chamada no Web (nem <form>, nem literal de URL) com a cadeia
+    // BFF->API completa: gap funcional documentado (r21a0 F-R21-B; fila R22 decide ligar ou
+    // remover). Se um form for ligado, o fato auto-verificador falha e a saida daqui e obrigatoria.
+    private static readonly HashSet<string> AcoesFantasmaSemChamador = new()
+    {
+        // -> POST   api/administrativo360/orcamentos/{id}/rejeitar         (Adm360OrcamentosController L82)
+        "OrcamentoRejeitar",
+        // -> POST   api/administrativo360/orcamentos/{id}/cancelar         (ibid. L91)
+        "OrcamentoCancelar",
+        // -> DELETE api/administrativo360/orcamentos/{id}/reservas/{reservaId} (ibid. L126)
+        "OrcamentoCancelarReserva",
+        // -> POST   api/administrativo360/vales/{id}/cancelar              (Adm360ValesController L143)
+        "ValeCancelar"
+    };
+
+    private static readonly HashSet<string> AcoesSemFormEstatico =
+        AcoesJsDrivenSemFormEstatico.Concat(AcoesFantasmaSemChamador).ToHashSet();
 
     [Fact]
     public void acoes_post_adm360_parametros_escalares_implicitos_existem_no_form_que_as_aponta()
@@ -423,6 +446,47 @@ public sealed class R16ScanFormBindingFonteTests
             .OrderBy(x => x)
             .ToList();
         Assert.Empty(semForm);
+    }
+
+    /// <summary>R21 (r21a0 D1): torna o catalogo AcoesSemFormEstatico auto-verificavel.
+    /// JS-driven deve manter ≥1 literal de URL dinamico em quotes na view; fantasma deve ter
+    /// zero ocorrencias em qualquer .cshtml (botao ligado ⇒ reclasificar). Antivacuidade: toda
+    /// entrada continua sendo acao HttpPost extraida pelo scan principal (sem row obsoleta).</summary>
+    [Fact]
+    public void whitelist_acoes_sem_form_estatico_e_auto_verificada()
+    {
+        var acoes = ExtrairAcoesPostComEscalaresImplicitos();
+        var views = LerTodasAsViews().ToList();
+        Assert.True(views.Count >= 200, $"Scan suspeito de views: apenas {views.Count} .cshtml em Views/** (superficie R21: 484).");
+
+        var obsoletas = AcoesSemFormEstatico.Where(a => !acoes.ContainsKey(a)).OrderBy(x => x).ToList();
+        Assert.True(obsoletas.Count == 0,
+            "Entradas da whitelist que nao sao mais acoes HttpPost com escalares implicitos (rows obsoletas): "
+            + string.Join(", ", obsoletas));
+
+        // JS_DRIVEN: literal em quotes contendo /Administrativo360/[seg/]\<acao\> (a regex tolera
+        // segmentos intermediarios — o data-ai-url carrega Cotacoes/{id}/AnaliseIa).
+        foreach (var acao in AcoesJsDrivenSemFormEstatico.OrderBy(x => x))
+        {
+            var rx = new System.Text.RegularExpressions.Regex(
+                "[\"'=]\\s*/Administrativo360(?:/[^\\s\"'<>;)]*)*/" + acao + "(?=[\"'\\s?;)]|$)");
+            var hit = views.FirstOrDefault(v => rx.IsMatch(v.Texto));
+            Assert.True(hit.NomeArquivo != null,
+                $"{acao}: sem URL dinamica (/Administrativo360/[...]/" + acao + ") em nenhuma view — JS-driven morta ou virou estatica; reclasifique (r21a0 D1).");
+        }
+        Assert.True(AcoesJsDrivenSemFormEstatico.Count >= 3,
+            $"Catalogo suspeito: apenas {AcoesJsDrivenSemFormEstatico.Count} classificadas JS-driven (baseline R21: 3).");
+
+        // FANTASMA: zero ocorrencias (case-sensitive) do nome em qualquer .cshtml.
+        foreach (var acao in AcoesFantasmaSemChamador.OrderBy(x => x))
+        {
+            var hits = views.Where(v => v.Texto.Contains(acao, StringComparison.Ordinal))
+                .Select(v => v.NomeArquivo).ToList();
+            Assert.True(hits.Count == 0,
+                $"{acao}: fantasma com ponto de chamada (" + string.Join(", ", hits) + ") — ligacao feita; tire do set de fantasmas e deixe o scan principal parear (r21a0 D1).");
+        }
+        Assert.True(AcoesFantasmaSemChamador.Count >= 4,
+            $"Catalogo suspeito: apenas {AcoesFantasmaSemChamador.Count} classificadas fantasma (baseline R21: 4).");
     }
 
     /// <summary>Casa uma URL estatica de form (/Administrativo360/&lt;Area&gt;/&lt;path&gt;) com a acao
@@ -546,6 +610,15 @@ public sealed class R16ScanFormBindingFonteTests
         var viewsDir = Path.Combine(Root, "backend/PlantaoPro.Web/Views/Administrativo360");
         foreach (var arquivo in Directory.GetFiles(viewsDir, "*.cshtml", SearchOption.AllDirectories))
             yield return (Path.GetFileName(arquivo), File.ReadAllText(arquivo));
+    }
+
+    /// <summary>R21 (r21a0 D1): o mesmo scan em Views/** — um call-site de acao Adm360 pode
+    /// morar em qualquer pagina (portal, modulos); a verificacao da whitelist cobre tudo.</summary>
+    private static IEnumerable<(string NomeArquivo, string Texto)> LerTodasAsViews()
+    {
+        var viewsDir = Path.Combine(Root, "backend/PlantaoPro.Web/Views");
+        foreach (var arquivo in Directory.GetFiles(viewsDir, "*.cshtml", SearchOption.AllDirectories))
+            yield return (Path.GetRelativePath(viewsDir, arquivo).Replace('\\', '/'), File.ReadAllText(arquivo));
     }
 
     private static IEnumerable<string> DividirTopoLevel(string s)

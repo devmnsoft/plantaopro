@@ -50,4 +50,4 @@ sessão; fato e suíte no próximo push (r29b1/r29z). Whitelists: comentários d
 
 - Apps PARADOS, portas livres. `origin/main` sincronizada neste push.
 - Fila: **R29 = E1 demais módulos** (fatia aplicada, fechamento pendente); roadmap r24a1 segue
-  (R30–R31 E1 resx/valores, R32–R33 E6, R34 E7, R35–R37 E3, R38–R39 E2, R40+ E9).
+  (R30–R31 E5, R32–R33 E6, R34 E7, R35–R37 E3, R38–R39 E2, R40+ E9).

@@ -369,6 +369,7 @@ public sealed class ValeFormViewModel
     public IReadOnlyList<OrcamentoResumoViewModel> Orcamentos { get; set; } = Array.Empty<OrcamentoResumoViewModel>();
     public IReadOnlyList<Produto360ViewModel> ProdutosDisponiveis { get; set; } = Array.Empty<Produto360ViewModel>();
     public IReadOnlyList<Lote360ViewModel> LotesDisponiveis { get; set; } = Array.Empty<Lote360ViewModel>();
+    public IReadOnlyList<ReservaAtivaResumoViewModel> ReservasAtivas { get; set; } = Array.Empty<ReservaAtivaResumoViewModel>();
 }
 
 public sealed class ValeItemInputModel
@@ -378,6 +379,14 @@ public sealed class ValeItemInputModel
     public Guid? ReservaId { get; set; }
     public decimal QuantidadeSolicitada { get; set; }
     public decimal PrecoUnitario { get; set; }
+}
+
+// E6 (rodada 33): reserva ativa do planejamento do orçamento aprovado — o vale escolhe por nome, não por UUID.
+public sealed record ReservaAtivaResumoViewModel(Guid Id, string Produto, string Lote, decimal Quantidade);
+
+public sealed class PlanejamentoReservaOrcamentoDto
+{
+    public IReadOnlyList<ReservaAtivaResumoViewModel> ReservasAtivas { get; set; } = Array.Empty<ReservaAtivaResumoViewModel>();
 }
 
 public sealed class EventoValeInputModel

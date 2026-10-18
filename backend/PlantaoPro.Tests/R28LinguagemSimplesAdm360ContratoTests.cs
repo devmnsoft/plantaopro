@@ -61,7 +61,8 @@ public class R28LinguagemSimplesAdm360ContratoTests
         Assert.Contains("Código do vendedor (opcional)", orcamento, StringComparison.Ordinal);
 
         var vale = ReadRelative("backend", "PlantaoPro.Web", "Views", "Administrativo360", "ValeNovo.cshtml");
-        Assert.Contains("Código da reserva ativa (opcional)", vale, StringComparison.Ordinal);
+        // Nota R33: o placeholder "Código da reserva ativa (opcional)" deixou de existir quando o campo
+        // virou select de reservas ativas (R33E6LookupsReservaEPedidoContratoTests cobre a estrutura nova).
         Assert.Contains("<th>Reserva vinculada</th>", vale, StringComparison.Ordinal);
 
         var monitor = ReadRelative("backend", "PlantaoPro.Web", "Views", "Administrativo360", "Gestao", "Monitor.cshtml");

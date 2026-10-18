@@ -394,6 +394,9 @@ public sealed class DocumentoXmlDetalhesPageViewModel
 {
     public DocumentoRecebidoDetalhesViewModel Documento { get; init; } = default!;
     public string? Erro { get; init; }
+    // E6 (rodada 33): o modal de vínculo escolhe pedido/local por nome em vez de colar UUID.
+    public IReadOnlyList<PedidoCompraResumoViewModel> Pedidos { get; init; } = Array.Empty<PedidoCompraResumoViewModel>();
+    public IReadOnlyList<Local360ViewModel> Locais { get; init; } = Array.Empty<Local360ViewModel>();
 }
 
 public sealed class ImportarXmlManualFormModel

@@ -47,10 +47,17 @@ public sealed class Adm360DocumentosXmlWebController : BaseWebController
             return RedirectToAction(nameof(Index));
         }
 
+        // E6 (rodada 33): o modal de vínculo escolhe pedido/local por nome em vez de colar UUID.
+        // Falha nas listas não quebra a página: chegam vazias e o usuário vê o estado vazio.
+        var respPedidos = await ReadApiResponse<IReadOnlyList<PedidoCompraResumoViewModel>>(client, "api/administrativo360/compras");
+        var respLookups = await ReadApiResponse<Lookups360ViewModel>(client, "api/administrativo360/cadastros/lookups");
+
         return View("~/Views/Administrativo360/DocumentosXml/Detalhes.cshtml", new DocumentoXmlDetalhesPageViewModel
         {
             Documento = resp.Data,
-            Erro = resp.Error
+            Erro = resp.Error,
+            Pedidos = respPedidos.Data ?? Array.Empty<PedidoCompraResumoViewModel>(),
+            Locais = respLookups.Data?.Locais ?? Array.Empty<Local360ViewModel>()
         });
     }
 

@@ -1,4 +1,7 @@
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using PlantaoPro.Application.Administrativo360;
+using PlantaoPro.Web.Models;
 using Xunit;
 
 namespace PlantaoPro.Tests;
@@ -217,6 +220,38 @@ public sealed class R20BffMappingContratoTests
         // 21 comparacoes aninhadas). Os pisos quebram se o scan perder a superficie real.
         Assert.True(propsComparedas >= 700, $"Scan suspeito: apenas {propsComparedas} propriedades comparadas (superficie R20: 809).");
         Assert.True(comparacoesAninhadas >= 15, $"Scan suspeito: apenas {comparacoesAninhadas} comparacoes de tipos aninhados (superficie R20: 21; recursao morreu?).");
+    }
+
+    [Fact]
+    public void binding_stj_liga_o_wire_ao_espelho_nos_fixes_r20()
+    {
+        // F-R20-A/F-R20-C (mecanismo, offline): serializa o DTO real da Api como o ASP.NET Core
+        // emite (web defaults => camelCase) e desserializa no espelho Web com as opcoes do BFF
+        // (BaseWebController.JsonOptions). O binding STJ e por nome: grafia casada garante o valor;
+        // sob a grafia antiga (dataBaixa/motivoEstorno) o campo ficava para sempre 0001-01-01 / "".
+        var web = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        var emissao = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+
+        var dtoBaixa = new TituloBaixaDto(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Caixa Geral",
+            new DateOnly(2026, 10, 18), 1234.56m, "PIX", null, Estornado: true, RecebidoPor: "Maria Silva",
+            new DateTime(2026, 10, 18, 9, 30, 0));
+        var wireBaixa = JsonSerializer.Serialize(dtoBaixa, emissao);
+        var vmBaixa = JsonSerializer.Deserialize<TituloBaixaViewModel>(wireBaixa, web);
+        Assert.Equal(new DateOnly(2026, 10, 18), vmBaixa!.DataRecebimento);
+        Assert.Equal("Maria Silva", vmBaixa.RecebidoPor);
+        Assert.Equal(true, vmBaixa.Estornado);
+        Assert.DoesNotContain("\"dataBaixa\"", wireBaixa); // a chave antiga nem existia no wire
+
+        var dtoComissao = new RelatorioComissaoItem("Joao Vendedor", "V-102", new DateOnly(2026, 9, 30), 1000m, 5m, 50m, "APROVADA");
+        var wireComissao = JsonSerializer.Serialize(dtoComissao, emissao);
+        var vmComissao = JsonSerializer.Deserialize<RelatorioComissaoItemViewModel>(wireComissao, web);
+        Assert.Equal(new DateOnly(2026, 9, 30), vmComissao!.DataRecebimento);
+        Assert.Equal(50m, vmComissao.ComissaoApropriada);
+        Assert.DoesNotContain("\"dataBaixa\"", wireComissao);
     }
 
     // ----------------------------- extracao de call-sites -----------------------------

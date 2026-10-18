@@ -204,14 +204,18 @@
                     {
                         @foreach (var it in f.Itens)
                         {
+                            // R20 (r20b1 F-R20-B): a API não envia "tipo" no item; a classificação é
+                            // derivada dos valores transportados (realizado x previsto receber/pagar).
+                            var ehRealizado = it.RealizadoEntrada > 0m || it.RealizadoSaida > 0m;
+                            var ehPrevistoReceber = !ehRealizado && it.PrevistoEntrada > 0m;
                             <tr>
                                 <td><strong>@it.Data.ToString("dd/MM/yyyy")</strong></td>
                                 <td>
-                                    @if (it.Tipo == "REALIZADO")
+                                    @if (ehRealizado)
                                     {
                                         <span class="badge bg-success">Realizado</span>
                                     }
-                                    else if (it.Tipo == "PREVISTO_RECEBER")
+                                    else if (ehPrevistoReceber)
                                     {
                                         <span class="badge bg-warning text-dark">Prev. Receber</span>
                                     }

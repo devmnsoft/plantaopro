@@ -128,14 +128,14 @@ public partial class Administrativo360Controller
         }
 
         var sb = new System.Text.StringBuilder();
-        sb.AppendLine("Vendedor;VendaNumero;DataBaixa;BaseCalculo;Percentual;ComissaoApropriada;Situacao");
+        sb.AppendLine("Vendedor;VendaNumero;DataRecebimento;BaseCalculo;Percentual;ComissaoApropriada;Situacao");
 
         foreach (var it in resp.Data)
         {
             sb.AppendLine(string.Join(";",
                 SanitizarCsv(it.Vendedor),
                 SanitizarCsv(it.VendaNumero),
-                it.DataBaixa.ToString("yyyy-MM-dd"),
+                it.DataRecebimento.ToString("yyyy-MM-dd"),
                 ValorHumano.Format(it.BaseCalculo),
                 ValorHumano.Format(it.Percentual),
                 ValorHumano.Format(it.ComissaoApropriada),

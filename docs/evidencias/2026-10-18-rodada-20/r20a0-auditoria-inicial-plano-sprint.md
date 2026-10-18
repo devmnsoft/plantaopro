@@ -27,9 +27,24 @@ Inventário (`%TEMP%\opencode\r20_inventario_bff.ps1`): **90 chamadas `ReadApiRe
 2. **Tipo compartilhado Application→Web** (exceção estrutural): `Adm360FiscalWebController` desserializa **direto em tipos do projeto Application** (`NotaPreEmitidaDetalhesDto`, `ParametrosFiscaisAmbienteDto` — `Application/Administrativo360/FiscalPreEmissoesContracts.cs`; Web referencia Application no csproj). Se a Api devolver exatamente esses records, a família F9d é eliminada **por construção** para eles — pendente de confirmar endpoint a endpoint.
 3. **Espelho manual com sufixo próprio**: `DreGerencialDtoWeb` (classe em `Web/Models/Administrativo360Models.cs` L738, ×2 call-sites) — espelho de DTO de relatório mantido à mão, máxima exposição F9d, contrato zero.
 
-### F3 (em aberto p/ r20b1) — Divergências do cruzamento
+### F3 — Divergências do cruzamento (executado em r20b1)
 
-A matriz endpoint → DTO Api → comparação de propriedades (case-insensitive) será executada em r20b1 e classificada: **(i) grafia divergente em par correspondente = defeito real** (família F9d; fix cirúrgico + fato); (ii) propriedade só no ViewModel = sempre valor padrão (dead field; classificado, fix se consumido); (iii) propriedade só no DTO = dado perdido (classificado; fix se consumido em UI). Achados entram nesta seção antes do push final da rodada.
+Superfície medida pelo scanner permanente: **90 call-sites / 53 endpoints distintos** (o inventário r20a0 subestimou em ~40 por bug do extrator PowerShell com `List<T>`). Matriz endpoint → DTO Api executada par a par; achados reais — todos tratados cirurgicamente em r20b1:
+
+| Achado | Classe | Sev. | Defeito em produção | Tratamento |
+|---|---|---|---|---|
+| **F-R20-A** — `RelatorioComissaoItemViewModel.DataBaixa` × API `DataRecebimento` | (i) grafia divergente | P2 visível | coluna Data e CSV sempre `0001-01-01` | rename p/ `DataRecebimento` (precedente F9d) + view `RelatoriosFinanceiros.cshtml` L228 + export CSV. Header já usava a key resx correta (`Adm360.RelFin.ThDataRecebimento`) — sem resx novo |
+| **F-R20-B** — `FluxoCaixaItemViewModel.Tipo` nunca enviado (`FluxoCaixaItemDto` sem o campo) | (ii) prop só no VM | P2 visível | todas as linhas classificadas como badge "Prev. Pagar" | remoção de `Tipo`; classificação derivada dos valores transportados na view (realizado se `RealizadoEntrada>0‖RealizadoSaida>0`; previsto receber se `PrevistoEntrada>0`; senão previsto pagar — ADR-0003 regra 3) |
+| **F-R20-C** — `TituloBaixaViewModel.MotivoEstorno` × API `RecebidoPor` | (i) grafia divergente | P3 | motivo do estorno em branco no detalhe do título | rename p/ `RecebidoPor` + `TituloDetalhes.cshtml` L270 |
+| **F-R20-D/E** — `TituloReceberDetalhesViewModel.Observacoes+CriadoEm`, `ContaFinanceiraViewModel.CriadoEm` ausentes nos DTOs | (ii) dead field | P3 | consumo zero; `CriadoEm` = mina `0001-01-01` latente | remoção (zero construções manuais) |
+| **F-R20-G** — `ExtratoLancamentoViewModel` + `ExtratoContaViewModel` | ghost (tipo morto + divergente) | P3 | nenhum controller desserializa; rota de extrato não ligada; diverge do DTO (`SaldoInicial`×`SaldoAbertura`, `Lancamentos`×`Movimentos`, conta achatada × aninhada) | remoção dos dois tipos |
+| **Allowlist** — `FluxoCaixaViewModel.Definicoes`/`TimeCriterion` não emitidos por `FluxoCaixaDto` | espelho aguardando a Api (R8-B27) | — | view degrada suave ("Sem definições informadas pela fonte.") | mantidos com registro no allowlist versionado `EspelhoAguardandoApi` (obsoletos quando a Api emitir) |
+
+**Baseline limpo:** os demais ~47 pares batem 1:1 (posicionais + aninhados), incluindo Ocorrencia360, PreviaValorizacao, Orcamento (OrcamentoItem × OrcamentoItemDetalhe — só nullability difere), lookups (Parceiro/Medico/Produto/Local/Lote), trio DRE, Resumo × `Administrativo360ResumoDto`, Dashboard × `DashboardAdm360Resposta`, Contratos × `ContratoTrabalhoDetalheDto`, Usuarios × `UserListVM`, Cotacao/Orcamento/Venda/Vale/Cirurgia/TituloPagar/ComissaoPendente/DfeSincronizacao/DocumentosXml/Estabelecimento/Inspecao/Inventario/SaldoEstoque/Tarefa.
+
+**Desvendamento estrutural (por que o scanner permanente precisa ler também `PlantaoPro.Api`):** quatro respostas da família vêm de tipos **locais do projeto Api**, fora de Application — `Administrativo360ResumoDto` e `ContratoTrabalhoDetalheDto` (`Api/Administrativo360Contracts.cs`), `DashboardAdm360Resposta` (`Api/Controllers/Adm360GestaoController.cs` L9 — o wire real do dashboard; o `DashboardAdm360Dto` de Application é tipo intermediário de repositório, **não** a forma do wire) e `UserListVM` (`Api/Data.cs` L743).
+
+**Contrato travado (`R20BffMappingContratoTests`, 3 fatos):** dicionário versionado c/ 53 entradas endpoint → (elemento Web, elemento Api); antivacuidade nos dois sentidos (90 chamadas cobertas, zero entrada obsoleta); tipo Api existente com uso visível; props Web ⊆ props Api case-insensitive recursivo — **809 propriedades comparadas, 21 comparações aninhadas**. Parte A estendida no mesmo slice: `R16ScanFormBindingFonteTests` agora cobre os 4 `Adm360*WebController*` (**79 pareamentos form×ação / 203 parâmetros / 76 ações**, pisos travados; `AnaliseIa` whitelisted como JS-driven via `data-ai-url`).
 
 ## Decisões
 

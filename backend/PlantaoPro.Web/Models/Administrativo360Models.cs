@@ -557,6 +557,9 @@ public sealed record VendaDetalhesViewModel(
     IReadOnlyList<VendaItemViewModel> Itens,
     IReadOnlyList<TituloReceberResumoViewModel> Titulos);
 
+// R20 (r20b1 F-R20-C): renomeado MotivoEstorno -> RecebidoPor para casar com a chave da API
+// ("recebidoPor", DTO TituloBaixaDto.RecebidoPor). A API não envia motivo na linha de baixa
+// (ele vive no estorno, TituloEstornoDto.Motivo); "MotivoEstorno" ficava sempre nula na UI.
 public sealed record TituloBaixaViewModel(
     Guid Id,
     Guid TituloId,
@@ -567,9 +570,12 @@ public sealed record TituloBaixaViewModel(
     string MeioPagamento,
     string? Referencia,
     bool Estornado,
-    string? MotivoEstorno,
+    string? RecebidoPor,
     DateTime CriadoEm);
 
+// R20 (r20b1 F-R20-D): propriedades "Observacoes" e "CriadoEm" removidas — ausentes do DTO
+// (TituloReceberDetalhesDto) e nunca consumidas em view: campos mortos que o STJ deixava
+// sempre null/0001-01-01 (mesma família F9d).
 public sealed record TituloReceberDetalhesViewModel(
     Guid Id,
     Guid VendaId,
@@ -586,8 +592,6 @@ public sealed record TituloReceberDetalhesViewModel(
     decimal SaldoAberto,
     string Situacao,
     bool Vencido,
-    string? Observacoes,
-    DateTime CriadoEm,
     IReadOnlyList<TituloBaixaViewModel> Baixas);
 
 public sealed record ContaFinanceiraViewModel(
@@ -603,32 +607,20 @@ public sealed record ContaFinanceiraViewModel(
     // r16b2/F9d: renomeado Ativa -> Ativo para casar com a chave da API ("ativo", DTO
     // ContaFinanceiraDto.Ativo). Com "Ativa", o STJ (case-insensitive) nunca mapeava a
     // propriedade e toda conta chegava como inativa nos 5 consumers .Where(c => c.Ativa).
-    bool Ativo,
-    DateTime CriadoEm);
+    // R20 (r20b1 F-R20-E): "CriadoEm" removido — ausente no DTO e não consumido em view.
+    bool Ativo);
 
-public sealed record ExtratoLancamentoViewModel(
-    Guid Id,
-    DateOnly Data,
-    string Tipo,
-    string OrigemTipo,
-    Guid? OrigemId,
-    string? Documento,
-    string? Historico,
-    decimal Valor,
-    decimal SaldoApos);
+// R20 (r20b1 F-R20-G): removidos ExtratoLancamentoViewModel e ExtratoContaViewModel — tipos
+// mortos (nenhum controller desserializa para eles; a rota de extrato da API não está
+// ligada em nenhuma view). Além de mortas, divergiam do DTO (SaldoInicial x SaldoAbertura,
+// SaldoFinal x SaldoFechamento, Lancamentos x Movimentos, Conta achatada x aninhada).
 
-public sealed record ExtratoContaViewModel(
-    Guid ContaId,
-    string ContaNome,
-    decimal SaldoInicial,
-    decimal TotalEntradas,
-    decimal TotalSaidas,
-    decimal SaldoFinal,
-    IReadOnlyList<ExtratoLancamentoViewModel> Lancamentos);
-
+// R20 (r20b1 F-R20-B): propriedade "Tipo" removida — a API nunca emite "tipo" (DTO
+// FluxoCaixaItemDto sem o campo); o STJ deixava sempre "" e a view classificava TODAS as
+// linhas como "Prev. Pagar". A classificação Realizado/Previsto é derivada dos valores
+// transportados (previsto vs realizado), ver FluxoCaixa.cshtml.
 public sealed record FluxoCaixaItemViewModel(
     DateOnly Data,
-    string Tipo,
     string Descricao,
     string Origem,
     decimal PrevistoEntrada,
@@ -672,10 +664,14 @@ public sealed record RelatorioVendasItemViewModel(
     decimal ComissaoPrevista,
     string Situacao);
 
+// R20 (r20b1 F-R20-A): renomeado DataBaixa -> DataRecebimento para casar com a chave da API
+// ("dataRecebimento", DTO RelatorioComissaoItem.DataRecebimento). Com "DataBaixa", o STJ
+// (case-insensitive, insensível só a caixa) nunca mapeava o valor e toda linha saía 01/01/0001
+// na tabela e no export CSV. Mesmo mecanismo do F9d (Ativa x Ativo).
 public sealed record RelatorioComissaoItemViewModel(
     string Vendedor,
     string VendaNumero,
-    DateOnly DataBaixa,
+    DateOnly DataRecebimento,
     decimal BaseCalculo,
     decimal Percentual,
     decimal ComissaoApropriada,

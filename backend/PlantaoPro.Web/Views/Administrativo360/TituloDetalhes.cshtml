@@ -267,7 +267,7 @@
                                             }
                                             else
                                             {
-                                                <span class="text-muted small">Estornado: @b.MotivoEstorno</span>
+                                                <span class="text-muted small">Estornado@(string.IsNullOrWhiteSpace(b.RecebidoPor) ? "" : " · recebido por " + b.RecebidoPor)</span>
                                             }
                                         </td>
                                     </tr>

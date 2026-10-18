@@ -355,7 +355,10 @@ public sealed class R16ScanFormBindingFonteTests
     private static readonly HashSet<string> AcoesSemFormEstatico = new()
     {
         "OrcamentoRejeitar", "OrcamentoCancelar", "OrcamentoCancelarReserva",
-        "ValeCancelar", "AtivarDepartamento", "AtivarCargo"
+        "ValeCancelar", "AtivarDepartamento", "AtivarCargo",
+        // R20 (extensao F-R15-A): painel IA dos detalhes de cotação POST via fetch (data-ai-url),
+        // nao existe <form>; segue no catalogo de superficies JS-driven (item 2 da fila).
+        "AnaliseIa"
     };
 
     [Fact]
@@ -373,11 +376,18 @@ public sealed class R16ScanFormBindingFonteTests
         {
             foreach (System.Text.RegularExpressions.Match formTag in System.Text.RegularExpressions.Regex.Matches(viewText, "<form\\b[^>]*>"))
             {
-                var acao = System.Text.RegularExpressions.Regex.Match(formTag.Value, "asp-action\\s*=\\s*\"([A-Z][A-Za-z0-9_]*)\"").Groups[1].Value;
-                if (!acoes.TryGetValue(acao, out var escalares)) continue;
+                var acaoAsp = System.Text.RegularExpressions.Regex.Match(formTag.Value, "asp-action\\s*=\\s*\"([A-Z][A-Za-z0-9_]*)\"").Groups[1].Value;
+                // R20 (extensao F-R15-A): os Adm360*WebController* usam forms com URL estatica
+                // (action="/Administrativo360/<Area>/<rota>") em vez de asp-action; casa o path
+                // contra os templates de rota conhecidos ({param:tipo} aceita qualquer valor).
+                var queryKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var acao = string.IsNullOrEmpty(acaoAsp)
+                    ? ResolverAcaoPorUrlEstatica(formTag.Value, acoes, queryKeys)
+                    : acaoAsp;
+                if (!acoes.TryGetValue(acao, out var entrada)) continue;
                 mapeadas.Add(acao);
                 pareadas++;
-                parametrosVerificados += escalares.Count;
+                parametrosVerificados += entrada.Escalares.Count;
 
                 var fim = viewText.IndexOf("</form>", formTag.Index + formTag.Length, StringComparison.Ordinal);
                 var corte = fim < 0 ? viewText.Length : fim;
@@ -389,14 +399,23 @@ public sealed class R16ScanFormBindingFonteTests
                     .Select(m => m.Groups[1].Value)
                     .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-                foreach (var p in escalares.Where(p => !campos.Contains(p) && !rotas.Contains(p)))
+                // Parametros que entram por slot {param} da URL ja estao garantidos pelo match
+                // de template acima (todos os segmentos presentes); o resto exige campo,
+                // asp-route ou chave de query na URL do form.
+                var slots = SlotsDeTemplate(entrada.Template ?? acao);
+
+                foreach (var p in entrada.Escalares.Where(p => !campos.Contains(p) && !rotas.Contains(p) && !queryKeys.Contains(p) && !slots.Contains(p)))
                     violacoes.Add($"{viewFile}::{acao} => falta campo/rota '{p}'");
             }
         }
 
-        // Antivacuidade: o scan precisa estar olhando a superfice real (baseline 54 pares / 141 parametros).
-        Assert.True(pareadas >= 40, $"Scan suspeito: apenas {pareadas} formacoes action×form (baseline 54).");
-        Assert.True(parametrosVerificados >= 120, $"Scan suspeito: apenas {parametrosVerificados} parametros (baseline 141).");
+        // Antivacuidade: o scan precisa estar olhando a superficie real. Baseline r16 (12 files
+        // Administrativo360Controller*): 54 pareamentos / 141 parametros. Extensao R20 aos 4
+        // Adm360*WebController* (medido em r20b1): 79 / 203 / 76 acoes. Os pisos travam
+        // regressao de scan (ex.: glob que volta a ignorar os *WebController*).
+        Assert.True(pareadas >= 75, $"Scan suspeito: apenas {pareadas} formacoes action×form (superficie R20: 79).");
+        Assert.True(parametrosVerificados >= 190, $"Scan suspeito: apenas {parametrosVerificados} parametros (superficie R20: 203).");
+        Assert.True(acoes.Count >= 70, $"Scan suspeito: apenas {acoes.Count} acoes com escalares implicitos (superficie R20: 76).");
         Assert.Empty(violacoes);
 
         var semForm = acoes.Keys.Except(mapeadas)
@@ -406,14 +425,68 @@ public sealed class R16ScanFormBindingFonteTests
         Assert.Empty(semForm);
     }
 
-    private static Dictionary<string, List<string>> ExtrairAcoesPostComEscalaresImplicitos()
+    /// <summary>Casa uma URL estatica de form (/Administrativo360/&lt;Area&gt;/&lt;path&gt;) com a acao
+    /// cuja template de rota ({param:tipo} = wild-card) produz o mesmo path; devolve tambem as
+    /// chaves de query embutidas na URL (?chave=...) como canal estatico de satisfacao.</summary>
+    private static string ResolverAcaoPorUrlEstatica(string formTag, IReadOnlyDictionary<string, AcaoPost> acoes, HashSet<string> queryKeys)
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(formTag, "action\\s*=\\s*\"/Administrativo360/[^/\"]+/([^\"]*)\"");
+        if (!m.Success) return "__sem_acao__";
+        var pathPart = m.Groups[1].Value;
+        var qIdx = pathPart.IndexOf('?');
+        if (qIdx >= 0)
+        {
+            foreach (var par in pathPart[(qIdx + 1)..].Split('&', System.StringSplitOptions.RemoveEmptyEntries))
+            {
+                var eq = par.IndexOf('=');
+                if (eq > 0) queryKeys.Add(par[..eq]);
+            }
+            pathPart = pathPart[..qIdx];
+        }
+        var segs = pathPart.Split('/', System.StringSplitOptions.RemoveEmptyEntries);
+        foreach (var kv in acoes)
+        {
+            var tsegs = (kv.Value.Template ?? kv.Key)
+                .Split('/', System.StringSplitOptions.RemoveEmptyEntries);
+            if (tsegs.Length != segs.Length) continue;
+            var ok = true;
+            for (var i = 0; i < tsegs.Length; i++)
+            {
+                var ts = tsegs[i];
+                if (ts.StartsWith('{') && ts.EndsWith('}')) continue;
+                if (!string.Equals(ts, segs[i], StringComparison.OrdinalIgnoreCase)) { ok = false; break; }
+            }
+            if (ok) return kv.Key;
+        }
+        return "__sem_acao__";
+    }
+
+    private static HashSet<string> SlotsDeTemplate(string template)
+    {
+        return System.Text.RegularExpressions.Regex.Matches(template, "\\{(\\w+)")
+            .Select(x => x.Groups[1].Value)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private sealed record AcaoPost(List<string> Escalares, string? Template);
+
+    private static Dictionary<string, AcaoPost> ExtrairAcoesPostComEscalaresImplicitos()
     {
         var controllersDir = Path.Combine(Root, "backend/PlantaoPro.Web/Controllers");
-        var resultado = new Dictionary<string, List<string>>();
+        var resultado = new Dictionary<string, AcaoPost>();
+        // R20 (extensao F-R15-A): a template de rota ([HttpPost("...")]) e capturada junto —
+        // em forms com URL estatica ela decide quais parametros entram pela URL (slots {param}).
         var padrao = new System.Text.RegularExpressions.Regex(
-            "\\[HttpPost[^\\]]*\\]\\s*(?:\\[[^\\]]*\\]\\s*)*(?:public|protected)\\s+(?:async\\s+)?[\\w<>,\\[\\]?]+\\s+([A-Z]\\w+)\\s*\\(");
+            "\\[HttpPost(?<tpl>(?:\\(\"[^\"]*\"\\))?)[^\\]]*\\]\\s*(?:\\[[^\\]]*\\]\\s*)*(?:public|protected)\\s+(?:async\\s+)?[\\w<>,\\[\\]?]+\\s+([A-Z]\\w+)\\s*\\(");
 
-        foreach (var arquivo in Directory.GetFiles(controllersDir, "Administrativo360Controller*.cs"))
+        // R20 (r20b1 / extensao F-R15-A): cobertura explicita dos Adm360*WebController* — os 4
+        // files da familia (Cotacoes/DocumentosXml/Fiscal/Gestao) que ficavam fora do scan
+        // original de r16b1, criado so para Administrativo360Controller*.cs.
+        var arquivos = Directory.GetFiles(controllersDir, "Administrativo360Controller*.cs")
+            .Concat(Directory.GetFiles(controllersDir, "Adm360*WebController*.cs"))
+            .ToArray();
+
+        foreach (var arquivo in arquivos)
         {
             var texto = File.ReadAllText(arquivo);
             foreach (System.Text.RegularExpressions.Match m in padrao.Matches(texto))
@@ -459,7 +532,10 @@ public sealed class R16ScanFormBindingFonteTests
 
                     escalares.Add(tokens[1]);
                 }
-                if (escalares.Count > 0) resultado[m.Groups[1].Value] = escalares;
+                var template = m.Groups["tpl"].Success
+                    ? System.Text.RegularExpressions.Regex.Match(m.Groups["tpl"].Value, "\"([^\"]*)\"").Groups[1].Value
+                    : null;
+                if (escalares.Count > 0) resultado[m.Groups[1].Value] = new AcaoPost(escalares, template);
             }
         }
         return resultado;

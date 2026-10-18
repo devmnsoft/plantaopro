@@ -17,7 +17,9 @@ public sealed record AbrirInventarioCommand(Guid LocalId, string Escopo);
 public sealed record ContarInventarioCommand(Guid ProdutoId, Guid LoteId, decimal Quantidade, string? Condicao = "LIBERADO");
 public sealed record InventarioResumo(Guid Id, string Local, string Escopo, string Situacao, DateTimeOffset CriadoEm);
 
-public sealed record PedidoResumo(Guid Id, string Numero, string Fornecedor, string Situacao, decimal Total, DateTimeOffset CriadoEm);
+public sealed record PedidoItemResumo(Guid Id, string Produto, string Sku, decimal Quantidade, decimal QuantidadeRecebida);
+
+public sealed record PedidoResumo(Guid Id, string Numero, string Fornecedor, string Situacao, decimal Total, DateTimeOffset CriadoEm, IReadOnlyList<PedidoItemResumo> Itens);
 public sealed record SaldoEstoque(Guid ProdutoId, string Produto, Guid LoteId, string Lote, DateOnly? Validade, Guid LocalId, string Local, string Condicao, decimal Fisico, decimal Reservado, decimal Disponivel);
 public sealed record InspecaoPendente(Guid RecebimentoItemId, string Produto, string Lote, decimal Recebida, decimal Pendente, string Local);
 public sealed record TarefaColeta(Guid Id, string Tipo, string Descricao, string Situacao);

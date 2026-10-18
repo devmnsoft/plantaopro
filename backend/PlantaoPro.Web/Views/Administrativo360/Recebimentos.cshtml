@@ -77,7 +77,7 @@
                                 }
                             </td>
                             <td class="text-end">
-                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalNovoRecebimento" onclick="document.getElementById('selectPedidoId').value='@ped.Id';">
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalNovoRecebimento" onclick="document.getElementById('selectPedidoId').value='@ped.Id'; atualizarItensRecebimento();">
                                     <i class="bi bi-box-arrow-in-down me-1"></i>Conferir Entrada
                                 </button>
                             </td>
@@ -117,6 +117,29 @@
                     <div class="col-12 col-md-6">
                         <label class="form-label small fw-bold">Documento / Nota Fiscal (DANFE) *</label>
                         <input type="text" name="documento" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: NF-e 001.248.910" required />
+                    </div>
+                </div>
+
+                <!-- R23b2 (F-R15-C): seletor de item do pedido — o campo pedidoItemId deixava de
+                     ser preenchido (hidden com GUID vazio) e o recebimento caía em 400 na API. -->
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-8">
+                        <label class="form-label small fw-bold" for="selectPedidoItem">Item do Pedido Autorizado *</label>
+                        <select name="pedidoItemId" id="selectPedidoItem" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                            <option value="">Selecione primeiro o pedido acima...</option>
+                            @foreach (var ped in Model.PedidosPendentes)
+                            {
+                                if (ped.Itens.Count == 0) continue;
+                                <optgroup label="@ped.Numero — @ped.Fornecedor" data-pedido="@ped.Id" style="display:none;">
+                                    @foreach (var it in ped.Itens)
+                                    {
+                                        var saldoItem = it.Quantidade - it.QuantidadeRecebida;
+                                        <option value="@it.Id">@it.Sku — @it.Produto (saldo @saldoItem.ToString("N4"))</option>
+                                    }
+                                </optgroup>
+                            }
+                        </select>
+                        <small class="text-secondary">O saldo disponível por item é o que ainda falta receber do pedido autorizado. Ao escolher o pedido acima, as opções filtram para as linhas daquele documento.</small>
                     </div>
                 </div>
 
@@ -169,7 +192,6 @@
                             <small class="text-secondary">Lotes com validade vencida serão bloqueados automaticamente.</small>
                         </div>
                         <div class="col-md-6">
-                            <input type="hidden" name="pedidoItemId" value="@Guid.Empty" id="hiddenPedidoItemId" />
                             <label class="form-label small text-secondary">Rastreabilidade & Conformidade</label>
                             <div class="form-control form-control-sm bg-dark text-secondary border-secondary">
                                 <i class="bi bi-shield-lock me-1 text-warning"></i>Entrada inicial em Quarentena
@@ -185,3 +207,30 @@
         </form>
     </div>
 </div>
+
+<script>
+    // R23b2 (F-R15-C): filtra os itens do seletor conforme o pedido escolhido (optgroups
+    // data-pedido) e auto-seleciona quando resta exatamente 1 linha visível. Mostrar/ocultar
+    // grupos evita round-trip com o servidor; o button por-linha da tabela chama a mesma função
+    // após setar .value (atribuição direta não dispara o evento change).
+    function atualizarItensRecebimento() {
+        var selPedido = document.getElementById('selectPedidoId');
+        var selItem = document.getElementById('selectPedidoItem');
+        if (!selPedido || !selItem) return;
+        var grupos = selItem.getElementsByTagName('optgroup');
+        var totalVisivel = 0;
+        var unico = null;
+        for (var i = 0; i < grupos.length; i++) {
+            var ativo = selPedido.value !== '' && grupos[i].getAttribute('data-pedido') === selPedido.value;
+            grupos[i].style.display = ativo ? '' : 'none';
+            if (ativo && grupos[i].options.length > 0) {
+                totalVisivel += grupos[i].options.length;
+                unico = grupos[i].options[0];
+            }
+        }
+        if (totalVisivel === 1 && unico) {
+            selItem.value = unico.value;
+        }
+    }
+    document.getElementById('selectPedidoId').addEventListener('change', atualizarItensRecebimento);
+</script>

@@ -31,6 +31,18 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
         public DateTimeOffset CriadoEm { get; set; }
     }
 
+    // R23b2 (F-R15-C): classe intermediária para o item do pedido — o agrupamento por pedido_id
+    // exige ler mais colunas do que o DTO expõe (mesma motivação dos resumos deste arquivo).
+    private sealed class PedidoItemRow
+    {
+        public Guid PedidoId { get; set; }
+        public Guid Id { get; set; }
+        public string Produto { get; set; } = string.Empty;
+        public string Sku { get; set; } = string.Empty;
+        public decimal Quantidade { get; set; }
+        public decimal QuantidadeRecebida { get; set; }
+    }
+
     public ComprasRepository(string connectionString) : base(connectionString) { }
 
     public async Task<IReadOnlyList<PedidoResumo>> ListarAsync(Guid tenantId, string? fornecedor, string? situacao, DateOnly? inicio, DateOnly? fim, CancellationToken ct)
@@ -39,7 +51,7 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
             throw new ArgumentException("Período inválido: a data inicial não pode ser posterior à data final.");
 
         await using var cn = Connection();
-        var rows = await cn.QueryAsync<PedidoRow>(new CommandDefinition(@"
+        var rows = (await cn.QueryAsync<PedidoRow>(new CommandDefinition(@"
             SELECT p.id, p.numero, f.nome AS fornecedor, p.situacao,
                    (SELECT COALESCE(SUM(i.quantidade * i.preco_unitario - i.desconto), 0) FROM plantaopro.adm360_pedido_itens i WHERE i.pedido_id = p.id) + p.frete AS total,
                    p.created_at AS criadoem
@@ -50,8 +62,34 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
               AND (@situacao IS NULL OR p.situacao = @situacao)
               AND (@inicio::date IS NULL OR p.created_at::date >= @inicio::date)
               AND (@fim::date IS NULL OR p.created_at::date <= @fim::date)
-            ORDER BY p.created_at DESC", new { tenantId, fornecedor, situacao, inicio, fim }, cancellationToken: ct));
-        return rows.Select(p => new PedidoResumo(p.Id, p.Numero, p.Fornecedor, p.Situacao, p.Total, p.CriadoEm)).ToList();
+            ORDER BY p.created_at DESC", new { tenantId, fornecedor, situacao, inicio, fim }, cancellationToken: ct))).ToList();
+
+        // R23b2 (F-R15-C): itens por pedido para a tela de recebimento poder selecionar a linha
+        // autorizada — antes o form carregava só o id do pedido e o pedidoItemId ia Guid.Empty
+        // (400 na API: "Quantidade excede o saldo autorizado do pedido"). Query em lote sobre os
+        // ids já filtrados (padrão ANY(@ids) usado no próprio CriarAsync deste arquivo).
+        var itensPorPedido = new Dictionary<Guid, List<PedidoItemResumo>>();
+        if (rows.Count > 0)
+        {
+            var ids = rows.Select(r => r.Id).ToArray();
+            var itens = await cn.QueryAsync<PedidoItemRow>(new CommandDefinition(@"
+                SELECT i.pedido_id AS PedidoId, i.id AS Id, pr.nome AS Produto, pr.sku AS Sku,
+                       i.quantidade AS Quantidade, COALESCE(i.quantidade_recebida, 0) AS QuantidadeRecebida
+                FROM plantaopro.adm360_pedido_itens i
+                JOIN plantaopro.adm360_produtos pr ON pr.id = i.produto_id AND pr.tenant_id = i.tenant_id
+                WHERE i.tenant_id = @tenantId AND i.pedido_id = ANY(@ids)
+                ORDER BY i.pedido_id, i.id",
+                new { tenantId, ids }, cancellationToken: ct));
+            foreach (var it in itens)
+            {
+                if (!itensPorPedido.TryGetValue(it.PedidoId, out var lista))
+                    itensPorPedido[it.PedidoId] = lista = new List<PedidoItemResumo>();
+                lista.Add(new PedidoItemResumo(it.Id, it.Produto, it.Sku, it.Quantidade, it.QuantidadeRecebida));
+            }
+        }
+
+        return rows.Select(p => new PedidoResumo(p.Id, p.Numero, p.Fornecedor, p.Situacao, p.Total, p.CriadoEm,
+            itensPorPedido.GetValueOrDefault(p.Id) ?? (IReadOnlyList<PedidoItemResumo>)Array.Empty<PedidoItemResumo>())).ToList();
     }
 
     public async Task<Guid> CriarAsync(Guid tenantId, Guid usuarioId, CriarPedidoCommand c, CancellationToken ct)

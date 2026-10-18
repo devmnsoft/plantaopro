@@ -1077,7 +1077,9 @@ public sealed class Lookups360ViewModel
 }
 
 // Suprimentos e Estoque ViewModels
-public sealed record PedidoCompraResumoViewModel(Guid Id, string Numero, string Fornecedor, string Situacao, decimal Total, DateTimeOffset CriadoEm);
+public sealed record PedidoItemResumoViewModel(Guid Id, string Produto, string Sku, decimal Quantidade, decimal QuantidadeRecebida);
+
+public sealed record PedidoCompraResumoViewModel(Guid Id, string Numero, string Fornecedor, string Situacao, decimal Total, DateTimeOffset CriadoEm, IReadOnlyList<PedidoItemResumoViewModel> Itens);
 
 public sealed class PedidosCompraIndexViewModel
 {

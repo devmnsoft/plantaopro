@@ -161,7 +161,7 @@ public partial class Administrativo360Controller
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
-        if (pedidoId == Guid.Empty || string.IsNullOrWhiteSpace(documento) || quantidade <= 0 || localId == Guid.Empty)
+        if (pedidoId == Guid.Empty || pedidoItemId == Guid.Empty || string.IsNullOrWhiteSpace(documento) || quantidade <= 0 || localId == Guid.Empty)
         {
             TempData["Error"] = UiText.L("Adm360.Compras.ErrReceiptRequiredFields");
             return RedirectToAction(nameof(Recebimentos));

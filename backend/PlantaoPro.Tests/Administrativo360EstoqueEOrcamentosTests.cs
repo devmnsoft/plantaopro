@@ -403,6 +403,76 @@ public sealed class Administrativo360EstoqueEOrcamentosTests
         Assert.True(itemPlano.FaltaAtender <= 2m);
     }
 
+    // R22b2: o planejamento expõe as reservas ativas individuais (id visível p/ cancelamento
+    // por-reserva) e CancelarReservaAsync as remove da lista — trava a extensão que tornou
+    // OrcamentoCancelarReserva alcançável pela UI (OrcamentoReserva.cshtml).
+    [Fact]
+    public async Task Integracao_PlanejamentoReserva_ListaReservasAtivasE_CancelarRemoveDaLista()
+    {
+        var cs = ObterConnectionString();
+        await GarantirConexaoBancoAsync(cs);
+
+        var tenantId = Guid.Parse("d3f6584c-2c64-4e5a-9ea9-4e1428647502");
+        var usuarioId = Guid.NewGuid();
+        var hospitalId = Guid.Parse("a3610000-0000-4000-8000-000000000030");
+        var pagadorId = Guid.Parse("a3610000-0000-4000-8000-000000000030");
+        var produtoId = Guid.Parse("a3610000-0000-4000-8000-000000000002");
+        var localId = Guid.Parse("a3610000-0000-4000-8000-000000000003");
+
+        var loteId = Guid.NewGuid();
+        var codigoLote = "PLN-RSV-" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+
+        await using (var cn = new NpgsqlConnection(cs))
+        {
+            await cn.OpenAsync();
+            await cn.ExecuteAsync(@"
+                INSERT INTO plantaopro.adm360_lotes(id, tenant_id, produto_id, codigo, validade)
+                VALUES(@loteId, @tenantId, @produtoId, @codigoLote, '2028-01-01');
+
+                INSERT INTO plantaopro.adm360_movimentos(
+                    id, tenant_id, produto_id, lote_id, local_id, tipo, condicao, quantidade,
+                    origem_tipo, origem_id, idempotency_key, created_by
+                ) VALUES (
+                    gen_random_uuid(), @tenantId, @produtoId, @loteId, @localId, 'ENTRADA', 'LIBERADO', 10,
+                    'SEED_TEST', @loteId, @loteKey, @usuarioId
+                );", new { loteId, tenantId, produtoId, codigoLote, localId, usuarioId, loteKey = "seed:pln:" + loteId });
+        }
+
+        var orcamentoRepo = new OrcamentoCirurgicoRepository(cs);
+
+        var cmdCriar = new CriarOrcamentoCommand(
+            hospitalId, null, "Cirurgia Teste Planejamento Reserva", pagadorId, null,
+            new DateOnly(2026, 11, 20),
+            new DateOnly(2026, 11, 5),
+            "Observações teste planejamento",
+            new[] { new OrcamentoItemCommand(produtoId, 3m, 500m, 50m) });
+
+        var orcamentoId = await orcamentoRepo.CriarAsync(tenantId, usuarioId, cmdCriar, CancellationToken.None);
+        await orcamentoRepo.AprovarAsync(tenantId, usuarioId, orcamentoId, "aprov:pln:" + Guid.NewGuid().ToString("N"), CancellationToken.None);
+
+        await orcamentoRepo.ReservarItemAsync(tenantId, usuarioId, orcamentoId,
+            new ReservarCommand(produtoId, loteId, localId, 1m, "ORCAMENTO_CIRURGICO", orcamentoId, "reserva:pln:" + Guid.NewGuid().ToString("N")),
+            CancellationToken.None);
+
+        var plano = await orcamentoRepo.ObterPlanejamentoReservaAsync(tenantId, orcamentoId, CancellationToken.None);
+        Assert.NotNull(plano);
+        Assert.Single(plano!.ReservasAtivas);
+        var reserva = plano.ReservasAtivas[0];
+        Assert.Equal(1m, reserva.Quantidade);
+        Assert.Equal(codigoLote, reserva.Lote);
+        Assert.False(string.IsNullOrWhiteSpace(reserva.Produto));
+        Assert.NotEqual(Guid.Empty, reserva.Id);
+
+        // Cancelar a reserva por-id (mesma chamada do endpoint DELETE da UI) -> sai da lista
+        await orcamentoRepo.CancelarReservaAsync(tenantId, usuarioId, orcamentoId, reserva.Id, "Cancelamento teste planejamento", CancellationToken.None);
+
+        var planoDepois = await orcamentoRepo.ObterPlanejamentoReservaAsync(tenantId, orcamentoId, CancellationToken.None);
+        Assert.NotNull(planoDepois);
+        Assert.Empty(planoDepois!.ReservasAtivas);
+        var itemDepois = planoDepois.Itens.First(i => i.ProdutoId == produtoId);
+        Assert.Equal(0m, itemDepois.QuantidadeReservada);
+    }
+
     // =========================================================================
     // SEÇÃO 16: ACEITE NUMÉRICO OBRIGATÓRIO (7 ETAPAS EXATAS)
     // =========================================================================

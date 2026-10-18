@@ -537,7 +537,21 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
             planejados.Add(new ItemReservaPlanejamento(it.ProdutoId, it.Produto, it.Sku, it.Quantidade, reservada, falta, lotesElegiveis, it.ItemId));
         }
 
-        return new PlanejamentoReservaOrcamento(header.Id, header.Numero, header.Situacao, header.DataPrevista, header.Hospital, planejados);
+        // R22b2: reservas ativas individuais (id visível p/ cancelamento por-reserva —
+        // antes a UI só via a soma agregada acima e o endpoint DELETE ficava inalcançável).
+        var reservasAtivas = (await cn.QueryAsync<ReservaAtivaRow>(new CommandDefinition(@"
+            SELECT r.id AS Id, r.quantidade AS Quantidade, r.created_at AS CriadoEm,
+                   p.nome AS Produto, COALESCE(l.codigo, 'Lote') AS Lote
+            FROM plantaopro.adm360_reservas r
+            JOIN plantaopro.adm360_produtos p ON p.id = r.produto_id AND p.tenant_id = r.tenant_id
+            LEFT JOIN plantaopro.adm360_lotes l ON l.id = r.lote_id AND l.tenant_id = r.tenant_id
+            WHERE r.tenant_id = @tenantId AND r.origem_tipo = 'ORCAMENTO_CIRURGICO' AND r.origem_id = @orcamentoId
+              AND r.situacao = 'ATIVA'
+            ORDER BY r.created_at DESC, r.id",
+            new { tenantId, orcamentoId }, cancellationToken: ct))).Select(r =>
+            new ReservaAtivaPlanejamento(r.Id, r.Produto, r.Lote, r.Quantidade, r.CriadoEm)).ToList();
+
+        return new PlanejamentoReservaOrcamento(header.Id, header.Numero, header.Situacao, header.DataPrevista, header.Hospital, planejados, reservasAtivas);
     }
 
     public async Task ReservarItemAsync(Guid tenantId, Guid usuarioId, Guid orcamentoId, ReservarCommand command, CancellationToken ct)
@@ -717,6 +731,15 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
 
     // Mesma motivação dos demais resumos deste arquivo: classe intermediária absorve a conversão
     // timestamptz→DateTimeOffset do Npgsql; o mapeamento direto no record falharia com linhas.
+    private sealed class ReservaAtivaRow
+    {
+        public Guid Id { get; set; }
+        public string Produto { get; set; } = string.Empty;
+        public string Lote { get; set; } = string.Empty;
+        public decimal Quantidade { get; set; }
+        public DateTimeOffset CriadoEm { get; set; }
+    }
+
     private sealed class OrcamentoRevisaoRow
     {
         public Guid Id { get; set; }

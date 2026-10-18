@@ -243,7 +243,7 @@ public sealed class R20BffMappingContratoTests
         var vmBaixa = JsonSerializer.Deserialize<TituloBaixaViewModel>(wireBaixa, web);
         Assert.Equal(new DateOnly(2026, 10, 18), vmBaixa!.DataRecebimento);
         Assert.Equal("Maria Silva", vmBaixa.RecebidoPor);
-        Assert.Equal(true, vmBaixa.Estornado);
+        Assert.True(vmBaixa.Estornado); // R22b2: xUnit2004 — Equal(true, bool) dispara o analizador sem valor extra
         Assert.DoesNotContain("\"dataBaixa\"", wireBaixa); // a chave antiga nem existia no wire
 
         var dtoComissao = new RelatorioComissaoItem("Joao Vendedor", "V-102", new DateOnly(2026, 9, 30), 1000m, 5m, 50m, "APROVADA");

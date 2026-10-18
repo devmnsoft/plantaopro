@@ -34,7 +34,9 @@ public sealed record OrcamentoRevisaoHistorico(Guid Id, int Revisao, string Moti
 
 public sealed record LoteElegivelReserva(Guid LoteId, string Lote, DateOnly? Validade, Guid LocalId, string Local, decimal Fisico, decimal Reservado, decimal Disponivel, bool ElegivelParaDataCirurgia);
 public sealed record ItemReservaPlanejamento(Guid ProdutoId, string Produto, string Sku, decimal QuantidadeSolicitada, decimal QuantidadeReservada, decimal FaltaAtender, IReadOnlyList<LoteElegivelReserva> LotesElegiveis, Guid? OrcamentoItemId = null);
-public sealed record PlanejamentoReservaOrcamento(Guid OrcamentoId, string Numero, string Situacao, DateOnly DataPrevista, string Hospital, IReadOnlyList<ItemReservaPlanejamento> Itens);
+public sealed record ReservaAtivaPlanejamento(Guid Id, string Produto, string Lote, decimal Quantidade, DateTimeOffset CriadoEm);
+
+public sealed record PlanejamentoReservaOrcamento(Guid OrcamentoId, string Numero, string Situacao, DateOnly DataPrevista, string Hospital, IReadOnlyList<ItemReservaPlanejamento> Itens, IReadOnlyList<ReservaAtivaPlanejamento> ReservasAtivas);
 
 // Cirurgias Operacionais
 public sealed record CriarCirurgiaCommand(Guid HospitalId, Guid? MedicoId, string Procedimento, DateOnly DataPrevista, TimeOnly? HoraPrevista, Guid? OrcamentoId, int? OrcamentoRevisao, Guid? ResponsavelId, Guid LocalDestinoId, string? Observacoes);

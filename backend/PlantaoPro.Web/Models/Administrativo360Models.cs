@@ -172,13 +172,21 @@ public sealed record ItemReservaPlanejamentoViewModel(
     decimal FaltaAtender,
     IReadOnlyList<LoteElegivelReservaViewModel> LotesElegiveis);
 
+public sealed record ReservaAtivaPlanejamentoViewModel(
+    Guid Id,
+    string Produto,
+    string Lote,
+    decimal Quantidade,
+    DateTimeOffset CriadoEm);
+
 public sealed record PlanejamentoReservaOrcamentoViewModel(
     Guid OrcamentoId,
     string Numero,
     string Situacao,
     DateOnly DataPrevista,
     string Hospital,
-    IReadOnlyList<ItemReservaPlanejamentoViewModel> Itens);
+    IReadOnlyList<ItemReservaPlanejamentoViewModel> Itens,
+    IReadOnlyList<ReservaAtivaPlanejamentoViewModel> ReservasAtivas);
 
 public sealed record OrcamentoRevisaoHistoricoViewModel(
     Guid Id,

@@ -207,9 +207,10 @@ public sealed class R14DegradacaoHonestaFaturamentoSaasWebTests : IDisposable
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
         var html = await resp.Content.ReadAsStringAsync();
         Assert.Contains("Falha ao carregar.", html);
-        // O banner carrega a mensagem atribuida ao endpoint que falhou: para 500 em chamada
-        // simples, a casa mapeia para o literal fixo de instabilidade (BuildApiErrorMessage L523).
-        Assert.Contains("instabilidade interna", html);
+        // D-R24-1 (R24, F-R14-D): 500 em chamada simples agora repassa a mensagem da API com
+        // atribuicao, igual ao parser paginado (unificacao em BuildApiErrorMessage, r24a0).
+        Assert.Contains("resumo comercial.", html);
+        Assert.DoesNotContain("instabilidade interna", html);
         Assert.DoesNotContain("Nenhuma fatura encontrada", html);
     }
 

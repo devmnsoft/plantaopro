@@ -119,12 +119,27 @@ public sealed class R16WebParserErrorContratoTests
     }
 
     [Fact]
-    public async Task GET_500_mantem_literal_fixo_e_descarta_mensagem_interna()
+    public async Task GET_500_repassa_mensagem_da_api_com_atribuicao()
     {
-        // D4/r16a0: BuildApiErrorMessage(500) segue descartando a apiMessage — a
-        // intencao dos 500 e decisao separada (fila P3, F-R14-D, premissa refinada).
+        // D-R24-1 (F-R14-D, decidido em r24a0): o 500 da chamada simples passa a seguir o mesmo
+        // criterio dos demais ramos (repasse da mensagem da API), alinhado ao comportamento do
+        // parser paginado aprovado ao vivo na r14b2. A assimetria historica (literal fixo) acaba.
         var (ctrl, _, _) = Sonda(_ => StubApiHandler.Json(HttpStatusCode.InternalServerError,
             "{\"message\":\"excecao tecnica interna\"}"));
+
+        var (_, error, status) = await ctrl.ReadApiResponse<ItemDto>(ctrl.CreateApiClient(), "api/instavel");
+
+        Assert.Equal(HttpStatusCode.InternalServerError, status);
+        Assert.Equal("excecao tecnica interna", error);
+    }
+
+    [Fact]
+    public async Task GET_500_sem_mensagem_no_corpo_mantem_literal_de_instabilidade()
+    {
+        // Fallback honesto (D-R24-1): JSON sem nenhuma chave reconhecida (message/mensagem/
+        // error/detail/title/errors) nao produz mensagem — o literal fixo da casa permanece.
+        var (ctrl, _, _) = Sonda(_ => StubApiHandler.Json(HttpStatusCode.InternalServerError,
+            "{\"code\":500}"));
 
         var (_, error, status) = await ctrl.ReadApiResponse<ItemDto>(ctrl.CreateApiClient(), "api/instavel");
 

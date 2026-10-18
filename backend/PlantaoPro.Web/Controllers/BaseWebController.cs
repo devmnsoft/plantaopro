@@ -525,7 +525,10 @@ public abstract class BaseWebController : Controller
             HttpStatusCode.Forbidden => apiMessage ?? "Você não possui permissão para realizar esta ação.",
             HttpStatusCode.NotFound => apiMessage ?? "Registro não encontrado ou não está mais disponível.",
             HttpStatusCode.Conflict => apiMessage ?? "Conflito de dados detectado. Atualize a tela e tente novamente.",
-            HttpStatusCode.InternalServerError => "Ocorreu uma instabilidade interna. Tente novamente em instantes.",
+            // D-R24-1 (F-R14-D): 500 passa a seguir o mesmo criterio dos demais ramos (repasse da
+            // mensagem da API com fallback ao literal), alinhado ao comportamento ja aprovado ao vivo
+            // do parser paginado na r14b2 — a assimetria entre chamadas simples e paginadas termina aqui.
+            HttpStatusCode.InternalServerError => apiMessage ?? "Ocorreu uma instabilidade interna. Tente novamente em instantes.",
             _ => apiMessage ?? "Não foi possível concluir a operação agora."
         };
 

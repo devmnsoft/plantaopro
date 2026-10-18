@@ -131,9 +131,14 @@ public sealed class AjudaController : Controller
 
     private string NormalizarPerfil(string? perfil)
     {
-        if (!string.IsNullOrWhiteSpace(perfil)) return perfil.Trim().ToUpperInvariant();
-        var claim = User.FindFirstValue("perfil") ?? User.FindFirstValue(ClaimTypes.Role) ?? User.FindFirstValue("role");
-        return string.IsNullOrWhiteSpace(claim) ? "TODOS" : claim.Trim().ToUpperInvariant();
+        var bruto = !string.IsNullOrWhiteSpace(perfil)
+            ? perfil.Trim().ToUpperInvariant()
+            : (User.FindFirstValue("perfil") ?? User.FindFirstValue(ClaimTypes.Role) ?? User.FindFirstValue("role"));
+        var normalizado = string.IsNullOrWhiteSpace(bruto) ? "TODOS" : bruto.Trim().ToUpperInvariant();
+        // D-R51-1: a família administrador de tenant compartilha um único manual (mesmo escopo
+        // Tenant e mesmo DefaultRoute /ClientePortal; o onboarding atribui os dois perfis).
+        if (string.Equals(normalizado, "ADMINISTRADOR", StringComparison.OrdinalIgnoreCase)) normalizado = "ADMINISTRADOR_CLIENTE";
+        return normalizado;
     }
 
     private static List<AjudaInterativaTopicoViewModel> FiltrarTopicos(string perfil)
@@ -173,6 +178,8 @@ public sealed class AjudaController : Controller
             new AjudaInterativaTopicoViewModel { Slug = "medico", Perfil = "MEDICO", Titulo = "Área do médico", Descricao = "Plantões disponíveis, agenda, convites e pagamentos.", Icone = "bi-heart-pulse" },
             new AjudaInterativaTopicoViewModel { Slug = "financeiro", Perfil = "FINANCEIRO", Titulo = "Financeiro", Descricao = "Pagamentos, contestação e relatórios financeiros.", Icone = "bi-cash-coin" },
             new AjudaInterativaTopicoViewModel { Slug = "hospital", Perfil = "HOSPITAL", Titulo = "Hospital", Descricao = "Acompanhamento de plantões, escalas e comunicação.", Icone = "bi-hospital" },
+            new AjudaInterativaTopicoViewModel { Slug = "instituicao", Perfil = "ADMINISTRADOR_CLIENTE", Titulo = "Operação da instituição", Descricao = "Vendas, compras, estoque, títulos e relatórios financeiros do dia a dia.", Icone = "bi-buildings" },
+            new AjudaInterativaTopicoViewModel { Slug = "central", Perfil = "TODOS", Titulo = "Minha Central e avisos", Descricao = "Tarefas, faturas vencidas e preferências de notificação que você acompanha.", Icone = "bi-bell" },
             new AjudaInterativaTopicoViewModel { Slug = "privacidade", Perfil = "TODOS", Titulo = "Privacidade LGPD", Descricao = "Consentimentos, direitos do titular e exportação de dados.", Icone = "bi-shield-lock" }
         };
     }
@@ -193,7 +200,14 @@ public sealed class AjudaController : Controller
             Artigo("medico-pagamentos", "medico", "MEDICO", "Como consultar pagamentos", "Acompanhe pagamentos previstos e confirmados.", "Financeiro", "Index", 20, new List<string> { "Acesse Meus Pagamentos.", "Use filtros por período.", "Confira status de pagamento.", "Acione a coordenação em caso de divergência." }),
             Artigo("financeiro-pagamento", "financeiro", "FINANCEIRO", "Como confirmar pagamento", "Confirme pagamentos com rastreabilidade e auditoria.", "Financeiro", "Index", 10, new List<string> { "Acesse Pagamentos.", "Filtre pendentes.", "Confira valor e favorecido.", "Confirme após conciliação bancária." }),
             Artigo("hospital-escalas", "hospital", "HOSPITAL", "Como consultar escalas", "Acompanhe escalas confirmadas do hospital.", "Escalas", "Index", 10, new List<string> { "Acesse Escalas.", "Filtre por período.", "Verifique médicos confirmados.", "Use Comunicação para dúvidas operacionais." }),
-            Artigo("lgpd-direitos", "privacidade", "TODOS", "Como usar Minha Privacidade", "Solicite exportação, correção ou anonimização quando permitido por lei.", "Lgpd", "MinhaPrivacidade", 10, new List<string> { "Acesse Privacidade LGPD.", "Leia a política vigente.", "Registre solicitação do titular.", "Acompanhe status e resposta na própria tela." })
+            Artigo("lgpd-direitos", "privacidade", "TODOS", "Como usar Minha Privacidade", "Solicite exportação, correção ou anonimização quando permitido por lei.", "Lgpd", "MinhaPrivacidade", 10, new List<string> { "Acesse Privacidade LGPD.", "Leia a política vigente.", "Registre solicitação do titular.", "Acompanhe status e resposta na própria tela." }),
+            Artigo("adm-orcamento", "instituicao", "ADMINISTRADOR_CLIENTE", "Como criar orçamento", "Monte a proposta com itens e valores antes de transformá-la em venda.", "Administrativo360", "Orcamentos", 10, new List<string> { "Acesse a tela de Orçamentos.", "Clique em novo orçamento e informe o cliente ou parceiro.", "Adicione itens, quantidades e valores; confira o total.", "Salve como rascunho e ajuste até ficar pronto para confirmar." }),
+            Artigo("adm-compras", "instituicao", "ADMINISTRADOR_CLIENTE", "Como registrar pedido de compra", "Crie o pedido, aprove-o e registre o que chegou.", "Administrativo360", "PedidosCompra", 20, new List<string> { "Acesse Pedidos de Compra.", "Clique em criar pedido e informe fornecedor e itens.", "Aprove o pedido quando os dados estiverem corretos.", "Registre o recebimento quando o material chegar." }),
+            Artigo("adm-estoque", "instituicao", "ADMINISTRADOR_CLIENTE", "Como acompanhar estoque e inventário", "Confira saldos, lotes e feche a contagem quando inventariar.", "Administrativo360", "Estoque", 30, new List<string> { "Acesse a tela de Estoque.", "Confira saldo, lotes e movimentações dos produtos.", "Abra a contagem na tela de Inventários.", "Aprove o inventário finalizado para atualizar os saldos." }),
+            Artigo("adm-titulos", "instituicao", "ADMINISTRADOR_CLIENTE", "Como controlar títulos a receber e a pagar", "Emita títulos, receba, pague e mantenha o fluxo organizado.", "Administrativo360", "TitulosReceber", 40, new List<string> { "Acesse Títulos a Receber.", "Emita ou receba títulos e confira vencimento e status.", "Acesse Títulos a Pagar para as saídas.", "Marque pago somente após confirmar a baixa no banco." }),
+            Artigo("adm-relatorio", "instituicao", "ADMINISTRADOR_CLIENTE", "Como consultar relatórios financeiros", "Entenda resultado, margem e fluxo de caixa com linguagem simples.", "Administrativo360", "RelatoriosFinanceiros", 50, new List<string> { "Acesse Relatórios Financeiros.", "Escolha o relatório do período que deseja ver.", "Leia os totais e os destaques da página.", "Exporte em CSV para compartilhar com a equipe." }),
+            Artigo("central-fatura", "central", "TODOS", "Como resolver fatura vencida", "Veja o aviso na Minha Central, confira o valor e regularize o pagamento.", "MinhaCentral", "Index", 10, new List<string> { "Entre na sua área.", "Abra Minha Central e procure o aviso Fatura vencida.", "Confira valor, competência e data de vencimento.", "Pague pelo canal indicado e acompanhe o status voltar ao normal." }),
+            Artigo("central-notificacoes", "central", "TODOS", "Como configurar notificações", "Ligue ou desligue os avisos por canal, do jeito que faz sentido para você.", "Notificacoes", "Preferencias", 20, new List<string> { "Acesse Preferências de Notificações.", "Revise as categorias e os canais disponíveis.", "Ative ou desative cada tipo de aviso.", "Salve e aguarde o próximo aviso para confirmar que chegou." })
         };
     }
 

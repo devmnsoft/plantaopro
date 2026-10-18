@@ -55,7 +55,7 @@
             <p><strong>Chave do provedor.</strong> Deixe em branco para manter a atual ou usar a chave global do servidor. A chave fica cifrada no banco e nunca volta inteira para esta tela.</p>
             <p><strong>Testar conexão.</strong> Valida a configuração junto ao provedor antes de considerar configurado. Falhas retornam um estado explicável — nunca “sucesso” fictício.</p>
             <p><strong>Limites e cota.</strong> Tokens, timeout e cota mensal por tarefa são aplicados no servidor; apenas usos bem-sucedidos consomem a cota. O orçamento mensal é bloqueio adicional por valor (moeda USD ou BRL).</p>
-            <p><strong>Fallback de modelo.</strong> Deixe em branco para usar o modelo padrão do provedor escolhido como fallback. Avisos ao lado do campo não impedem o salvamento; apenas chamam atenção para modelos fora do catálogo documentado.</p>
+            <p><strong>Modelo de reserva.</strong> Deixe em branco para usar o modelo padrão do provedor escolhido. Avisos ao lado do campo não impedem o salvamento; apenas chamam atenção para modelos fora do catálogo documentado.</p>
             <p><strong>Reconciliação de custos.</strong> Usos que terminam em timeout ou resposta inválida ficam com custo incerto. Confirme ali embaixo o valor efetivamente cobrado pelo provedor (ou deixe em branco para zerar); o crédito mensal do cliente dono do uso é ajustado na hora.</p>
         </div>
     </details>
@@ -88,7 +88,7 @@
                             </select>
                         </div>
                         <div class="col-12 col-md-4">
-                            <label class="form-label" for="fallback_@cfg.TaskCode">Fallback — provedor (opcional)</label>
+                            <label class="form-label" for="fallback_@cfg.TaskCode">Provedor de reserva (opcional)</label>
                             <select class="form-select" id="fallback_@cfg.TaskCode" name="FallbackProvedor">
                                 <option value="">nenhum</option>
                                 @foreach (var p in provedores)
@@ -107,9 +107,9 @@
                             }
                         </div>
                         <div class="col-12 col-md-6">
-                            <label class="form-label" for="fallbackmodelo_@cfg.TaskCode">Modelo do fallback (opcional)</label>
-                            <input class="form-control" id="fallbackmodelo_@cfg.TaskCode" name="FallbackModelo" value="@cfg.FallbackModelo" placeholder="padrão vigente do provedor de fallback" />
-                            <div class="form-text">Deixe em branco para usar o modelo padrão do provedor escolhido como fallback.</div>
+                            <label class="form-label" for="fallbackmodelo_@cfg.TaskCode">Modelo de reserva (opcional)</label>
+                            <input class="form-control" id="fallbackmodelo_@cfg.TaskCode" name="FallbackModelo" value="@cfg.FallbackModelo" placeholder="padrão vigente do provedor" />
+                            <div class="form-text">Deixe em branco para usar o modelo padrão do provedor escolhido.</div>
                         </div>
                         <div class="col-12">
                             <label class="form-label" for="chave_@cfg.TaskCode">Chave do provedor (cifrada no servidor)</label>

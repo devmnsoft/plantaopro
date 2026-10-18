@@ -494,7 +494,7 @@
     <value>Senha redefinida com sucesso.</value>
   </data>
   <data name="Auth.ResetTokenInvalid" xml:space="preserve">
-    <value>Token inválido ou expirado.</value>
+    <value>O link de redefinição é inválido ou expirou.</value>
   </data>
   <data name="Coverage.LoadFailed" xml:space="preserve">
     <value>Não foi possível carregar a Central de Escala.</value>
@@ -3219,7 +3219,7 @@
     <value>&lt;code&gt;competencia &amp;gt;= início AND competencia &amp;lt;= fim&lt;/code&gt; (inclusivo); opcionais &lt;code&gt;clienteId&lt;/code&gt; e &lt;code&gt;vendedorId&lt;/code&gt;; sempre isolado por tenant — &lt;code&gt;clienteId&lt;/code&gt; de outro tenant é rejeitado com erro explícito (400). Sem data: últimos 30 dias até hoje.</value>
   </data>
   <data name="Adm360.RelFin.IndVendasFonte" xml:space="preserve">
-    <value>&lt;code&gt;adm360_vendas&lt;/code&gt; (linha por venda confirmada), com nomes de cliente/pagador/vendedor resolvidos via &lt;code&gt;adm360_parceiros&lt;/code&gt;; registros históricos podem apontar para a tabela clínica &lt;code&gt;hospitais&lt;/code&gt; (fallback de nome) e sem nome vira "Cliente não identificado".</value>
+    <value>&lt;code&gt;adm360_vendas&lt;/code&gt; (linha por venda confirmada), com nomes de cliente/pagador/vendedor resolvidos via &lt;code&gt;adm360_parceiros&lt;/code&gt;; registros históricos podem apontar para a tabela clínica &lt;code&gt;hospitais&lt;/code&gt; (resolução alternativa de nome) e sem nome vira "Cliente não identificado".</value>
   </data>
   <data name="Adm360.RelFin.IndVendasFormula" xml:space="preserve">
     <value>Total Líquido = bruto − desconto; Custo = Σ custo dos lotes consumidos na valorização; Comissão prevista = líquido × % comissão da venda. Valores gravados na venda, sem recálculo retroativo.</value>

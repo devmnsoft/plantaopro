@@ -158,7 +158,7 @@
                                                         <div class="mb-3">
                                                             <label class="form-label small text-secondary" for="nome-@c.Id">Nome da Conta</label>
                                                             <input type="text" id="nome-@c.Id" name="nome" class="form-control form-control-sm bg-dark text-light border-secondary"
-                                                                   value="@c.Nome" required />
+                                                                   value="@c.Nome" maxlength="120" required />
                                                         </div>
                                                         <div class="row g-3 mb-3">
                                                             <div class="col-6">
@@ -172,19 +172,19 @@
                                                             <div class="col-6">
                                                                 <label class="form-label small text-secondary" for="banco-@c.Id">Banco</label>
                                                                 <input type="text" id="banco-@c.Id" name="banco" class="form-control form-control-sm bg-dark text-light border-secondary"
-                                                                       value="@c.Banco" />
+                                                                       value="@c.Banco" maxlength="40" />
                                                             </div>
                                                         </div>
                                                         <div class="row g-3 mb-3">
                                                             <div class="col-6">
                                                                 <label class="form-label small text-secondary" for="agencia-@c.Id">Agência</label>
                                                                 <input type="text" id="agencia-@c.Id" name="agencia" class="form-control form-control-sm bg-dark text-light border-secondary"
-                                                                       value="@c.Agencia" />
+                                                                       value="@c.Agencia" maxlength="20" />
                                                             </div>
                                                             <div class="col-6">
                                                                 <label class="form-label small text-secondary" for="conta-@c.Id">Conta</label>
                                                                 <input type="text" id="conta-@c.Id" name="conta" class="form-control form-control-sm bg-dark text-light border-secondary"
-                                                                       value="@c.Conta" />
+                                                                       value="@c.Conta" maxlength="30" />
                                                             </div>
                                                         </div>
                                                         <div class="alert alert-secondary small mb-0">
@@ -225,7 +225,7 @@
                     <div class="mb-3">
                         <label class="form-label small text-secondary" for="nomeNova">Nome da Conta / Identificação</label>
                         <input type="text" id="nomeNova" name="nome" class="form-control form-control-sm bg-dark text-light border-secondary"
-                               placeholder="Ex: Santander - Conta Operacional" required />
+                               placeholder="Ex: Santander - Conta Operacional" maxlength="120" required />
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-6">
@@ -239,19 +239,19 @@
                         <div class="col-6">
                             <label class="form-label small text-secondary" for="bancoNova">Banco</label>
                             <input type="text" id="bancoNova" name="banco" class="form-control form-control-sm bg-dark text-light border-secondary"
-                                   placeholder="Ex: 033 - Santander" />
+                                   placeholder="Ex: 033 - Santander" maxlength="40" />
                         </div>
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-6">
                             <label class="form-label small text-secondary" for="agenciaNova">Agência</label>
                             <input type="text" id="agenciaNova" name="agencia" class="form-control form-control-sm bg-dark text-light border-secondary"
-                                   placeholder="Ex: 1234" />
+                                   placeholder="Ex: 1234" maxlength="20" />
                         </div>
                         <div class="col-6">
                             <label class="form-label small text-secondary" for="contaNova">Nº Conta</label>
                             <input type="text" id="contaNova" name="conta" class="form-control form-control-sm bg-dark text-light border-secondary"
-                                   placeholder="Ex: 56789-0" />
+                                   placeholder="Ex: 56789-0" maxlength="30" />
                         </div>
                     </div>
                     <div class="row g-3 mb-3">

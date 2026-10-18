@@ -50,7 +50,7 @@
                             </div>
                             <div class="col-md-8">
                                 <label class="form-label text-light small fw-bold">Procedimento Cirúrgico *</label>
-                                <input type="text" name="Procedimento" value="@Model.Procedimento" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: Artroplastia Total de Quadril Não Cimentada" required>
+                                <input type="text" name="Procedimento" value="@Model.Procedimento" class="form-control form-control-sm bg-black text-light border-secondary" maxlength="180" placeholder="Ex: Artroplastia Total de Quadril Não Cimentada" required>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-light small">Médico Cirurgião</label>
@@ -73,7 +73,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-light small">Vendedor Responsável</label>
-                                <input type="text" name="VendedorId" value="@Model.VendedorId" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Código do vendedor (opcional)">
+                                <input type="text" name="VendedorId" value="@Model.VendedorId" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Código do vendedor (opcional)" maxlength="36">
                             </div>
                             <div class="col-12">
                                 <label class="form-label text-light small">Observações / Recomendações Logísticas</label>

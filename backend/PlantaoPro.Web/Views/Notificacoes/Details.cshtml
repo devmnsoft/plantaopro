@@ -1,6 +1,28 @@
 @model PlantaoPro.Web.Models.DetailsPageViewModel<PlantaoPro.Web.Models.NotificacaoDto>
-<h2>Detalhes</h2>
-@if (Model?.IsPlaceholder == true)
-{<div class="alert alert-info">Detalhamento em preparação.</div>}
-else
-{<pre>@System.Text.Json.JsonSerializer.Serialize(Model?.Data)</pre>}
+@{
+    ViewData["Title"] = "Notificação";
+    var vm = Model;
+}
+<div class="container py-4" style="max-width: 720px">
+    <h1 class="h3 mb-3">Detalhes da notificação</h1>
+    @if (vm is null || vm.IsPlaceholder || vm.Data is null)
+    {
+        <div class="alert alert-info">A notificação não está mais disponível ou foi removida.</div>
+    }
+    else if (!string.IsNullOrEmpty(vm.ErrorMessage))
+    {
+        <div class="alert alert-warning">@vm.ErrorMessage</div>
+    }
+    else
+    {
+        var n = vm.Data;
+        <dl class="row mb-4">
+            <dt class="col-sm-3">Título</dt><dd class="col-sm-9">@n.Titulo</dd>
+            <dt class="col-sm-3">Mensagem</dt><dd class="col-sm-9">@n.Mensagem</dd>
+            <dt class="col-sm-3">Tipo</dt><dd class="col-sm-9"><span class="badge bg-primary-subtle text-primary">@n.Tipo</span></dd>
+            <dt class="col-sm-3">Situação</dt><dd class="col-sm-9">@(n.Lida ? "Lida" : "Nova")</dd>
+            <dt class="col-sm-3">Data</dt><dd class="col-sm-9">@n.RegDate.ToString("dd/MM/yyyy HH:mm")</dd>
+        </dl>
+    }
+    <a class="btn btn-outline-secondary" asp-controller="Notificacoes" asp-action="Index">Voltar para as notificações</a>
+</div>

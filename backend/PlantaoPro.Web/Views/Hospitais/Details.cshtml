@@ -1,6 +1,31 @@
 @model PlantaoPro.Web.Models.DetailsPageViewModel<PlantaoPro.Web.Models.HospitalDto>
-<h2>Detalhes</h2>
-@if (Model?.IsPlaceholder == true)
-{<div class="alert alert-info">Detalhamento em preparação.</div>}
-else
-{<pre>@System.Text.Json.JsonSerializer.Serialize(Model?.Data)</pre>}
+@{
+    ViewData["Title"] = "Unidade";
+    var vm = Model;
+}
+<div class="container py-4" style="max-width: 720px">
+    <h1 class="h3 mb-3">Detalhes da unidade</h1>
+    @if (vm is null || vm.IsPlaceholder || vm.Data is null)
+    {
+        <div class="alert alert-info">Os detalhes desta unidade não estão disponíveis agora.</div>
+    }
+    else if (!string.IsNullOrEmpty(vm.ErrorMessage))
+    {
+        <div class="alert alert-warning">@vm.ErrorMessage</div>
+    }
+    else
+    {
+        var u = vm.Data;
+        <dl class="row mb-4">
+            <dt class="col-sm-3">Nome</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(u.NomeFantasia) ? u.RazaoSocial : $"{u.NomeFantasia} ({u.RazaoSocial})")</dd>
+            <dt class="col-sm-3">CNPJ</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(u.Cnpj) ? "Não informado" : u.Cnpj)</dd>
+            <dt class="col-sm-3">Telefone</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(u.Telefone) ? "Não informado" : u.Telefone)</dd>
+            <dt class="col-sm-3">E-mail</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(u.Email) ? "Não informado" : u.Email)</dd>
+            <dt class="col-sm-3">Endereço</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(u.Endereco) ? "Não informado" : u.Endereco)</dd>
+            <dt class="col-sm-3">Cidade/UF</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(u.Cidade) ? "Não informado" : $"{u.Cidade}/{u.Estado}")</dd>
+            <dt class="col-sm-3">Responsável</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(u.Responsavel) ? "Não informado" : u.Responsavel)</dd>
+            <dt class="col-sm-3">Situação</dt><dd class="col-sm-9"><span class="badge bg-primary-subtle text-primary">@u.RegStatus</span></dd>
+        </dl>
+    }
+    <a class="btn btn-outline-secondary" asp-controller="Hospitais" asp-action="Index">Voltar para as unidades</a>
+</div>

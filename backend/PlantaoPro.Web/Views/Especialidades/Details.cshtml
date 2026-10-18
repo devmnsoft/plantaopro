@@ -1,6 +1,26 @@
 @model PlantaoPro.Web.Models.DetailsPageViewModel<PlantaoPro.Web.Models.EspecialidadeDto>
-<h2>Detalhes</h2>
-@if (Model?.IsPlaceholder == true)
-{<div class="alert alert-info">Detalhamento em preparação.</div>}
-else
-{<pre>@System.Text.Json.JsonSerializer.Serialize(Model?.Data)</pre>}
+@{
+    ViewData["Title"] = "Especialidade";
+    var vm = Model;
+}
+<div class="container py-4" style="max-width: 720px">
+    <h1 class="h3 mb-3">Detalhes da especialidade</h1>
+    @if (vm is null || vm.IsPlaceholder || vm.Data is null)
+    {
+        <div class="alert alert-info">Os detalhes desta especialidade não estão disponíveis agora.</div>
+    }
+    else if (!string.IsNullOrEmpty(vm.ErrorMessage))
+    {
+        <div class="alert alert-warning">@vm.ErrorMessage</div>
+    }
+    else
+    {
+        var e = vm.Data;
+        <dl class="row mb-4">
+            <dt class="col-sm-3">Nome</dt><dd class="col-sm-9">@e.Nome</dd>
+            <dt class="col-sm-3">Descrição</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(e.Descricao) ? "Não descrita." : e.Descricao)</dd>
+            <dt class="col-sm-3">Situação</dt><dd class="col-sm-9"><span class="badge bg-primary-subtle text-primary">@e.RegStatus</span></dd>
+        </dl>
+    }
+    <a class="btn btn-outline-secondary" asp-controller="Especialidades" asp-action="Index">Voltar para as especialidades</a>
+</div>

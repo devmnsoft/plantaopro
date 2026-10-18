@@ -39,7 +39,7 @@ public sealed class UsuariosController : BaseWebController
         var (user, error, status) = await ReadApiResponseAsync<UsuarioSaasViewModel>(client, "api/seguranca/usuarios/" + id);
         if (user is null)
         {
-            TempData["Error"] = error ?? "Usuário não encontrado no tenant permitido.";
+            TempData["Error"] = error ?? "Usuário não encontrado no escopo de acesso.";
             return (int)status == StatusCodes.Status401Unauthorized ? HandleUnauthorized() : RedirectToAction(nameof(Index));
         }
         var (selectedProfiles, _, _) = await ReadApiListResponseAsync<Guid>(client, $"api/seguranca/usuarios/{id}/perfis");

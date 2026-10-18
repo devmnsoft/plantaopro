@@ -27,8 +27,8 @@ public sealed class V2155TenantPermissionBoundaryTests
         Assert.Contains("UsuarioPertenceAoEscopoAsync(usuarioId, effectiveTenantId", permissionsController, StringComparison.Ordinal);
         Assert.Contains("UsuarioPertenceAoEscopoAsync(request.UsuarioId.Value, effectiveTenantId", permissionsController, StringComparison.Ordinal);
         Assert.Contains("TestarPermissaoNoEscopoAsync", securityController, StringComparison.Ordinal);
-        Assert.Contains("Usuário não encontrado no tenant permitido", permissionsController, StringComparison.Ordinal);
-        Assert.Contains("Usuário não encontrado no tenant permitido", securityController, StringComparison.Ordinal);
+        Assert.Contains("Usuário não encontrado no escopo de acesso", permissionsController, StringComparison.Ordinal);
+        Assert.Contains("Usuário não encontrado no escopo de acesso", securityController, StringComparison.Ordinal);
     }
 
     [Fact]

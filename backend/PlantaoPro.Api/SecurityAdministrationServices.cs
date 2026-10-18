@@ -358,7 +358,7 @@ exists(select 1 from plantaopro.perfis p where p.id=any(@profileIds) and p.reg_s
             ? await cn.QuerySingleOrDefaultAsync<(Guid Id, Guid? TenantId, string Nome, string Email, string? Telefone, string Status)>(new CommandDefinition(@"select id,coalesce(tenant_id,cliente_id) tenant_id,nome,email,telefone,coalesce(status,'ATIVO') status
 from plantaopro.usuarios where id=@userId and (@scopeTenantId is null or coalesce(tenant_id,cliente_id)=@scopeTenantId)", new { userId, scopeTenantId = TenantScope(null) }, tx, cancellationToken: ct))
             : default;
-        if (id.HasValue && before.Id == Guid.Empty) return ApiResponse<Guid>.Fail("Usuário não encontrado no tenant permitido.", 404);
+        if (id.HasValue && before.Id == Guid.Empty) return ApiResponse<Guid>.Fail("Usuário não encontrado no escopo de acesso.", 404);
         if (id.HasValue && before.TenantId != tenantId) return ApiResponse<Guid>.Fail("Não é permitido mover usuário entre clientes.", 409);
 
         var email = request.Email.Trim().ToLowerInvariant();
@@ -410,7 +410,7 @@ reg_update=now(),updated_by=@actorId where id=@userId", new
         if (tenantId.HasValue)
             await cn.ExecuteScalarAsync<Guid?>(new CommandDefinition("select id from plantaopro.clientes where id=@tenantId for update", new { tenantId }, tx, cancellationToken: ct));
         var before = await cn.QuerySingleOrDefaultAsync<(Guid Id, Guid? TenantId, string Status)>(new CommandDefinition("select id,coalesce(tenant_id,cliente_id) tenant_id,coalesce(status,'ATIVO') status from plantaopro.usuarios where id=@id and (@tenantId is null or coalesce(tenant_id,cliente_id)=@tenantId) for update", new { id, tenantId }, tx, cancellationToken: ct));
-        if (before.Id == Guid.Empty) return ApiResponse<Guid>.Fail("Usuário não encontrado no tenant permitido.", 404);
+        if (before.Id == Guid.Empty) return ApiResponse<Guid>.Fail("Usuário não encontrado no escopo de acesso.", 404);
         var isGlobalTarget = await cn.ExecuteScalarAsync<bool>(new CommandDefinition($@"select exists(select 1 from plantaopro.usuarios_perfis up join plantaopro.perfis p on p.id=up.perfil_id where up.usuario_id=@id and up.reg_status='A' and p.reg_status='A' and upper(coalesce(p.codigo,p.nome)) in {GlobalAdminProfiles.SqlInList})", new { id }, tx, cancellationToken: ct));
         if (isGlobalTarget && !currentUser.IsGlobalAdmin()) return ApiResponse<Guid>.Fail("Perfis globais só podem ser administrados pela MNSOFT.", 403);
         if (isGlobalTarget && normalized != "ATIVO")
@@ -480,14 +480,14 @@ and (@tenantId is null or coalesce(u.tenant_id,u.cliente_id)=@tenantId)", new { 
     {
         await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
         var target = await cn.QuerySingleOrDefaultAsync<(Guid Id, Guid? TenantId)>(new CommandDefinition("select id,coalesce(tenant_id,cliente_id) tenant_id from plantaopro.usuarios where id=@usuarioId and (@tenantId is null or coalesce(tenant_id,cliente_id)=@tenantId)", new { usuarioId, tenantId = TenantScope(null) }, cancellationToken: ct));
-        if (target.Id == Guid.Empty) return ApiResponse<Guid>.Fail("Usuário não encontrado no tenant permitido.", 404);
+        if (target.Id == Guid.Empty) return ApiResponse<Guid>.Fail("Usuário não encontrado no escopo de acesso.", 404);
         await RevogarSessoesAsync(usuarioId, "REVOGACAO_ADMINISTRATIVA", ct);
         await audit.RegistrarAsync(currentUser.UserId, target.TenantId, "USUARIO", usuarioId, "REVOGAR_SESSOES", new { motivo = "REVOGACAO_ADMINISTRATIVA" }, true, ip, string.Join(',', currentUser.Roles), ct);
         return ApiResponse<Guid>.Ok(usuarioId, "Sessões revogadas.");
     }
     public async Task<ApiResponse<Guid>> ExigirTrocaSenhaAsync(Guid usuarioId,string? ip,CancellationToken ct)
     {
-        if(!await UsuarioPertenceAoEscopoAsync(usuarioId,null,ct)) return ApiResponse<Guid>.Fail("Usuário não encontrado no tenant permitido.",404);
+        if(!await UsuarioPertenceAoEscopoAsync(usuarioId,null,ct)) return ApiResponse<Guid>.Fail("Usuário não encontrado no escopo de acesso.",404);
         await using var cn=new NpgsqlConnection(cfg.GetConnectionString("Default"));
         await cn.ExecuteAsync(new CommandDefinition("update plantaopro.usuarios set senha_alteracao_obrigatoria=true,reg_update=now(),updated_by=@actor where id=@usuarioId",new{usuarioId,actor=currentUser.UserId},cancellationToken:ct));
         await RevogarSessoesAsync(usuarioId,"TROCA_SENHA_OBRIGATORIA",ct);

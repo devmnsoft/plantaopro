@@ -64,7 +64,7 @@ public sealed class PermissoesController : ControllerBase
     {
         var effectiveTenantId = current.IsGlobalAdmin() ? tenantId : current.TenantId;
         if (!await securityAdministration.UsuarioPertenceAoEscopoAsync(usuarioId, effectiveTenantId, ct))
-            return NotFound(ApiResponse<object>.Fail("Usuário não encontrado no tenant permitido.", 404));
+            return NotFound(ApiResponse<object>.Fail("Usuário não encontrado no escopo de acesso.", 404));
         var permissoes = (await effectivePermissions.ObterPermissoesAsync(usuarioId, effectiveTenantId, ct)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         return Ok(ApiResponse<object>.Ok(new { usuarioId, tenantId = effectiveTenantId, permissoes }, "Permissões efetivas do usuário solicitado carregadas do PostgreSQL."));
     }
@@ -75,7 +75,7 @@ public sealed class PermissoesController : ControllerBase
         if (!request.UsuarioId.HasValue) return BadRequest(ApiResponse<object>.Fail("usuarioId é obrigatório para decisão efetiva.", 400));
         var effectiveTenantId = current.IsGlobalAdmin() ? request.TenantId : current.TenantId;
         if (!await securityAdministration.UsuarioPertenceAoEscopoAsync(request.UsuarioId.Value, effectiveTenantId, ct))
-            return NotFound(ApiResponse<object>.Fail("Usuário não encontrado no tenant permitido.", 404));
+            return NotFound(ApiResponse<object>.Fail("Usuário não encontrado no escopo de acesso.", 404));
         var result = await effectivePermissions.TestarAsync(request.UsuarioId.Value, effectiveTenantId, request.Modulo ?? string.Empty, request.Acao ?? "VER", ct);
         return Ok(ApiResponse<object>.Ok(result, result.Motivo));
     }

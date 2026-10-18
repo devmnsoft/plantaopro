@@ -16,6 +16,31 @@
         </a>
     </div>
 
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-2"><i class="bi bi-info-circle me-2"></i>Como criar um orçamento cirúrgico</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">1. Para que serve</strong>
+                    Anotar o procedimento, o hospital, quem vai pagar e os materiais que serão usados, para permitir a reserva de itens e a saída dos kits.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">2. Como utilizar</strong>
+                    Preencha os dados principais escolhendo hospital, pagador e médico nas listas. Depois inclua os produtos da cirurgia um a um: ao escolher o produto pelo nome, o preço é preenchido sozinho.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">3. O que acontece ao salvar</strong>
+                    É criado um orçamento em Rascunho, disponível para conferência e aprovação até ser aprovado.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">4. Próxima ação</strong>
+                    Volte a Orçamentos, confira o rascunho e aprove o orçamento para habilitar a reserva dos materiais.
+                </div>
+            </div>
+        </div>
+    </div>
+
     <form asp-action="OrcamentoNovo" method="post" id="formOrcamento">
         @Html.AntiForgeryToken()
 

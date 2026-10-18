@@ -38,7 +38,7 @@
 
 <section class="pp-kpi-strip" aria-label="Resumo financeiro da página atual">
     <article class="pp-kpi-card"><span>Total previsto</span><strong>@totalPrevisto.ToString("C")</strong><small>Composição dos registros exibidos</small></article>
-    <article class="pp-kpi-card"><span>Total pago</span><strong class="text-success">@(possuiValorPago ? totalPago.ToString("C") : "Não informado")</strong><small>Somente valores realizados retornados pela API</small></article>
+    <article class="pp-kpi-card"><span>Total pago</span><strong class="text-success">@(possuiValorPago ? totalPago.ToString("C") : "Não informado")</strong><small>Somente valores realizados</small></article>
     <article class="pp-kpi-card pp-kpi-card--warning"><span>Pendentes</span><strong>@pendentes</strong><small>Aguardando avanço operacional</small></article>
     <article class="pp-kpi-card"><span>Cancelados</span><strong>@cancelados</strong><small>Registros sem continuidade</small></article>
 </section>
@@ -99,7 +99,7 @@ else
                         <td>@p.ValorPrevisto.ToString("C")</td>
                         <td>@(p.ValorPago.HasValue ? p.ValorPago.Value.ToString("C") : "Não informado")</td>
                         <td>
-                            @if (string.IsNullOrWhiteSpace(p.Status)) { <span class="text-muted">Não informado pela API</span> } else { <span class="badge status-@p.Status.ToLowerInvariant()">@p.Status</span> }
+                            @if (string.IsNullOrWhiteSpace(p.Status)) { <span class="text-muted">Não informado</span> } else { <span class="badge status-@p.Status.ToLowerInvariant()">@p.Status</span> }
                         </td>
                         <td class="text-end">
                             <div class="action-buttons">

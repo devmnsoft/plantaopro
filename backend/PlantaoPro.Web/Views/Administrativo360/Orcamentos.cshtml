@@ -160,4 +160,45 @@
             </div>
         </div>
     </div>
+
+    <!-- Paginação (R54 — D-R54-6): contagem e navegação preservando os filtros ativos -->
+    @{
+        var totalRegistros = ViewBag.Total is int totalPg ? totalPg : 0;
+        var paginaAtual = ViewBag.Pagina is int paginaPg ? paginaPg : 1;
+        var porPaginaAtual = ViewBag.PorPagina is int porPaginaPg ? porPaginaPg : 100;
+        var inicioExibicao = ((paginaAtual - 1) * porPaginaAtual) + 1;
+        var fimExibicao = Math.Min(totalRegistros, paginaAtual * porPaginaAtual);
+        var inicioRota = ViewBag.Inicio != null ? ((DateOnly)ViewBag.Inicio).ToString("yyyy-MM-dd") : null;
+        var fimRota = ViewBag.Fim != null ? ((DateOnly)ViewBag.Fim).ToString("yyyy-MM-dd") : null;
+    }
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+        <span class="text-secondary small">
+            @if (totalRegistros > 0)
+            {
+                <text>Mostrando @inicioExibicao–@fimExibicao de @totalRegistros.ToString("N0") orçamentos</text>
+            }
+        </span>
+        <div class="btn-group" role="group" aria-label="Navegação de páginas">
+            @if (paginaAtual > 1)
+            {
+                <a asp-action="Orcamentos" asp-route-busca="@ViewBag.Busca" asp-route-situacao="@ViewBag.Situacao" asp-route-inicio="@inicioRota" asp-route-fim="@fimRota" asp-route-pagina="@(paginaAtual - 1)" class="btn btn-outline-info btn-sm" aria-label="Página anterior">
+                    <i class="bi bi-chevron-left"></i> Anterior
+                </a>
+            }
+            else
+            {
+                <span class="btn btn-outline-info btn-sm disabled" aria-disabled="true"><i class="bi bi-chevron-left"></i> Anterior</span>
+            }
+            @if (fimExibicao < totalRegistros)
+            {
+                <a asp-action="Orcamentos" asp-route-busca="@ViewBag.Busca" asp-route-situacao="@ViewBag.Situacao" asp-route-inicio="@inicioRota" asp-route-fim="@fimRota" asp-route-pagina="@(paginaAtual + 1)" class="btn btn-outline-info btn-sm" aria-label="Próxima página">
+                    Próxima <i class="bi bi-chevron-right"></i>
+                </a>
+            }
+            else
+            {
+                <span class="btn btn-outline-info btn-sm disabled" aria-disabled="true">Próxima <i class="bi bi-chevron-right"></i></span>
+            }
+        </div>
+    </div>
 </div>

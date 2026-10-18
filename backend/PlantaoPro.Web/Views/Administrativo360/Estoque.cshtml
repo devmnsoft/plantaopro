@@ -2,9 +2,6 @@
 @{
     ViewData["Title"] = "Estoque e Lotes — Administrativo 360";
     ViewData["BreadcrumbLabel"] = "Estoque e Lotes (FEFO)";
-    decimal totalFisico = Model.Saldos.Sum(s => s.Fisico);
-    decimal totalReservado = Model.Saldos.Sum(s => s.Reservado);
-    decimal totalDisponivel = Model.Saldos.Sum(s => s.Disponivel);
 }
 
 <div class="container-fluid py-3">
@@ -55,7 +52,7 @@
             <div class="card bg-dark border-secondary shadow-sm">
                 <div class="card-body">
                     <span class="text-secondary small d-block">Saldo Físico em Custódia</span>
-                    <strong class="fs-4 text-light">@totalFisico.ToString("N0") <small class="fs-6 text-secondary">unidades</small></strong>
+                    <strong class="fs-4 text-light">@Model.TotalFisico.ToString("N0") <small class="fs-6 text-secondary">unidades</small></strong>
                     <div class="text-secondary small mt-1">Soma de todos os lotes e almoxarifados</div>
                 </div>
             </div>
@@ -64,7 +61,7 @@
             <div class="card bg-dark border-secondary shadow-sm">
                 <div class="card-body">
                     <span class="text-secondary small d-block">Reservas Cirúrgicas Ativas</span>
-                    <strong class="fs-4 text-warning">@totalReservado.ToString("N0") <small class="fs-6 text-secondary">unidades</small></strong>
+                    <strong class="fs-4 text-warning">@Model.TotalReservado.ToString("N0") <small class="fs-6 text-secondary">unidades</small></strong>
                     <div class="text-secondary small mt-1">Bloqueadas para procedimentos agendados</div>
                 </div>
             </div>
@@ -73,7 +70,7 @@
             <div class="card bg-dark border-secondary shadow-sm">
                 <div class="card-body">
                     <span class="text-secondary small d-block">Saldo Imediatamente Disponível</span>
-                    <strong class="fs-4 text-success">@totalDisponivel.ToString("N0") <small class="fs-6 text-secondary">unidades</small></strong>
+                    <strong class="fs-4 text-success">@Model.TotalDisponivel.ToString("N0") <small class="fs-6 text-secondary">unidades</small></strong>
                     <div class="text-secondary small mt-1">Lotes liberados e não vencidos</div>
                 </div>
             </div>
@@ -119,7 +116,7 @@
     <div class="card bg-dark border-secondary shadow-sm">
         <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center py-2">
             <span class="text-light fw-bold small"><i class="bi bi-boxes me-2 text-info"></i>Saldos e Validades por Lote</span>
-            <span class="text-secondary small">Total: @Model.Saldos.Count registros</span>
+            <span class="text-secondary small">Total: @Model.TotalRegistros.ToString("N0") registros (página @Model.Pagina)</span>
         </div>
         <div class="table-responsive">
             <table class="table table-dark table-hover table-striped align-middle mb-0">
@@ -193,6 +190,42 @@
                     }
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Paginação (R54 — D-R54-6): contagem e navegação preservando os filtros ativos -->
+    @{
+        var inicioExibicao = ((Model.Pagina - 1) * Model.PorPagina) + 1;
+        var fimExibicao = Math.Min(Model.TotalRegistros, Model.Pagina * Model.PorPagina);
+    }
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+        <span class="text-secondary small">
+            @if (Model.TotalRegistros > 0)
+            {
+                <text>Mostrando @inicioExibicao–@fimExibicao de @Model.TotalRegistros.ToString("N0") registros</text>
+            }
+        </span>
+        <div class="btn-group" role="group" aria-label="Navegação de páginas">
+            @if (Model.Pagina > 1)
+            {
+                <a asp-action="Estoque" asp-route-busca="@Model.Busca" asp-route-condicao="@Model.Condicao" asp-route-localId="@Model.LocalId" asp-route-pagina="@(Model.Pagina - 1)" class="btn btn-outline-info btn-sm" aria-label="Página anterior">
+                    <i class="bi bi-chevron-left"></i> Anterior
+                </a>
+            }
+            else
+            {
+                <span class="btn btn-outline-info btn-sm disabled" aria-disabled="true"><i class="bi bi-chevron-left"></i> Anterior</span>
+            }
+            @if (fimExibicao < Model.TotalRegistros)
+            {
+                <a asp-action="Estoque" asp-route-busca="@Model.Busca" asp-route-condicao="@Model.Condicao" asp-route-localId="@Model.LocalId" asp-route-pagina="@(Model.Pagina + 1)" class="btn btn-outline-info btn-sm" aria-label="Próxima página">
+                    Próxima <i class="bi bi-chevron-right"></i>
+                </a>
+            }
+            else
+            {
+                <span class="btn btn-outline-info btn-sm disabled" aria-disabled="true">Próxima <i class="bi bi-chevron-right"></i></span>
+            }
         </div>
     </div>
 </div>

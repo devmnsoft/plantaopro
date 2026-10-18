@@ -8,23 +8,31 @@ public partial class Administrativo360Controller
 {
     // Orcamentos (ciclo completo) e reservas de itens
     [HttpGet]
-    public async Task<IActionResult> Orcamentos(string? busca, string? situacao, DateOnly? inicio, DateOnly? fim)
+    public async Task<IActionResult> Orcamentos(string? busca, string? situacao, DateOnly? inicio, DateOnly? fim, int? pagina, int? porPagina)
     {
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
-        var query = $"api/administrativo360/orcamentos?busca={Uri.EscapeDataString(busca ?? "")}&situacao={Uri.EscapeDataString(situacao ?? "")}";
+        // R54 (D-R54-3): a página 1-based e o tamanho (default 100, teto 500) seguem o clamp da Api.
+        var paginaEfetiva = Math.Max(1, pagina ?? 1);
+        var porPaginaEfetiva = Math.Clamp(porPagina ?? 100, 1, 500);
+
+        var query = $"api/administrativo360/orcamentos?busca={Uri.EscapeDataString(busca ?? "")}&situacao={Uri.EscapeDataString(situacao ?? "")}&pagina={paginaEfetiva}&porPagina={porPaginaEfetiva}";
         if (inicio.HasValue) query += $"&inicio={inicio.Value:yyyy-MM-dd}";
         if (fim.HasValue) query += $"&fim={fim.Value:yyyy-MM-dd}";
 
-        var resp = await ReadApiResponse<IReadOnlyList<OrcamentoResumoViewModel>>(client, query);
+        // R54 (D-R54-1): o endpoint devolve o envelope paginado; a view recebe apenas a fatia da página.
+        var resp = await ReadApiResponse<OrcamentoResumoPaginadoViewModel>(client, query);
         ViewBag.Busca = busca;
         ViewBag.Situacao = situacao;
         ViewBag.Inicio = inicio;
         ViewBag.Fim = fim;
         ViewBag.Erro = resp.Error;
+        ViewBag.Total = resp.Data?.Total ?? 0;
+        ViewBag.Pagina = paginaEfetiva;
+        ViewBag.PorPagina = porPaginaEfetiva;
 
-        return View(resp.Data ?? Array.Empty<OrcamentoResumoViewModel>());
+        return View(resp.Data?.Itens ?? Array.Empty<OrcamentoResumoViewModel>());
     }
 
     [HttpGet]

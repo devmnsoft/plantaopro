@@ -21,6 +21,9 @@ public sealed record PedidoItemResumo(Guid Id, string Produto, string Sku, decim
 
 public sealed record PedidoResumo(Guid Id, string Numero, string Fornecedor, string Situacao, decimal Total, DateTimeOffset CriadoEm, IReadOnlyList<PedidoItemResumo> Itens);
 public sealed record SaldoEstoque(Guid ProdutoId, string Produto, Guid LoteId, string Lote, DateOnly? Validade, Guid LocalId, string Local, string Condicao, decimal Fisico, decimal Reservado, decimal Disponivel);
+// R54 — Posição de estoque paginada (D-R54-1/D-R54-2): envelope do endpoint GET /estoque.
+// As somas cobrem o CONJUNTO FILTRADO COMPLETO (agregado SQL), não apenas a fatia da página.
+public sealed record SaldoEstoquePaginado(IReadOnlyList<SaldoEstoque> Itens, int Total, int Pagina, int PorPagina, decimal TotalFisico, decimal TotalReservado, decimal TotalDisponivel);
 public sealed record InspecaoPendente(Guid RecebimentoItemId, string Produto, string Lote, decimal Recebida, decimal Pendente, string Local);
 public sealed record TarefaColeta(Guid Id, string Tipo, string Descricao, string Situacao);
 
@@ -30,6 +33,8 @@ public sealed record CriarOrcamentoCommand(Guid HospitalId, Guid? MedicoId, stri
 public sealed record AtualizarOrcamentoCommand(Guid OrcamentoId, Guid HospitalId, Guid? MedicoId, string Procedimento, Guid ResponsavelFinanceiroId, Guid? VendedorId, DateOnly DataPrevista, DateOnly Validade, string? Observacoes, string? MotivoRevisao, IReadOnlyList<OrcamentoItemCommand> Itens);
 
 public sealed record OrcamentoResumo(Guid Id, string Numero, int Revisao, string Hospital, string? Medico, string Procedimento, string ResponsavelFinanceiro, DateOnly DataPrevista, DateOnly Validade, string Situacao, decimal TotalGeral, DateTimeOffset CriadoEm);
+// R54 — Lista de orçamentos paginada (D-R54-1): envelope do endpoint GET /orcamentos.
+public sealed record OrcamentoResumoPaginado(IReadOnlyList<OrcamentoResumo> Itens, int Total, int Pagina, int PorPagina);
 public sealed record OrcamentoItemDetalhe(Guid Id, Guid ProdutoId, string Sku, string Produto, string Unidade, decimal Quantidade, decimal PrecoUnitario, decimal Desconto, decimal Total, decimal QuantidadeReservada, decimal FaltaAtender);
 public sealed record OrcamentoDetalhes(Guid Id, string Numero, int Revisao, Guid HospitalId, string Hospital, Guid? MedicoId, string? Medico, string Procedimento, Guid ResponsavelFinanceiroId, string ResponsavelFinanceiro, Guid? VendedorId, DateOnly DataPrevista, DateOnly Validade, string Situacao, decimal TotalProdutos, decimal DescontoGeral, decimal TotalGeral, string? Observacoes, DateTimeOffset? AprovadoEm, int Versao, IReadOnlyList<OrcamentoItemDetalhe> Itens);
 public sealed record OrcamentoRevisaoHistorico(Guid Id, int Revisao, string Motivo, string SnapshotJson, DateTimeOffset CriadoEm);
@@ -82,6 +87,7 @@ public interface IComprasRepository
 public interface IEstoqueRepository
 {
     Task<IReadOnlyList<SaldoEstoque>> ConsultarAsync(Guid tenantId, string? busca, string? condicao, Guid? localId, CancellationToken ct);
+    Task<SaldoEstoquePaginado> ConsultarPaginadoAsync(Guid tenantId, string? busca, string? condicao, Guid? localId, int pagina, int porPagina, CancellationToken ct);
     Task TransferirAsync(Guid tenantId, Guid usuarioId, TransferirCommand command, CancellationToken ct);
     Task ReservarAsync(Guid tenantId, Guid usuarioId, ReservarCommand command, CancellationToken ct);
 }
@@ -119,6 +125,7 @@ public interface IInventarioRepository
 public interface IOrcamentoCirurgicoRepository
 {
     Task<IReadOnlyList<OrcamentoResumo>> ListarAsync(Guid tenantId, string? busca, string? situacao, DateOnly? inicio, DateOnly? fim, CancellationToken ct);
+    Task<OrcamentoResumoPaginado> ListarPaginadoAsync(Guid tenantId, string? busca, string? situacao, DateOnly? inicio, DateOnly? fim, int pagina, int porPagina, CancellationToken ct);
     Task<OrcamentoDetalhes?> ObterPorIdAsync(Guid tenantId, Guid id, CancellationToken ct);
     Task<Guid> CriarAsync(Guid tenantId, Guid usuarioId, CriarOrcamentoCommand command, CancellationToken ct);
     Task AtualizarAsync(Guid tenantId, Guid usuarioId, AtualizarOrcamentoCommand command, CancellationToken ct);

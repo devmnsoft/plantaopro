@@ -48,25 +48,25 @@ public partial class Administrativo360Controller : BaseWebController
     private async Task PreencherLookupsCirurgiaAsync(HttpClient client, CirurgiaFormViewModel model)
     {
         var lookups = await CarregarLookupsAsync(client);
-        var respOrc = await ReadApiResponse<IReadOnlyList<OrcamentoResumoViewModel>>(client, "api/administrativo360/orcamentos");
+        var respOrc = await ReadApiResponse<OrcamentoResumoPaginadoViewModel>(client, "api/administrativo360/orcamentos"); // R54: envelope paginado; o seletor recebe o default da Api (100 mais recentes)
         // Sem fallback por ausência: o seletor de hospitais usa apenas papéis explícitos.
         model.Hospitais = lookups.Hospitais ?? Array.Empty<Parceiro360ViewModel>();
         model.Medicos = lookups.Medicos ?? Array.Empty<Medico360ViewModel>();
         model.Locais = lookups.Locais;
-        model.Orcamentos = respOrc.Data ?? Array.Empty<OrcamentoResumoViewModel>();
+        model.Orcamentos = respOrc.Data?.Itens ?? Array.Empty<OrcamentoResumoViewModel>();
     }
 
     private async Task PreencherLookupsValeAsync(HttpClient client, ValeFormViewModel model)
     {
         var lookups = await CarregarLookupsAsync(client);
         var respCir = await ReadApiResponse<IReadOnlyList<CirurgiaResumoViewModel>>(client, "api/administrativo360/cirurgias");
-        var respOrc = await ReadApiResponse<IReadOnlyList<OrcamentoResumoViewModel>>(client, "api/administrativo360/orcamentos");
+        var respOrc = await ReadApiResponse<OrcamentoResumoPaginadoViewModel>(client, "api/administrativo360/orcamentos"); // R54: envelope paginado; o seletor recebe o default da Api (100 mais recentes)
         // Sem fallback por ausência: o seletor de hospitais usa apenas papéis explícitos.
         model.Hospitais = lookups.Hospitais ?? Array.Empty<Parceiro360ViewModel>();
         model.LocaisOrigem = lookups.Locais.Where(l => l.Tipo == "INTERNO").ToArray();
         model.LocaisDestino = lookups.Locais.ToArray();
         model.Cirurgias = respCir.Data ?? Array.Empty<CirurgiaResumoViewModel>();
-        model.Orcamentos = respOrc.Data ?? Array.Empty<OrcamentoResumoViewModel>();
+        model.Orcamentos = respOrc.Data?.Itens ?? Array.Empty<OrcamentoResumoViewModel>();
         model.ProdutosDisponiveis = lookups.Produtos;
         model.LotesDisponiveis = lookups.Lotes;
 

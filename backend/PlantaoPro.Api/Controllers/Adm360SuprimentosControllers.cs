@@ -25,7 +25,7 @@ public sealed class Estoque360Controller : ControllerBase
  private readonly ICurrentUserService current;
  public Estoque360Controller(IEstoqueRepository repository, ICurrentUserService current) { this.repository=repository; this.current=current; }
  private (Guid Tenant,Guid User) Context()=>(current.TenantId??throw new UnauthorizedAccessException(),current.UserId??throw new UnauthorizedAccessException());
- [HttpGet] public async Task<IActionResult> Consultar(string? busca,string? condicao,Guid? localId,CancellationToken ct){var x=Context();return Ok(await repository.ConsultarAsync(x.Tenant,busca,condicao,localId,ct));}
+ [HttpGet] public async Task<IActionResult> Consultar(string? busca,string? condicao,Guid? localId,int? pagina,int? porPagina,CancellationToken ct){var x=Context();var p=Math.Max(1,pagina??1);var pp=Math.Clamp(porPagina??100,1,500);return Ok(await repository.ConsultarPaginadoAsync(x.Tenant,busca,condicao,localId,p,pp,ct));}
  [HttpPost("transferencias")] public async Task<IActionResult> Transferir(TransferirCommand command,CancellationToken ct){var x=Context();await repository.TransferirAsync(x.Tenant,x.User,command,ct);return NoContent();}
  [HttpPost("reservas")] public async Task<IActionResult> Reservar(ReservarCommand command,CancellationToken ct){var x=Context();await repository.ReservarAsync(x.Tenant,x.User,command,ct);return NoContent();}
 }

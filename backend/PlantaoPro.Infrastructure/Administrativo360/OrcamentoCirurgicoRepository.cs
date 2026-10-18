@@ -105,17 +105,10 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
 
     public OrcamentoCirurgicoRepository(string connectionString) : base(connectionString) { }
 
-    public async Task<IReadOnlyList<OrcamentoResumo>> ListarAsync(Guid tenantId, string? busca, string? situacao, DateOnly? inicio, DateOnly? fim, CancellationToken ct)
-    {
-        await using var cn = Connection();
-        var rows = await cn.QueryAsync<OrcamentoResumoRow>(new CommandDefinition(@"
-            SELECT o.id AS Id, o.numero AS Numero, o.revisao AS Revisao,
-                   COALESCE(h.nome, hosp.nome, 'Hospital') AS Hospital,
-                   COALESCE(m.nome, med.nome, '') AS Medico,
-                   o.procedimento AS Procedimento,
-                   COALESCE(f.nome, hospf.nome, 'Responsável') AS ResponsavelFinanceiro,
-                   o.data_prevista AS DataPrevista, o.validade AS Validade, o.situacao AS Situacao,
-                   o.total_geral AS TotalGeral, o.created_at AS CriadoEm
+    // R54 (D-R54-4): base de listagem compartilhada — WHERE idêntico nas variantes integral e
+    // paginada; o ORDER BY fica só na consulta de linhas (Postgres rejeita ORDER BY por coluna
+    // não agregada em agregações como count(*)/sum sem GROUP BY).
+    private const string BaseListagemSql = @"
             FROM plantaopro.adm360_orcamentos o
             LEFT JOIN plantaopro.adm360_parceiros h ON h.id = o.hospital_id AND h.tenant_id = o.tenant_id
             LEFT JOIN plantaopro.hospitais hosp ON hosp.id = o.hospital_id AND hosp.tenant_id = o.tenant_id
@@ -127,8 +120,23 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
               AND (@busca IS NULL OR o.numero ILIKE '%' || @busca || '%' OR o.procedimento ILIKE '%' || @busca || '%' OR COALESCE(h.nome, hosp.nome, '') ILIKE '%' || @busca || '%')
               AND (@situacao IS NULL OR o.situacao = @situacao)
               AND (@dtInicio::date IS NULL OR o.data_prevista >= @dtInicio::date)
-              AND (@dtFim::date IS NULL OR o.data_prevista <= @dtFim::date)
-            ORDER BY o.created_at DESC",
+              AND (@dtFim::date IS NULL OR o.data_prevista <= @dtFim::date)";
+
+    private const string OrderByCriadoDesc = " ORDER BY o.created_at DESC";
+
+    private const string SelectResumoSql = @"
+            SELECT o.id AS Id, o.numero AS Numero, o.revisao AS Revisao,
+                   COALESCE(h.nome, hosp.nome, 'Hospital') AS Hospital,
+                   COALESCE(m.nome, med.nome, '') AS Medico,
+                   o.procedimento AS Procedimento,
+                   COALESCE(f.nome, hospf.nome, 'Responsável') AS ResponsavelFinanceiro,
+                   o.data_prevista AS DataPrevista, o.validade AS Validade, o.situacao AS Situacao,
+                   o.total_geral AS TotalGeral, o.created_at AS CriadoEm";
+
+    public async Task<IReadOnlyList<OrcamentoResumo>> ListarAsync(Guid tenantId, string? busca, string? situacao, DateOnly? inicio, DateOnly? fim, CancellationToken ct)
+    {
+        await using var cn = Connection();
+        var rows = await cn.QueryAsync<OrcamentoResumoRow>(new CommandDefinition(SelectResumoSql + BaseListagemSql + OrderByCriadoDesc,
             new
             {
                 tenantId,
@@ -138,11 +146,35 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
                 dtFim = fim.HasValue ? fim.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null
             }, cancellationToken: ct));
 
-        return rows.Select(r => new OrcamentoResumo(
-            r.Id, r.Numero, r.Revisao, r.Hospital, r.Medico, r.Procedimento, r.ResponsavelFinanceiro,
-            r.DataPrevista, r.Validade, r.Situacao, r.TotalGeral, new DateTimeOffset(r.CriadoEm, TimeSpan.Zero)
-        )).ToList();
+        return rows.Select(r => MapearResumo(r)).ToList();
     }
+
+    // R54 (D-R54-1/D-R54-3): variante paginada — LIMIT/OFFSET e contagem sobre a MESMA base.
+    public async Task<OrcamentoResumoPaginado> ListarPaginadoAsync(Guid tenantId, string? busca, string? situacao, DateOnly? inicio, DateOnly? fim, int pagina, int porPagina, CancellationToken ct)
+    {
+        await using var cn = Connection();
+        var parametros = new
+        {
+            tenantId,
+            busca,
+            situacao,
+            dtInicio = inicio.HasValue ? inicio.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
+            dtFim = fim.HasValue ? fim.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
+            porPagina,
+            offset = (long)((pagina - 1) * porPagina)
+        };
+
+        var rows = await cn.QueryAsync<OrcamentoResumoRow>(new CommandDefinition(SelectResumoSql + BaseListagemSql + OrderByCriadoDesc + "\n            LIMIT @porPagina OFFSET @offset",
+            parametros, cancellationToken: ct));
+        long total = await cn.ExecuteScalarAsync<long>(new CommandDefinition("SELECT count(*)::bigint" + BaseListagemSql,
+            parametros, cancellationToken: ct));
+
+        return new OrcamentoResumoPaginado(rows.Select(r => MapearResumo(r)).ToList(), (int)total, pagina, porPagina);
+    }
+
+    private static OrcamentoResumo MapearResumo(OrcamentoResumoRow r) => new(
+        r.Id, r.Numero, r.Revisao, r.Hospital, r.Medico, r.Procedimento, r.ResponsavelFinanceiro,
+        r.DataPrevista, r.Validade, r.Situacao, r.TotalGeral, new DateTimeOffset(r.CriadoEm, TimeSpan.Zero));
 
     public async Task<OrcamentoDetalhes?> ObterPorIdAsync(Guid tenantId, Guid id, CancellationToken ct)
     {

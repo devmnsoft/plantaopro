@@ -8,28 +8,39 @@ public partial class Administrativo360Controller
 {
     // Estoque, movimentacoes, inventarios, coleta e valorizacao de ativos
     [HttpGet]
-    public async Task<IActionResult> Estoque(string? busca, string? condicao, Guid? localId)
+    public async Task<IActionResult> Estoque(string? busca, string? condicao, Guid? localId, int? pagina, int? porPagina)
     {
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
-        var q = new List<string>();
+        // R54 (D-R54-3): clamp idêntico ao da Api — página 1-based; default 100, teto 500.
+        var paginaEfetiva = Math.Max(1, pagina ?? 1);
+        var porPaginaEfetiva = Math.Clamp(porPagina ?? 100, 1, 500);
+
+        var q = new List<string> { $"pagina={paginaEfetiva}", $"porPagina={porPaginaEfetiva}" };
         if (!string.IsNullOrWhiteSpace(busca)) q.Add($"busca={Uri.EscapeDataString(busca)}");
         if (!string.IsNullOrWhiteSpace(condicao)) q.Add($"condicao={Uri.EscapeDataString(condicao)}");
         if (localId.HasValue && localId.Value != Guid.Empty) q.Add($"localId={localId.Value}");
 
-        var query = "api/administrativo360/estoque" + (q.Count > 0 ? "?" + string.Join("&", q) : "");
-        var resp = await ReadApiResponse<IReadOnlyList<SaldoEstoqueViewModel>>(client, query);
+        var query = "api/administrativo360/estoque" + "?" + string.Join("&", q);
+        // R54 (D-R54-1/D-R54-2): envelope com paginação e somas do conjunto filtrado completo.
+        var resp = await ReadApiResponse<SaldoEstoquePaginadoViewModel>(client, query);
         var lookups = await CarregarLookupsAsync(client);
 
         return View(new EstoqueIndexViewModel
         {
-            Saldos = resp.Data ?? Array.Empty<SaldoEstoqueViewModel>(),
+            Saldos = resp.Data?.Itens ?? Array.Empty<SaldoEstoqueViewModel>(),
             Locais = lookups.Locais,
             Busca = busca,
             Condicao = condicao,
             LocalId = localId,
-            Erro = resp.Error
+            Erro = resp.Error,
+            TotalRegistros = resp.Data?.Total ?? 0,
+            Pagina = paginaEfetiva,
+            PorPagina = porPaginaEfetiva,
+            TotalFisico = resp.Data?.TotalFisico ?? 0m,
+            TotalReservado = resp.Data?.TotalReservado ?? 0m,
+            TotalDisponivel = resp.Data?.TotalDisponivel ?? 0m
         });
     }
 
@@ -39,12 +50,14 @@ public partial class Administrativo360Controller
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
-        var resp = await ReadApiResponse<IReadOnlyList<SaldoEstoqueViewModel>>(client, "api/administrativo360/estoque");
+        // R54 (D-R54-5): picker de transferências — a view já filtra LIBERADO e Disponivel>0 no
+        // cliente; o servidor limita o volume (teto de 500) em vez de carregar todo o estoque.
+        var resp = await ReadApiResponse<SaldoEstoquePaginadoViewModel>(client, "api/administrativo360/estoque?condicao=LIBERADO&porPagina=500");
         var lookups = await CarregarLookupsAsync(client);
 
         return View(new MovimentacoesIndexViewModel
         {
-            Saldos = resp.Data ?? Array.Empty<SaldoEstoqueViewModel>(),
+            Saldos = resp.Data?.Itens ?? Array.Empty<SaldoEstoqueViewModel>(),
             Locais = lookups.Locais,
             Erro = resp.Error
         });

@@ -129,6 +129,9 @@ public sealed record OrcamentoResumoViewModel(
     decimal TotalGeral,
     DateTimeOffset CriadoEm);
 
+// R54 — Lista de orçamentos paginada (espelho do DTO OrcamentoResumoPaginado da Api; ADR-0003).
+public sealed record OrcamentoResumoPaginadoViewModel(IReadOnlyList<OrcamentoResumoViewModel> Itens, int Total, int Pagina, int PorPagina);
+
 public sealed record OrcamentoDetalhesViewModel(
     Guid Id,
     string Numero,
@@ -1128,6 +1131,10 @@ public sealed class OcorrenciasIndexViewModel
 
 public sealed record SaldoEstoqueViewModel(Guid ProdutoId, string Produto, Guid LoteId, string Lote, DateOnly? Validade, Guid LocalId, string Local, string Condicao, decimal Fisico, decimal Reservado, decimal Disponivel);
 
+// R54 — Posição de estoque paginada (espelho do DTO SaldoEstoquePaginado da Api; ADR-0003).
+// As somas cobrem o conjunto filtrado completo, não apenas a fatia da página.
+public sealed record SaldoEstoquePaginadoViewModel(IReadOnlyList<SaldoEstoqueViewModel> Itens, int Total, int Pagina, int PorPagina, decimal TotalFisico, decimal TotalReservado, decimal TotalDisponivel);
+
 public sealed class EstoqueIndexViewModel
 {
     public IReadOnlyList<SaldoEstoqueViewModel> Saldos { get; init; } = Array.Empty<SaldoEstoqueViewModel>();
@@ -1136,6 +1143,13 @@ public sealed class EstoqueIndexViewModel
     public string? Condicao { get; init; }
     public Guid? LocalId { get; init; }
     public string? Erro { get; init; }
+    // R54 — paginação + somas do conjunto filtrado (cards independentes da fatia exibida)
+    public int TotalRegistros { get; init; }
+    public int Pagina { get; init; }
+    public int PorPagina { get; init; }
+    public decimal TotalFisico { get; init; }
+    public decimal TotalReservado { get; init; }
+    public decimal TotalDisponivel { get; init; }
 }
 
 public sealed class MovimentacoesIndexViewModel

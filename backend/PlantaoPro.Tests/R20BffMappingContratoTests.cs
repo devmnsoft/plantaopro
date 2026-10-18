@@ -35,6 +35,10 @@ public sealed class R20BffMappingContratoTests
     // nas duas pontas; o envelope ApiResponse e responsabilidade de LerAsync na Api).
     // Cada novo ReadApiResponse<T> precisa de uma entrada nova; se a Api renomear uma chave,
     // o espelho Web tem que seguir (falha este teste ate atualizar os dois lados).
+    //
+    // R54 (D-R54-1): os endpoints de listas densas /orcamentos e /estoque passam a devolver
+    // ENVELOPES paginados concretos (OrcamentoResumoPaginado / SaldoEstoquePaginado); os tipos
+    // elementares permanecem como itens de "Itens" na comparacao recursiva abaixo.
     // ------------------------------------------------------------------
     private static readonly Dictionary<string, (string Web, string Api)> Contrato = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -54,7 +58,7 @@ public sealed class R20BffMappingContratoTests
         ["api/administrativo360/fiscal/notas/{x}"] = ("NotaPreEmitidaDetalhesDto", "NotaPreEmitidaDetalhesDto"),
         ["api/administrativo360/gestao/dashboard"] = ("DashboardAdm360ViewModel", "DashboardAdm360Resposta"),
         ["api/administrativo360/gestao/capacidades-ativas"] = ("string", "string"),
-        ["api/administrativo360/orcamentos"] = ("OrcamentoResumoViewModel", "OrcamentoResumo"),
+        ["api/administrativo360/orcamentos"] = ("OrcamentoResumoPaginadoViewModel", "OrcamentoResumoPaginado"),
         ["api/administrativo360/orcamentos/{x}"] = ("OrcamentoDetalhesViewModel", "OrcamentoDetalhes"),
         ["api/administrativo360/orcamentos/{x}/revisoes"] = ("OrcamentoRevisaoHistoricoViewModel", "OrcamentoRevisaoHistorico"),
         ["api/administrativo360/orcamentos/{x}/reserva-planejamento"] = ("PlanejamentoReservaOrcamentoViewModel", "PlanejamentoReservaOrcamento"),
@@ -64,7 +68,7 @@ public sealed class R20BffMappingContratoTests
         ["api/administrativo360/qualidade/pendentes"] = ("InspecaoPendenteViewModel", "InspecaoPendente"),
         ["api/administrativo360/ocorrencias"] = ("Ocorrencia360ViewModel", "OcorrenciaResumo"),
         ["api/administrativo360/resumo"] = ("Administrativo360ResumoViewModel", "Administrativo360ResumoDto"),
-        ["api/administrativo360/estoque"] = ("SaldoEstoqueViewModel", "SaldoEstoque"),
+        ["api/administrativo360/estoque"] = ("SaldoEstoquePaginadoViewModel", "SaldoEstoquePaginado"),
         ["api/administrativo360/inventarios"] = ("InventarioResumoViewModel", "InventarioResumo"),
         ["api/administrativo360/coleta/tarefas"] = ("TarefaColetaViewModel", "TarefaColeta"),
         ["api/administrativo360/valorizacoes/pendentes"] = ("ValeResumoViewModel", "ValeResumo"),

@@ -25,19 +25,65 @@ public sealed class EstoqueRepository : Adm360Repository, IEstoqueRepository
 
     public EstoqueRepository(string connectionString) : base(connectionString) { }
 
-    public async Task<IReadOnlyList<SaldoEstoque>> ConsultarAsync(Guid tenantId, string? busca, string? condicao, Guid? localId, CancellationToken ct)
-    {
-        await using var cn = Connection();
-        return (await cn.QueryAsync<SaldoEstoque>(new CommandDefinition(@"
+    // R54 (D-R54-4): base de posição de estoque compartilhada — WHERE idêntico nas variantes;
+    // o ORDER BY fica só na consulta de linhas (Postgres rejeita ORDER BY por coluna não
+    // agregada em agregações como count(*)/sum sem GROUP BY).
+    private const string SelectSaldoSql = @"
             SELECT produto_id AS ProdutoId, produto, lote_id AS LoteId, lote, validade,
-                   local_id AS LocalId, local, condicao, fisico, reservado, disponivel
+                   local_id AS LocalId, local, condicao, fisico, reservado, disponivel";
+
+    private const string BasePosicaoSql = @"
             FROM plantaopro.adm360_saldos
             WHERE tenant_id = @tenantId
               AND (@busca IS NULL OR produto ILIKE '%' || @busca || '%' OR lote ILIKE '%' || @busca || '%')
               AND (@condicao IS NULL OR condicao = @condicao)
-              AND (@localId::uuid IS NULL OR local_id = @localId::uuid)
-            ORDER BY produto, validade NULLS LAST",
+              AND (@localId::uuid IS NULL OR local_id = @localId::uuid)";
+
+    private const string OrderByFefo = " ORDER BY produto, validade NULLS LAST";
+
+    // R54 (D-R54-2): agregados sobre o conjunto filtrado completo — mantêm a semântica dos
+    // cards de resumo da página BFF independentemente da fatia de paginação exibida.
+    private const string SomaSaldosSql = @"
+            SELECT COALESCE(SUM(fisico),0) AS TotalFisico,
+                   COALESCE(SUM(reservado),0) AS TotalReservado,
+                   COALESCE(SUM(disponivel),0) AS TotalDisponivel";
+
+    private sealed class SomaSaldosRow
+    {
+        public decimal TotalFisico { get; set; }
+        public decimal TotalReservado { get; set; }
+        public decimal TotalDisponivel { get; set; }
+    }
+
+    public async Task<IReadOnlyList<SaldoEstoque>> ConsultarAsync(Guid tenantId, string? busca, string? condicao, Guid? localId, CancellationToken ct)
+    {
+        await using var cn = Connection();
+        return (await cn.QueryAsync<SaldoEstoque>(new CommandDefinition(SelectSaldoSql + BasePosicaoSql + OrderByFefo,
             new { tenantId, busca, condicao, localId }, cancellationToken: ct))).AsList();
+    }
+
+    // R54 (D-R54-1/D-R54-3): variante paginada — LIMIT/OFFSET e agregados sobre a MESMA base.
+    public async Task<SaldoEstoquePaginado> ConsultarPaginadoAsync(Guid tenantId, string? busca, string? condicao, Guid? localId, int pagina, int porPagina, CancellationToken ct)
+    {
+        await using var cn = Connection();
+        var parametros = new
+        {
+            tenantId,
+            busca,
+            condicao,
+            localId,
+            porPagina,
+            offset = (long)((pagina - 1) * porPagina)
+        };
+
+        var rows = (await cn.QueryAsync<SaldoEstoque>(new CommandDefinition(SelectSaldoSql + BasePosicaoSql + OrderByFefo + "\n            LIMIT @porPagina OFFSET @offset",
+            parametros, cancellationToken: ct))).AsList();
+        long total = await cn.ExecuteScalarAsync<long>(new CommandDefinition("SELECT count(*)::bigint" + BasePosicaoSql,
+            parametros, cancellationToken: ct));
+        var somas = await cn.QuerySingleAsync<SomaSaldosRow>(new CommandDefinition(SomaSaldosSql + BasePosicaoSql,
+            parametros, cancellationToken: ct));
+
+        return new SaldoEstoquePaginado(rows, (int)total, pagina, porPagina, somas.TotalFisico, somas.TotalReservado, somas.TotalDisponivel);
     }
 
     public async Task TransferirAsync(Guid tenantId, Guid usuarioId, TransferirCommand c, CancellationToken ct)

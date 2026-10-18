@@ -31,11 +31,15 @@ public sealed class Orcamentos360Controller : ControllerBase
         [FromQuery] string? situacao,
         [FromQuery] DateOnly? inicio,
         [FromQuery] DateOnly? fim,
+        // R54 (D-R54-3): paginação no servidor — página 1-based e itens por página com default 100 e teto 500.
+        [FromQuery] int? pagina,
+        [FromQuery] int? porPagina,
         CancellationToken ct)
     {
         var (tenant, _) = Context();
-        var lista = await repository.ListarAsync(tenant, busca, situacao, inicio, fim, ct);
-        return Ok(lista);
+        var paginaEfetiva = Math.Max(1, pagina ?? 1);
+        var porPaginaEfetiva = Math.Clamp(porPagina ?? 100, 1, 500);
+        return Ok(await repository.ListarPaginadoAsync(tenant, busca, situacao, inicio, fim, paginaEfetiva, porPaginaEfetiva, ct));
     }
 
     [HttpGet("{id:guid}")]

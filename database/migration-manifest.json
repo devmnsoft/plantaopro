@@ -1349,6 +1349,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2354_r55_indice_reservas_saldo",
+      "source": "database/migrations/2026_10_v2354_r55_indice_reservas_saldo.sql",
+      "checksum": "31ab4e426a5f88fe7d249c1ee4ed59f627e894e7b795cca8907a486e37259ea5",
+      "dependsOn": [
+        "2026_10_v2353_r9d_precificacao_preco_venda"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

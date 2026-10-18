@@ -10222,3 +10222,13 @@ alter table plantaopro.adm360_produtos
 
 comment on column plantaopro.adm360_produtos.preco_venda is
     'Preco de venda padrao (s7 rodada 9). NULL = nao definido; derivadas calculadas no servidor; custo ausente != zero.';
+
+-- ============================================================
+-- Seção 125 — R55 Indice Reservas Saldo v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2354_r55_indice_reservas_saldo.sql
+-- SOURCE-SHA256: 31ab4e426a5f88fe7d249c1ee4ed59f627e894e7b795cca8907a486e37259ea5
+-- R55: índice de apoio à view adm360_saldos — cobre o padrão da subquery correlacionada das
+-- reservas ativas (sem ele cada grupo de saldo refaz scan completo de adm360_reservas duas vezes).
+CREATE INDEX IF NOT EXISTS ix_adm360_reservas_saldo ON plantaopro.adm360_reservas(tenant_id,produto_id,lote_id,local_id) INCLUDE(quantidade) WHERE situacao='ATIVA';

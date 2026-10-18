@@ -31,7 +31,7 @@
             <button class="btn btn-primary" type="submit">Aplicar filtros</button>
             @if (Model.HasActiveFilters) { <a class="btn btn-outline-secondary" asp-action="Index">Limpar filtros</a> }
         </form>
-        <p class="form-text">Os filtros usam somente status, competência e convênio fornecidos pela API.</p>
+        <p class="form-text">Você pode filtrar por status, competência e convênio.</p>
         @if (Model.AtendimentoId.HasValue) { <p class="pp-alert pp-alert--info">Entrada vinculada à consulta <strong>@Model.AtendimentoId</strong>. Somente contas cuja origem corresponda a esse identificador são exibidas.</p> }
     </section>
 
@@ -47,7 +47,7 @@
     {
         <section class="pp-empty-state" role="status" aria-labelledby="billing-empty-title">
             <h2 id="billing-empty-title">@(Model.HasActiveFilters ? "Nenhuma conta corresponde aos filtros" : "Nenhuma conta clínica encontrada")</h2>
-            <p>@(Model.HasActiveFilters ? "Ajuste ou limpe os filtros para consultar novamente os dados retornados pela API." : "Nenhum valor ou histórico foi criado para este cliente.")</p>
+            <p>@(Model.HasActiveFilters ? "Ajuste ou limpe os filtros para consultar novamente." : "Nenhum valor ou histórico foi criado para este cliente.")</p>
             <a class="btn btn-outline-primary" asp-controller="Consultas" asp-action="Index">Revisar consultas</a>
         </section>
     }
@@ -67,13 +67,13 @@
                         var referencia = item.OrigemId;
                         <tr>
                             <td>@item.Competencia</td>
-                            <td>@(referencia?.ToString() ?? "Não informada pela API")</td>
+                            <td>@(referencia?.ToString() ?? "Não informada")</td>
                             <td><span class="text-muted">Não informado pela fonte</span></td>
                             <td><span class="text-muted">Não informado pela fonte</span></td>
                             <td><span class="text-muted">Não informado pela fonte</span></td>
-                            <td>@(item.Valor.HasValue ? item.Valor.Value.ToString("C") : "Não informado pela API")</td>
+                            <td>@(item.Valor.HasValue ? item.Valor.Value.ToString("C") : "Não informado")</td>
                             <td><span class="text-muted">Não informado pela fonte</span></td>
-                            <td>@if (string.IsNullOrWhiteSpace(item.Status)) { <span class="text-muted">Não informado pela API</span> } else { <partial name="_StatusBadge" model="item.Status" /> }</td>
+                            <td>@if (string.IsNullOrWhiteSpace(item.Status)) { <span class="text-muted">Não informado</span> } else { <partial name="_StatusBadge" model="item.Status" /> }</td>
                             <td class="text-end"><div class="d-flex flex-wrap justify-content-end gap-2">
                                 @if (item.AtendimentoId.HasValue)
                                 {
@@ -81,10 +81,10 @@
                                 }
                                 else
                                 {
-                                    <button class="btn btn-sm btn-outline-secondary" type="button" disabled title="A API não informou o identificador da consulta.">Abrir origem</button>
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" disabled title="Esta conta ainda não tem vínculo com a consulta de origem.">Abrir origem</button>
                                 }
                                 <a class="btn btn-sm btn-outline-primary" asp-controller="ClinicaFinanceiro" asp-action="ContasReceber">Abrir financeiro clínico</a>
-                                <button class="btn btn-sm btn-outline-primary" type="button" disabled title="A API atual não oferece aprovação, glosa ou exportação desta conta.">Outras ações</button>
+                                <button class="btn btn-sm btn-outline-primary" type="button" disabled title="Aprovação, glosa e exportação ainda não estão disponíveis para esta conta.">Outras ações</button>
                             </div></td>
                         </tr>
                     }
@@ -97,8 +97,8 @@
                 var referencia = item.OrigemId;
                 <article class="pp-mobile-card pp-data-card">
                     <header><div><span class="pp-section-kicker">@item.Competencia</span><h3>@(item.Valor.HasValue ? item.Valor.Value.ToString("C") : "Valor não informado")</h3></div>@if (!string.IsNullOrWhiteSpace(item.Status)) { <partial name="_StatusBadge" model="item.Status" /> }</header>
-                    <p>Origem: @(referencia?.ToString() ?? "não informada pela API")</p>
-                    <p class="text-muted">Paciente, profissional, convênio, procedimento, aprovação, pagamento, glosas, repasses e histórico não são fornecidos por esta API.</p>
+                    <p>Origem: @(referencia?.ToString() ?? "não informada")</p>
+                    <p class="text-muted">Detalhes completos (paciente, convênio, valores e histórico) estão disponíveis no financeiro clínico.</p>
                     <a class="btn btn-outline-primary w-100" asp-controller="ClinicaFinanceiro" asp-action="ContasReceber">Abrir financeiro clínico</a>
                 </article>
             }

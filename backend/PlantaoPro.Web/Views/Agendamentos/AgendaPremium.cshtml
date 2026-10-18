@@ -7,7 +7,7 @@
 <section class="pp-page-hero">
     <span class="pp-eyebrow">Saúde 360 · agenda assistencial</span>
     <h1>@Model.Titulo</h1>
-    <p>Agenda clínica por cards, filtros, status e ações rápidas. Fonte: <code>@Model.Endpoint</code>.</p>
+    <p>Agenda clínica por cards, filtros, status e ações rápidas.</p>
     <span class="pp-badge">Fonte: @Model.Fonte</span>
 </section>
 @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
@@ -50,7 +50,7 @@ else
                 <h3 class="h5 mt-2">@(string.IsNullOrWhiteSpace(item.Paciente) ? "Paciente não informado" : item.Paciente)</h3>
                 <p class="mb-1"><strong>Profissional:</strong> @(string.IsNullOrWhiteSpace(item.Medico) ? "Não informado" : item.Medico)</p>
                 <p class="mb-1"><strong>Especialidade:</strong> @(string.IsNullOrWhiteSpace(item.Especialidade) ? "Não informada" : item.Especialidade)</p>
-                <p class="mb-3"><strong>Unidade:</strong> @(string.IsNullOrWhiteSpace(item.Unidade) ? "Não informada pela API" : item.Unidade)</p>
+                <p class="mb-3"><strong>Unidade:</strong> @(string.IsNullOrWhiteSpace(item.Unidade) ? "Não informada" : item.Unidade)</p>
                 <dl class="pp-data-meta">
                     <div><dt>Atendimento</dt><dd>@(string.IsNullOrWhiteSpace(item.TipoAtendimento) ? "Não informado" : item.TipoAtendimento)</dd></div>
                     <div><dt>Convênio</dt><dd>@(string.IsNullOrWhiteSpace(item.Convenio) ? "Não informado" : item.Convenio)</dd></div>
@@ -62,15 +62,15 @@ else
                 <div class="d-flex gap-2 flex-wrap">
                     <button type="button" class="btn btn-primary btn-sm" data-detail-open data-detail-kind="Agendamento" data-detail-title="@(string.IsNullOrWhiteSpace(item.Paciente) ? "Paciente não informado" : item.Paciente)" data-detail-status="@item.Status" data-detail-summary="@item.TipoAtendimento" data-detail-origin="@item.Unidade" data-detail-period="@item.Horario.ToString("dd/MM/yyyy HH:mm")" data-detail-owner="@item.Medico" data-detail-composition="@item.Convenio · sala @item.Sala" data-detail-reference="@item.Id" data-detail-primary-url="@Url.Action("Details", "Agendamentos", new { id = item.Id })">Ver jornada</button>
                     @if (item.PodeConfirmar) { <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#agendaActionModal" data-agenda-id="@item.Id" data-agenda-operation="confirmar" data-agenda-label="Confirmar agendamento">Confirmar</button> }
-                    else { <button type="button" class="btn btn-outline-primary btn-sm" disabled title="O status retornado pela API não permite confirmar este agendamento.">Confirmar</button> }
+                    else { <button type="button" class="btn btn-outline-primary btn-sm" disabled title="O status atual deste agendamento não permite a confirmação.">Confirmar</button> }
                     @if (item.PodeCheckIn) { <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#agendaActionModal" data-agenda-id="@item.Id" data-agenda-operation="checkin" data-agenda-label="Realizar check-in">Check-in</button> }
                     else { <button type="button" class="btn btn-outline-success btn-sm" disabled title="O check-in só é liberado para agendamento confirmado ou ainda agendado.">Check-in</button> }
                     @if (item.PodeAlterarAgenda) { <a class="btn btn-outline-secondary btn-sm" asp-action="Edit" asp-route-id="@item.Id">Reagendar</a> }
                     else { <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="O status retornado não permite reagendamento.">Reagendar</button> }
                     <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Vincule o agendamento à fila do painel antes de realizar a chamada.">Chamar no painel</button>
                     @if (item.PodeAbrirTriagem) { <a class="btn btn-outline-secondary btn-sm" asp-controller="Triagem" asp-action="Create" asp-route-agendamentoId="@item.Id">Enviar para triagem</a> }
-                    else { <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="A triagem exige check-in ou status de espera retornado pela API.">Abrir triagem</button> }
-                    <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="A consulta será habilitada quando a API retornar o vínculo da consulta deste agendamento.">Abrir consulta</button>
+                    else { <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="A triagem exige check-in ou status de espera.">Abrir triagem</button> }
+                    <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Este botão ficará habilitado quando a consulta estiver vinculada ao agendamento.">Abrir consulta</button>
                     @if (item.PodeAlterarAgenda) { <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#agendaActionModal" data-agenda-id="@item.Id" data-agenda-operation="cancelar" data-agenda-label="Cancelar agendamento">Cancelar</button> }
                     else { <button type="button" class="btn btn-outline-danger btn-sm" disabled title="O status retornado não permite cancelamento.">Cancelar</button> }
                 </div>

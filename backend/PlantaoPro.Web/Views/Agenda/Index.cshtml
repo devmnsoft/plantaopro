@@ -36,9 +36,9 @@
 
 <form method="get" class="agenda-filter pp-filter-panel">
     <div class="card-body row g-2">
-        <div class="col-md-3"><label class="form-label">Início</label><input type="date" name="inicio" value="@vm.Inicio.ToString("yyyy-MM-dd")" class="form-control" /></div>
-        <div class="col-md-3"><label class="form-label">Fim</label><input type="date" name="fim" value="@vm.Fim.ToString("yyyy-MM-dd")" class="form-control" /></div>
-        <div class="col-md-3"><label class="form-label">Status</label><select name="status" class="form-select"><option value="">Todos os status</option><option value="ABERTO" selected="@(vm.Status == "ABERTO")">Aberto</option><option value="CONFIRMADO" selected="@(vm.Status == "CONFIRMADO")">Confirmado</option><option value="CONFLITO" selected="@(vm.Status == "CONFLITO")">Conflito</option></select></div>
+        <div class="col-md-3"><label class="form-label">Início</label><input type="date" name="inicio" value="@vm.Inicio.ToString("yyyy-MM-dd")" class="form-control" aria-label="Início"></div>
+        <div class="col-md-3"><label class="form-label">Fim</label><input type="date" name="fim" value="@vm.Fim.ToString("yyyy-MM-dd")" class="form-control" aria-label="Fim"></div>
+        <div class="col-md-3"><label class="form-label">Status</label><select name="status" class="form-select" aria-label="Status"><option value="">Todos os status</option><option value="ABERTO" selected="@(vm.Status == "ABERTO")">Aberto</option><option value="CONFIRMADO" selected="@(vm.Status == "CONFIRMADO")">Confirmado</option><option value="CONFLITO" selected="@(vm.Status == "CONFLITO")">Conflito</option></select></div>
         <div class="col-md-3 d-flex align-items-end"><button class="btn btn-outline-primary w-100" type="submit">Filtrar</button></div>
     </div>
 </form>

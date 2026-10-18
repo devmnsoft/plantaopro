@@ -34,7 +34,7 @@
                     @if (editing)
                     {
                         <input asp-for="TenantId" type="hidden" />
-                        <select class="form-select" disabled aria-describedby="tenant-help">
+                        <select class="form-select" disabled aria-describedby="tenant-help" aria-label="Cliente">
                             @foreach (var tenant in Model.Clientes)
                             {
                                 <option selected="@(tenant.Id == Model.TenantId)">@tenant.NomeFantasia</option>
@@ -91,7 +91,7 @@
                     var selected = Model.PerfilIds.Contains(profile.Id);
                     <div class="col-md-6" data-profile-option data-tenant-id="@(profile.TenantId?.ToString() ?? string.Empty)">
                         <label class="pp-card h-100 d-flex gap-3 align-items-start">
-                            <input class="form-check-input mt-1" type="checkbox" name="PerfilIds" value="@profile.Id" checked="@selected" />
+                            <input class="form-check-input mt-1" type="checkbox" name="PerfilIds" value="@profile.Id" checked="@selected" aria-label="Perfilids">
                             <span><strong>@profile.Nome</strong>@if (profile.BaseSistema){<span class="badge text-bg-secondary ms-2">Base</span>}<small class="d-block text-muted">@profile.Descricao</small></span>
                         </label>
                     </div>

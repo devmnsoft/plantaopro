@@ -58,7 +58,7 @@
             <div class="row g-2 mb-3">
                 <div class="col-md-4">
                     <label class="form-label text-light small">Tipo de origem</label>
-                    <select name="OrigemTipo" class="form-select form-select-sm bg-black text-light border-secondary">
+                    <select name="OrigemTipo" class="form-select form-select-sm bg-black text-light border-secondary" aria-label="Tipo de origem">
                         @foreach (var origem in new[] { "MANUAL", "VENDA", "ORCAMENTO", "COTACAO" })
                         {
                             var selecionada = Model.OrigemTipo == origem;
@@ -108,12 +108,12 @@
                     <div class="col-2">
                         <input type="number" step="any" min="0" name="Itens[@indice].Quantidade"
                                value="@Model.Itens[indice].Quantidade.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)"
-                               class="form-control form-control-sm bg-black text-light border-secondary text-end" />
+                               class="form-control form-control-sm bg-black text-light border-secondary text-end" aria-label="Quantidade">
                     </div>
                     <div class="col-2">
                         <input type="number" step="any" min="0" name="Itens[@indice].PrecoUnitario"
                                value="@Model.Itens[indice].PrecoUnitario.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)"
-                               class="form-control form-control-sm bg-black text-light border-secondary text-end" />
+                               class="form-control form-control-sm bg-black text-light border-secondary text-end" aria-label="Precounitario">
                     </div>
                 </div>
             }

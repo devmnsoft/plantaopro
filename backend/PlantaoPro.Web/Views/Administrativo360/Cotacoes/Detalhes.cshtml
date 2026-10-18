@@ -265,7 +265,7 @@
                                             <div class="modal-body">
                                                 <div class="mb-3">
                                                     <label class="form-label small">@UiText.L("Adm360.CotDet.LblStatusAtendimento")</label>
-                                                    <select name="StatusRelacionamento" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                                    <select name="StatusRelacionamento" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Status do relacionamento">
                                                         <option value="RELACIONADO" selected="@(item.StatusRelacionamento == "RELACIONADO")">@UiText.L("Adm360.CotDet.OptRelacionadoInterno")</option>
                                                         <option value="NAO_ATENDIDO" selected="@(item.StatusRelacionamento == "NAO_ATENDIDO")">@UiText.L("Adm360.CotDet.StatusNaoAtendido")</option>
                                                     </select>
@@ -291,18 +291,18 @@
                                                     <div class="col-md-6">
                                                         <label class="form-label small">@UiText.L("Adm360.CotDet.LblFatorConversao")</label>
                                                         <input type="number" step="0.0001" name="FatorConversao" class="form-control form-control-sm bg-dark text-light border-secondary"
-                                                               value="@(item.FatorConversao > 0 ? item.FatorConversao : 1.0000m)" />
+                                                               aria-label="Fator de conversão" value="@(item.FatorConversao > 0 ? item.FatorConversao : 1.0000m)" />
                                                     </div>
                                                     <div class="col-md-6">
                                                         <label class="form-label small">@UiText.L("Adm360.CotDet.LblPrecoUnitario")</label>
                                                         <input type="number" step="0.01" name="PrecoUnitarioOfertado" class="form-control form-control-sm bg-dark text-light border-secondary"
-                                                               value="@item.PrecoUnitarioOfertado" />
+                                                               value="@item.PrecoUnitarioOfertado" aria-label="Precounitarioofertado">
                                                     </div>
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label small">@UiText.L("Adm360.CotDet.LblDesconto")</label>
                                                     <input type="number" step="0.01" name="Desconto" class="form-control form-control-sm bg-dark text-light border-secondary"
-                                                           value="@item.Desconto" />
+                                                           value="@item.Desconto" aria-label="Desconto">
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label small">@UiText.L("Adm360.CotDet.LblJustSubstituicao")</label>

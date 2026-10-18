@@ -31,7 +31,7 @@
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="ClienteId" value="@jornada.ClienteId" />
                 <label class="form-label">Motivo/resumo para avançar</label>
-                <textarea name="Motivo" class="form-control" rows="2" required maxlength="500"></textarea>
+                <textarea name="Motivo" class="form-control" rows="2" required maxlength="500" aria-label="Motivo"></textarea>
                 <div class="form-text">Informe a evidência comercial, operacional ou de Customer Success.</div>
                 <button type="submit" class="btn btn-primary mt-2"><i class="bi bi-arrow-right-circle"></i> Avançar etapa</button>
             </form>
@@ -39,7 +39,7 @@
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="ClienteId" value="@jornada.ClienteId" />
                 <label class="form-label">Justificativa para retroceder</label>
-                <textarea name="Motivo" class="form-control" rows="2" required maxlength="500"></textarea>
+                <textarea name="Motivo" class="form-control" rows="2" required maxlength="500" aria-label="Motivo"></textarea>
                 <button type="submit" class="btn btn-outline-secondary mt-2"><i class="bi bi-arrow-left-circle"></i> Retroceder etapa</button>
             </form>
         </div></div>
@@ -49,9 +49,9 @@
             <form asp-action="CriarTarefa" method="post" data-loading="true">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="ClienteId" value="@jornada.ClienteId" />
-                <div class="mb-2"><label class="form-label">Título</label><input name="Titulo" class="form-control" required maxlength="180" /></div>
+                <div class="mb-2"><label class="form-label">Título</label><input name="Titulo" class="form-control" required maxlength="180" aria-label="Titulo"></div>
                 <div class="mb-2"><label class="form-label">Responsável</label><input name="Responsavel" class="form-control" maxlength="160" placeholder="Customer Success" /></div>
-                <div class="mb-2"><label class="form-label">Vencimento</label><input name="Vencimento" class="form-control" type="datetime-local" /></div>
+                <div class="mb-2"><label class="form-label">Vencimento</label><input name="Vencimento" class="form-control" type="datetime-local" aria-label="Vencimento"></div>
                 <button type="submit" class="btn btn-outline-primary"><i class="bi bi-check2-square"></i> Criar tarefa</button>
             </form>
         </div></div>
@@ -73,7 +73,7 @@
             <form asp-action="RegistrarEvento" method="post" data-loading="true">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="ClienteId" value="@jornada.ClienteId" />
-                <div class="row g-2"><div class="col-md-4"><label class="form-label">Tipo</label><input name="Tipo" class="form-control" value="INTERACAO_CS" required /></div><div class="col-md-8"><label class="form-label">Resumo</label><input name="Resumo" class="form-control" required maxlength="500" /></div></div>
+                <div class="row g-2"><div class="col-md-4"><label class="form-label">Tipo</label><input name="Tipo" class="form-control" value="INTERACAO_CS" required aria-label="Tipo"></div><div class="col-md-8"><label class="form-label">Resumo</label><input name="Resumo" class="form-control" required maxlength="500" aria-label="Resumo"></div></div>
                 <button class="btn btn-outline-primary mt-2" type="submit"><i class="bi bi-plus-circle"></i> Registrar evento</button>
             </form>
         </div></div>

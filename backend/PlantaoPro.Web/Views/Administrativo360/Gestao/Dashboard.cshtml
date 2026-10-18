@@ -58,7 +58,7 @@
             <form method="get" action="/Administrativo360/Gestao/Dashboard" class="row g-2 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label text-light small">@UiText.L("Adm360.LabelProvedor")</label>
-                    <select name="provedor" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <select name="provedor" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Provedor">
                         <option value="">@UiText.L("Adm360.Cotacoes.OptAllPortals")</option>
                         <option value="OPMENEXO" selected="@(Model.Provedor == "OPMENEXO")">OPMENEXO</option>
                         <option value="INPART" selected="@(Model.Provedor == "INPART")">INPART Saúde</option>
@@ -67,12 +67,12 @@
                 <div class="col-md-3">
                     <label class="form-label text-light small">@UiText.L("Adm360.Dash.LabelStartDate")</label>
                     <input type="date" name="dataInicio" class="form-control form-control-sm bg-dark text-light border-secondary"
-                           value="@(Model.DataInicio?.ToString("yyyy-MM-dd"))" />
+                           value="@(Model.DataInicio?.ToString("yyyy-MM-dd"))" aria-label="Início">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-light small">@UiText.L("Adm360.Dash.LabelEndDate")</label>
                     <input type="date" name="dataFim" class="form-control form-control-sm bg-dark text-light border-secondary"
-                           value="@(Model.DataFim?.ToString("yyyy-MM-dd"))" />
+                           value="@(Model.DataFim?.ToString("yyyy-MM-dd"))" aria-label="Fim">
                 </div>
                 <div class="col-md-3">
                     <button type="submit" class="btn btn-sm btn-primary me-2">

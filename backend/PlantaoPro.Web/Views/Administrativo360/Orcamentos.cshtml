@@ -55,7 +55,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small text-secondary">Situação</label>
-                    <select name="situacao" class="form-select form-select-sm bg-black text-light border-secondary">
+                    <select name="situacao" class="form-select form-select-sm bg-black text-light border-secondary" aria-label="Situação">
                         <option value="">Todas as situações</option>
                         <option value="RASCUNHO" selected="@(ViewBag.Situacao == "RASCUNHO")">Rascunho</option>
                         <option value="APROVADO" selected="@(ViewBag.Situacao == "APROVADO")">Aprovado</option>
@@ -66,8 +66,8 @@
                 <div class="col-md-3">
                     <label class="form-label small text-secondary">Data Prevista (Início / Fim)</label>
                     <div class="input-group input-group-sm">
-                        <input type="date" name="inicio" value="@(ViewBag.Inicio != null ? ((DateOnly)ViewBag.Inicio).ToString("yyyy-MM-dd") : "")" class="form-control bg-black text-light border-secondary">
-                        <input type="date" name="fim" value="@(ViewBag.Fim != null ? ((DateOnly)ViewBag.Fim).ToString("yyyy-MM-dd") : "")" class="form-control bg-black text-light border-secondary">
+                        <input type="date" name="inicio" value="@(ViewBag.Inicio != null ? ((DateOnly)ViewBag.Inicio).ToString("yyyy-MM-dd") : "")" class="form-control bg-black text-light border-secondary" aria-label="Início">
+                        <input type="date" name="fim" value="@(ViewBag.Fim != null ? ((DateOnly)ViewBag.Fim).ToString("yyyy-MM-dd") : "")" class="form-control bg-black text-light border-secondary" aria-label="Fim">
                     </div>
                 </div>
                 <div class="col-md-2 d-flex gap-2">

@@ -5,11 +5,11 @@
 <section class="pp-page-head"><span class="pp-badge">Comercial</span><h1>@Model.Title</h1><p>@Model.Subtitle</p></section>
 <form class="pp-form" asp-controller="CommercialDemoWeb" asp-action="EnviarContato" method="post">
     @Html.AntiForgeryToken()
-    <input type="text" name="website" class="pp-hp" tabindex="-1" autocomplete="off" />
-    <label>Nome<input name="nome" required /></label>
-    <label>E-mail<input name="email" type="email" required /></label>
-    <label>Telefone<input name="telefone" required minlength="8" /></label>
-    <label>Empresa<input name="empresa" required /></label>
+    <input type="text" name="website" class="pp-hp" tabindex="-1" autocomplete="off" aria-label="Website">
+    <label>Nome<input name="nome" required aria-label="Nome"></label>
+    <label>E-mail<input name="email" type="email" required aria-label="Email"></label>
+    <label>Telefone<input name="telefone" required minlength="8" aria-label="Telefone"></label>
+    <label>Empresa<input name="empresa" required aria-label="Empresa"></label>
     <button class="btn btn-primary btn-lg" type="submit">Enviar para comercial</button>
 </form>
 <partial name="_CommercialStyles" />

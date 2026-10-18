@@ -62,7 +62,7 @@
             <form method="get" action="/Administrativo360/Cotacoes" class="row g-2 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label text-light small">@UiText.L("Adm360.LabelProvedor")</label>
-                    <select name="provedor" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <select name="provedor" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Provedor">
                         <option value="">@UiText.L("Adm360.Cotacoes.OptAllPortals")</option>
                         <option value="OPMENEXO" selected="@(Model.Provedor == "OPMENEXO")">OPMENEXO</option>
                         <option value="INPART" selected="@(Model.Provedor == "INPART")">INPART Saúde</option>
@@ -71,7 +71,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-light small">@UiText.L("Adm360.LabelStatusInterno")</label>
-                    <select name="status" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <select name="status" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Status">
                         <option value="">@UiText.L("Adm360.Cotacoes.OptAllStatuses")</option>
                         <option value="RECEBIDA" selected="@(Model.Status == "RECEBIDA")">@UiText.L("Adm360.Cotacoes.StatusRecebida")</option>
                         <option value="EM_RELACIONAMENTO" selected="@(Model.Status == "EM_RELACIONAMENTO")">@UiText.L("Adm360.Cotacoes.StatusEmRelacionamento")</option>

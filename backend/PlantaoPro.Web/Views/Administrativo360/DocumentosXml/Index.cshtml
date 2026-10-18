@@ -57,7 +57,7 @@
             <form method="get" action="/Administrativo360/DocumentosXml" class="row g-2 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label text-light small">Status Conferência</label>
-                    <select name="status" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <select name="status" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Status">
                         <option value="">Todos</option>
                         <option value="PENDENTE" selected="@(Model.Status == "PENDENTE")">Pendente</option>
                         <option value="CONFERIDO" selected="@(Model.Status == "CONFERIDO")">Conferido</option>
@@ -67,7 +67,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-light small">Quarentena</label>
-                    <select name="quarentena" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <select name="quarentena" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Quarentena">
                         <option value="">Todos</option>
                         <option value="true" selected="@(Model.Quarentena == true)">Apenas em Quarentena</option>
                         <option value="false" selected="@(Model.Quarentena == false)">Apenas Válidos</option>

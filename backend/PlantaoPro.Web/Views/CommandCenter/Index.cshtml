@@ -117,10 +117,10 @@
             @if (!isGlobal)
             {
                 <form method="get" class="cc-filters">
-                    <label>De<input type="date" name="from" value="@ViewBag.From.ToString("yyyy-MM-dd")" required /></label>
-                    <label>Até<input type="date" name="to" value="@ViewBag.To.ToString("yyyy-MM-dd")" required /></label>
+                    <label>De<input type="date" name="from" value="@ViewBag.From.ToString("yyyy-MM-dd")" required aria-label="From"></label>
+                    <label>Até<input type="date" name="to" value="@ViewBag.To.ToString("yyyy-MM-dd")" required aria-label="To"></label>
                     <label>Status
-                        <select name="status">
+                        <select name="status" aria-label="Status">
                             <option value="">Todos</option>
                             @foreach (var s in new[] { "aberto", "pendente", "confirmado", "cancelado", "realizado" })
                             {

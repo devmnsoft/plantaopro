@@ -12,10 +12,10 @@
  else {<partial name="_DaySummary" model="Model.Summary"/>}
  <section aria-labelledby="pendingTitle"><div class="section-heading"><div><span class="eyebrow">Lista de trabalho</span><h2 id="pendingTitle">Pendências que exigem ação</h2></div><p>O item sai desta lista somente quando o registro de origem deixa de estar pendente.</p></div>
  <details class="central-filter-panel" open><summary>Filtrar pendências</summary><form class="central-filters" data-work-item-filters aria-label="Filtros de pendências">
-  <label>Prioridade<select data-filter-priority><option value="">Todas</option>@foreach(var value in Model.Items.Select(x=>x.Priority).Distinct().OrderBy(x=>x)){<option value="@value">@value</option>}</select></label>
-  <label>Tipo<select data-filter-type><option value="">Todos</option>@foreach(var value in Model.Items.Select(x=>x.Type).Distinct().OrderBy(x=>x)){<option value="@value">@value</option>}</select></label>
-  <label>Prazo<select data-filter-due><option value="">Todos</option><option value="overdue">Vencidas</option><option value="today">Vencem hoje</option><option value="none">Sem prazo</option></select></label>
-  <label>Responsável<select data-filter-owner><option value="">Todos</option><option value="assigned">Atribuídas</option><option value="unassigned">Sem responsável</option></select></label>
+  <label>Prioridade<select data-filter-priority aria-label="Prioridade"><option value="">Todas</option>@foreach(var value in Model.Items.Select(x=>x.Priority).Distinct().OrderBy(x=>x)){<option value="@value">@value</option>}</select></label>
+  <label>Tipo<select data-filter-type aria-label="Tipo"><option value="">Todos</option>@foreach(var value in Model.Items.Select(x=>x.Type).Distinct().OrderBy(x=>x)){<option value="@value">@value</option>}</select></label>
+  <label>Prazo<select data-filter-due aria-label="Prazo"><option value="">Todos</option><option value="overdue">Vencidas</option><option value="today">Vencem hoje</option><option value="none">Sem prazo</option></select></label>
+  <label>Responsável<select data-filter-owner aria-label="Responsável"><option value="">Todos</option><option value="assigned">Atribuídas</option><option value="unassigned">Sem responsável</option></select></label>
   <button type="reset" class="button button-secondary">Limpar filtros</button><span data-filter-result role="status" aria-live="polite"></span>
  </form></details>
  @if(Model.Items.Count==0 && !Model.Context.GlobalView){<div class="empty-state" role="status"><h3>Nenhuma pendência operacional</h3><p>Não há registros persistidos que atendam às regras do seu contexto atual.</p></div>}

@@ -271,8 +271,7 @@
                     <input type="hidden" name="aba" value="rastreabilidade" />
                     <input type="text" name="busca" value="@Model.Busca" class="form-control form-control-sm bg-dark text-light border-secondary"
                            placeholder="Buscar por Produto ou Lote..." />
-                    <button type="submit" class="btn btn-sm btn-outline-info">
-                        <i class="bi bi-search"></i>
+                    <button type="submit" class="btn btn-sm btn-outline-info"> aria-label="Buscar"                        <i class="bi bi-search"></i>
                     </button>
                 </form>
                 <a asp-action="ExportarRastreabilidadeCsv" asp-route-busca="@Model.Busca" class="btn btn-sm btn-outline-success">

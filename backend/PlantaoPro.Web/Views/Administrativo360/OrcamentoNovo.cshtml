@@ -55,7 +55,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label text-light small fw-bold">Hospital (Destinatário / Execução) *</label>
-                                <select name="HospitalId" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                                <select name="HospitalId" class="form-select form-select-sm bg-black text-light border-secondary" required aria-label="Hospital">
                                     <option value="">-- Selecione o Hospital --</option>
                                     @foreach (var h in Model.Hospitais)
                                     {
@@ -65,7 +65,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-light small fw-bold">Responsável Financeiro (Convênio / Pagador) *</label>
-                                <select name="ResponsavelFinanceiroId" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                                <select name="ResponsavelFinanceiroId" class="form-select form-select-sm bg-black text-light border-secondary" required aria-label="Responsável financeiro">
                                     <option value="">-- Selecione o Pagador / Convênio --</option>
                                     @foreach (var p in Model.Pagadores)
                                     {
@@ -79,7 +79,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-light small">Médico Cirurgião</label>
-                                <select name="MedicoId" class="form-select form-select-sm bg-black text-light border-secondary">
+                                <select name="MedicoId" class="form-select form-select-sm bg-black text-light border-secondary" aria-label="Medicoid">
                                     <option value="">-- Selecione o Médico (Opcional) --</option>
                                     @foreach (var m in Model.Medicos)
                                     {
@@ -89,12 +89,12 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-light small fw-bold">Data Prevista da Cirurgia *</label>
-                                <input type="date" name="DataPrevista" value="@Model.DataPrevista.ToString("yyyy-MM-dd")" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                                <input type="date" name="DataPrevista" value="@Model.DataPrevista.ToString("yyyy-MM-dd")" class="form-control form-control-sm bg-black text-light border-secondary" required aria-label="Data prevista">
                                 <small class="text-white-50">Lotes com validade anterior serão rejeitados.</small>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-light small fw-bold">Validade da Proposta Comercial *</label>
-                                <input type="date" name="Validade" value="@Model.Validade.ToString("yyyy-MM-dd")" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                                <input type="date" name="Validade" value="@Model.Validade.ToString("yyyy-MM-dd")" class="form-control form-control-sm bg-black text-light border-secondary" required aria-label="Validade">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-light small">Vendedor Responsável</label>
@@ -129,7 +129,7 @@
                                 <tbody>
                                     <tr>
                                         <td>
-                                            <select name="Itens[0].ProdutoId" class="form-select form-select-sm bg-black text-light border-secondary select-produto" required>
+                                            <select name="Itens[0].ProdutoId" class="form-select form-select-sm bg-black text-light border-secondary select-produto" required aria-label="Produto">
                                                 <option value="">-- Selecione o Produto --</option>
                                                 @foreach (var prod in Model.ProdutosDisponiveis)
                                                 {
@@ -138,16 +138,16 @@
                                             </select>
                                         </td>
                                         <td>
-                                            <input type="number" step="0.0001" min="0.0001" name="Itens[0].Quantidade" value="1" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                                            <input type="number" step="0.0001" min="0.0001" name="Itens[0].Quantidade" value="1" class="form-control form-control-sm bg-black text-light border-secondary" required aria-label="Quantidade">
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" min="0" name="Itens[0].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary input-preco" required>
+                                            <input type="number" step="0.01" min="0" name="Itens[0].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary input-preco" required aria-label="Precounitario">
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" min="0" name="Itens[0].Desconto" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary">
+                                            <input type="number" step="0.01" min="0" name="Itens[0].Desconto" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary" aria-label="Desconto">
                                         </td>
                                         <td class="text-center">
-                                            <button type="button" class="btn btn-sm btn-outline-danger btnRemoveItem"><i class="bi bi-trash"></i></button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger btnRemoveItem" aria-label="Remover item"><i class="bi bi-trash"></i></button>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -218,21 +218,21 @@
         var options = document.getElementById('produtoOptionsTemplate').innerHTML;
         tr.innerHTML = `
             <td>
-                <select name="Itens[${index}].ProdutoId" class="form-select form-select-sm bg-black text-light border-secondary select-produto" required>
+                <select name="Itens[${index}].ProdutoId" class="form-select form-select-sm bg-black text-light border-secondary select-produto" required aria-label="Produto">
                     ${options}
                 </select>
             </td>
             <td>
-                <input type="number" step="0.0001" min="0.0001" name="Itens[${index}].Quantidade" value="1" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                <input type="number" step="0.0001" min="0.0001" name="Itens[${index}].Quantidade" value="1" class="form-control form-control-sm bg-black text-light border-secondary" required aria-label="Quantidade">
             </td>
             <td>
-                <input type="number" step="0.01" min="0" name="Itens[${index}].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary input-preco" required>
+                <input type="number" step="0.01" min="0" name="Itens[${index}].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary input-preco" required aria-label="Precounitario">
             </td>
             <td>
-                <input type="number" step="0.01" min="0" name="Itens[${index}].Desconto" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary">
+                <input type="number" step="0.01" min="0" name="Itens[${index}].Desconto" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary" aria-label="Desconto">
             </td>
             <td class="text-center">
-                <button type="button" class="btn btn-sm btn-outline-danger btnRemoveItem"><i class="bi bi-trash"></i></button>
+                <button type="button" class="btn btn-sm btn-outline-danger btnRemoveItem" aria-label="Remover item"><i class="bi bi-trash"></i></button>
             </td>
         `;
         tbody.appendChild(tr);

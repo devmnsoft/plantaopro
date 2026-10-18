@@ -47,7 +47,7 @@
         <div class="card-body p-3">
             <form method="get" asp-action="Lotes" class="row g-2 align-items-center">
                 <div class="col-md-9 col-lg-10">
-                    <select name="produtoId" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <select name="produtoId" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="Produto">
                         <option value="">Todos os Produtos e Materiais</option>
                         @foreach (var prod in Model.Produtos)
                         {

@@ -65,7 +65,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small text-secondary">Situação</label>
-                    <select name="situacao" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <select name="situacao" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Situação">
                         <option value="">Todas as situações</option>
                         <option value="RASCUNHO" selected="@(ViewBag.Situacao == "RASCUNHO")">Rascunho</option>
                         <option value="EM_SEPARACAO" selected="@(ViewBag.Situacao == "EM_SEPARACAO")">Em Separação</option>
@@ -79,12 +79,12 @@
                 <div class="col-md-2">
                     <label class="form-label small text-secondary">De</label>
                     <input type="date" name="inicio" class="form-control form-control-sm bg-dark text-light border-secondary"
-                           value="@(ViewBag.Inicio != null ? ((DateOnly)ViewBag.Inicio).ToString("yyyy-MM-dd") : "")" />
+                           value="@(ViewBag.Inicio != null ? ((DateOnly)ViewBag.Inicio).ToString("yyyy-MM-dd") : "")" aria-label="Início">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small text-secondary">Até</label>
                     <input type="date" name="fim" class="form-control form-control-sm bg-dark text-light border-secondary"
-                           value="@(ViewBag.Fim != null ? ((DateOnly)ViewBag.Fim).ToString("yyyy-MM-dd") : "")" />
+                           value="@(ViewBag.Fim != null ? ((DateOnly)ViewBag.Fim).ToString("yyyy-MM-dd") : "")" aria-label="Fim">
                 </div>
                 <div class="col-md-1 d-flex gap-1">
                     <button type="submit" class="btn btn-sm btn-outline-info w-100" title="Filtrar">

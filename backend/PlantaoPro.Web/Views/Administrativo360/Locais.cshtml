@@ -49,7 +49,7 @@
         <div class="card-body p-3">
             <form method="get" asp-action="Locais" class="row g-2 align-items-center">
                 <div class="col-md-7 col-lg-8">
-                    <select name="tipo" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <select name="tipo" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="Tipo">
                         <option value="">Todos os Tipos (Interno e Externo)</option>
                         <option value="INTERNO" selected="@(Model.Tipo == "INTERNO")">Apenas Locais Internos</option>
                         <option value="EXTERNO" selected="@(Model.Tipo == "EXTERNO")">Apenas Locais Externos (Consignação)</option>
@@ -134,7 +134,7 @@
                                 </td>
                                 <td class="text-end pe-3">
                                     <button class="btn btn-outline-primary btn-sm py-0 px-2" type="button"
-                                            onclick="editarLocal('@l.Id', '@l.Codigo', '@l.Nome', '@l.Tipo', @l.Ativo.ToString().ToLower())">
+                                            onclick="editarLocal('@l.Id', '@l.Codigo', '@l.Nome', '@l.Tipo', @l.Ativo.ToString().ToLower())" aria-label="Editar local">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                 </td>

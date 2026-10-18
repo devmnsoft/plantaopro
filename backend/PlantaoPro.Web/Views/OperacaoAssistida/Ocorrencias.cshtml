@@ -17,8 +17,8 @@
     <form asp-action="CriarOcorrencia" method="post" class="row g-2" data-ajax-form="true" data-confirm="true" data-confirm-title="Registrar ocorrência" data-confirm-message="Confirma registrar esta ocorrência da homologação assistida? Ocorrências críticas geram alerta operacional." data-confirm-type="warning">
         @Html.AntiForgeryToken()
         <input type="hidden" name="ClienteId" value="@(Model?.ClienteId ?? Guid.Empty)" />
-        <div class="col-md-2"><select name="Tipo" class="form-select"><option>BUG</option><option>DUVIDA</option><option>MELHORIA</option><option>TREINAMENTO</option><option>CONFIGURACAO</option></select></div>
-        <div class="col-md-2"><select name="Prioridade" class="form-select"><option>BAIXA</option><option selected>MEDIA</option><option>ALTA</option><option>CRITICA</option></select></div>
+        <div class="col-md-2"><select name="Tipo" class="form-select" aria-label="Tipo"><option>BUG</option><option>DUVIDA</option><option>MELHORIA</option><option>TREINAMENTO</option><option>CONFIGURACAO</option></select></div>
+        <div class="col-md-2"><select name="Prioridade" class="form-select" aria-label="Prioridade"><option>BAIXA</option><option selected>MEDIA</option><option>ALTA</option><option>CRITICA</option></select></div>
         <div class="col-md-2"><input name="Responsavel" class="form-control" placeholder="Responsável" /></div>
         <div class="col-md-5"><input name="Descricao" class="form-control" placeholder="Descrição" required /></div>
         <div class="col-md-1"><button type="submit" class="btn btn-primary w-100">Salvar</button></div>

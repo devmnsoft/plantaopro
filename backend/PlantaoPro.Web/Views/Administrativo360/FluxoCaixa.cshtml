@@ -169,10 +169,10 @@
             <span class="fw-bold">Movimentos e Projeção do Período</span>
             <form method="get" class="d-flex align-items-center gap-2">
                 <input type="date" name="inicio" class="form-control form-control-sm bg-dark text-light border-secondary"
-                       value="@Model.Inicio.ToString("yyyy-MM-dd")" />
+                       value="@Model.Inicio.ToString("yyyy-MM-dd")" aria-label="Início">
                 <span class="text-white-50">até</span>
                 <input type="date" name="fim" class="form-control form-control-sm bg-dark text-light border-secondary"
-                       value="@Model.Fim.ToString("yyyy-MM-dd")" />
+                       value="@Model.Fim.ToString("yyyy-MM-dd")" aria-label="Fim">
                 <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
             </form>
         </div>

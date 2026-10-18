@@ -5,12 +5,12 @@
 <section class="pp-page-head"><span class="pp-badge">Proposta comercial</span><h1>@Model.Title</h1><p>@Model.Subtitle</p></section>
 <form class="pp-form" method="post" asp-controller="PropostasComerciais" asp-action="Index">
     @Html.AntiForgeryToken()
-    <label>Cliente/lead<input name="cliente" required /></label>
-    <label>Empresa<input name="empresa" required /></label>
-    <label>Plano<input name="plano" value="Profissional" required /></label>
-    <label>Taxa de setup<input type="number" name="setup" min="0" value="1500" /></label>
-    <label>Mensalidade<input type="number" name="mensalidade" min="0" value="1290" /></label>
-    <label>Condições<textarea name="condicoes">Validade de 15 dias. Implantação em até 15 dias úteis.</textarea></label>
+    <label>Cliente/lead<input name="cliente" required aria-label="Cliente"></label>
+    <label>Empresa<input name="empresa" required aria-label="Empresa"></label>
+    <label>Plano<input name="plano" value="Profissional" required aria-label="Plano"></label>
+    <label>Taxa de setup<input type="number" name="setup" min="0" value="1500" aria-label="Setup"></label>
+    <label>Mensalidade<input type="number" name="mensalidade" min="0" value="1290" aria-label="Mensalidade"></label>
+    <label>Condições<textarea name="condicoes" aria-label="Condicoes">Validade de 15 dias. Implantação em até 15 dias úteis.</textarea></label>
     <button class="btn btn-primary" type="submit">Salvar proposta</button>
 </form>
 <partial name="_CommercialStyles" />

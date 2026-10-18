@@ -158,7 +158,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label small">Selecione o Estabelecimento Autorizado</label>
-                        <select name="estabelecimentoId" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                        <select name="estabelecimentoId" class="form-select form-select-sm bg-dark text-light border-secondary" required aria-label="Estabelecimento">
                             @foreach (var est in Model.Estabelecimentos)
                             {
                                 <option value="@est.Id">@est.RazaoSocial (@est.Cnpj)</option>

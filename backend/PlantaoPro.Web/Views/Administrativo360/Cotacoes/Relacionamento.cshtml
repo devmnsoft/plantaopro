@@ -51,7 +51,7 @@
             <form method="get" action="/Administrativo360/Cotacoes/Relacionamento" class="row g-2 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label text-light small">Provedor</label>
-                    <select name="provedor" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <select name="provedor" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Provedor">
                         <option value="">Todos</option>
                         <option value="OPMENEXO" selected="@(Model.Provedor == "OPMENEXO")">OPMENEXO</option>
                         <option value="INPART" selected="@(Model.Provedor == "INPART")">INPART Saúde</option>
@@ -59,7 +59,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-light small">Tipo de Entidade</label>
-                    <select name="tipoEntidade" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <select name="tipoEntidade" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Tipo de entidade">
                         <option value="">Todos</option>
                         <option value="PRODUTO" selected="@(Model.TipoEntidade == "PRODUTO")">Produto / Material</option>
                         <option value="HOSPITAL" selected="@(Model.TipoEntidade == "HOSPITAL")">Hospital / Solicitante</option>
@@ -150,14 +150,14 @@
                     <div class="row g-2 mb-3">
                         <div class="col-md-6">
                             <label class="form-label small">Provedor</label>
-                            <select name="Provedor" class="form-select form-select-sm bg-dark text-light border-secondary">
+                            <select name="Provedor" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Provedor">
                                 <option value="OPMENEXO">OPMENEXO</option>
                                 <option value="INPART">INPART Saúde</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small">Tipo de Entidade</label>
-                            <select name="TipoEntidade" class="form-select form-select-sm bg-dark text-light border-secondary">
+                            <select name="TipoEntidade" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Tipo de entidade">
                                 <option value="PRODUTO">Produto / Material</option>
                                 <option value="HOSPITAL">Hospital / Solicitante</option>
                                 <option value="MEDICO">Médico</option>
@@ -167,15 +167,15 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label small">Código Externo</label>
-                        <input type="text" name="CodigoExterno" class="form-control form-control-sm bg-dark text-light border-secondary" required />
+                        <input type="text" name="CodigoExterno" class="form-control form-control-sm bg-dark text-light border-secondary" required aria-label="Código externo">
                     </div>
                     <div class="mb-3">
                         <label class="form-label small">Descrição Externa</label>
-                        <input type="text" name="DescricaoExterna" class="form-control form-control-sm bg-dark text-light border-secondary" required />
+                        <input type="text" name="DescricaoExterna" class="form-control form-control-sm bg-dark text-light border-secondary" required aria-label="Descrição externa">
                     </div>
                     <div class="mb-3">
                         <label class="form-label small">Descrição Interna (Entidade PlantãoPro)</label>
-                        <input type="text" name="EntidadeInternaDescricao" class="form-control form-control-sm bg-dark text-light border-secondary" required />
+                        <input type="text" name="EntidadeInternaDescricao" class="form-control form-control-sm bg-dark text-light border-secondary" required aria-label="Descrição da entidade interna">
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-md-8">
@@ -184,7 +184,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small">Fator Conversão</label>
-                            <input type="number" step="0.0001" name="FatorConversao" class="form-control form-control-sm bg-dark text-light border-secondary" value="1.0000" />
+                            <input type="number" step="0.0001" name="FatorConversao" class="form-control form-control-sm bg-dark text-light border-secondary" value="1.0000" aria-label="Fator de conversão">
                         </div>
                     </div>
                 </div>

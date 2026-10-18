@@ -7,14 +7,14 @@
     <p class="text-muted">@Model.Subtitle</p>
     <form class="card" method="post" action="/ItensFaturaveis">
         <div class="card-body row g-3">
-            <div class="col-md-6"><label class="form-label">Nome</label><input class="form-control" name="nome" /></div>
-            <div class="col-md-3"><label class="form-label">Código</label><input class="form-control" name="codigo" /></div>
-            <div class="col-md-3"><label class="form-label">Tipo</label><select class="form-select" name="tipo"><option>CONSULTA</option><option>PROCEDIMENTO</option><option>PLANTAO</option><option>TAXA</option><option>REPASSE</option><option>CONVENIO</option><option>PACOTE</option></select></div>
-            <div class="col-md-3"><label class="form-label">Valor padrão</label><input class="form-control" name="valorPadrao" type="number" step="0.01" /></div>
-            <div class="col-md-3"><label class="form-label">Especialidade</label><input class="form-control" name="especialidade" /></div>
-            <div class="col-md-3"><label class="form-label">Convênio</label><input class="form-control" name="convenio" /></div>
-            <div class="col-md-3"><label class="form-label">Status</label><select class="form-select" name="status"><option>ACTIVE</option><option>INACTIVE</option></select></div>
-            <div class="col-12"><label class="form-label">Observações</label><textarea class="form-control" name="observacoes"></textarea></div>
+            <div class="col-md-6"><label class="form-label">Nome</label><input class="form-control" name="nome" aria-label="Nome"></div>
+            <div class="col-md-3"><label class="form-label">Código</label><input class="form-control" name="codigo" aria-label="Codigo"></div>
+            <div class="col-md-3"><label class="form-label">Tipo</label><select class="form-select" name="tipo" aria-label="Tipo"><option>CONSULTA</option><option>PROCEDIMENTO</option><option>PLANTAO</option><option>TAXA</option><option>REPASSE</option><option>CONVENIO</option><option>PACOTE</option></select></div>
+            <div class="col-md-3"><label class="form-label">Valor padrão</label><input class="form-control" name="valorPadrao" type="number" step="0.01" aria-label="Valorpadrao"></div>
+            <div class="col-md-3"><label class="form-label">Especialidade</label><input class="form-control" name="especialidade" aria-label="Especialidade"></div>
+            <div class="col-md-3"><label class="form-label">Convênio</label><input class="form-control" name="convenio" aria-label="Convenio"></div>
+            <div class="col-md-3"><label class="form-label">Status</label><select class="form-select" name="status" aria-label="Status"><option>ACTIVE</option><option>INACTIVE</option></select></div>
+            <div class="col-12"><label class="form-label">Observações</label><textarea class="form-control" name="observacoes" aria-label="Observações"></textarea></div>
         </div>
         <div class="card-footer d-flex gap-2"><button class="btn btn-primary" type="submit">Salvar</button><a class="btn btn-outline-secondary" href="/ItensFaturaveis">Cancelar</a></div>
     </form>

@@ -31,13 +31,13 @@
 
     <form method="get" class="action-filter" data-filter-form>
         <input type="hidden" name="tab" value="@q.Tab" />
-        <label>Prioridade<select name="priority"><option value="">Todas</option>@foreach(var value in new[]{"CRITICA","ALTA","NORMAL","BAIXA"}){<option selected="@(q.Priority == value)">@value</option>}</select></label>
-        <label>Módulo<select name="module"><option value="">Todos</option>@foreach(var value in new[]{"OPERACAO","PRESENCA","OCORRENCIAS","CLINICO","FINANCEIRO"}){<option selected="@(q.Module == value)">@value</option>}</select></label>
-        <label>Status<select name="status"><option value="">Ativos</option>@foreach(var value in new[]{"ATIVA","PENDENTE","VENCIDA","BLOQUEADA","RESOLVIDA"}){<option selected="@(q.Status == value)">@value</option>}</select></label>
-        <label>Prazo<select name="due"><option value="">Qualquer prazo</option><option value="hoje" selected="@(q.Due == "hoje")">Hoje</option><option value="atrasado" selected="@(q.Due == "atrasado")">Atrasado</option></select></label>
-        <label>Período — de<input type="date" name="periodFrom" value="@q.PeriodFrom?.ToString("yyyy-MM-dd")" /></label>
-        <label>Período — até<input type="date" name="periodTo" value="@q.PeriodTo?.ToString("yyyy-MM-dd")" /></label>
-        <label class="action-filter__check"><input type="checkbox" name="mine" value="true" checked="@q.Mine" /> Atribuídas a mim</label>
+        <label>Prioridade<select name="priority" aria-label="Prioridade"><option value="">Todas</option>@foreach(var value in new[]{"CRITICA","ALTA","NORMAL","BAIXA"}){<option selected="@(q.Priority == value)">@value</option>}</select></label>
+        <label>Módulo<select name="module" aria-label="Module"><option value="">Todos</option>@foreach(var value in new[]{"OPERACAO","PRESENCA","OCORRENCIAS","CLINICO","FINANCEIRO"}){<option selected="@(q.Module == value)">@value</option>}</select></label>
+        <label>Status<select name="status" aria-label="Status"><option value="">Ativos</option>@foreach(var value in new[]{"ATIVA","PENDENTE","VENCIDA","BLOQUEADA","RESOLVIDA"}){<option selected="@(q.Status == value)">@value</option>}</select></label>
+        <label>Prazo<select name="due" aria-label="Due"><option value="">Qualquer prazo</option><option value="hoje" selected="@(q.Due == "hoje")">Hoje</option><option value="atrasado" selected="@(q.Due == "atrasado")">Atrasado</option></select></label>
+        <label>Período — de<input type="date" name="periodFrom" value="@q.PeriodFrom?.ToString("yyyy-MM-dd")" aria-label="Periodfrom"></label>
+        <label>Período — até<input type="date" name="periodTo" value="@q.PeriodTo?.ToString("yyyy-MM-dd")" aria-label="Periodto"></label>
+        <label class="action-filter__check"><input type="checkbox" name="mine" value="true" checked="@q.Mine" aria-label="Mine"> Atribuídas a mim</label>
         <button class="btn btn-primary" type="submit">Aplicar filtros</button>
         <a class="btn btn-outline-secondary" href="@Url.Action("Index", new { tab = q.Tab })">Limpar</a>
     </form>

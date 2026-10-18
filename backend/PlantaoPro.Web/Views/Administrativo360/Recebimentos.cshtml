@@ -146,7 +146,7 @@
                 <div class="row g-3 mb-3">
                     <div class="col-12">
                         <label class="form-label small fw-bold">Documento Fiscal XML da Central de XML (opcional)</label>
-                        <select name="documentoXmlId" class="form-select form-select-sm bg-black text-light border-secondary">
+                        <select name="documentoXmlId" class="form-select form-select-sm bg-black text-light border-secondary" aria-label="Documento fiscal">
                             <option value="">Sem documento XML vinculado (registro manual)</option>
                             @foreach (var doc in Model.DocumentosXml)
                             {
@@ -170,7 +170,7 @@
                     <div class="row g-2 mb-2">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Local de Armazenamento (Destino Interno) *</label>
-                            <select name="localId" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                            <select name="localId" class="form-select form-select-sm bg-dark text-light border-secondary" required aria-label="Local">
                                 <option value="">Selecione o Almoxarifado...</option>
                                 @foreach (var loc in Model.Locais)
                                 {
@@ -180,7 +180,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small fw-bold">Quantidade Recebida *</label>
-                            <input type="number" step="1" min="1" name="quantidade" value="10" class="form-control form-control-sm bg-dark text-light border-secondary" required />
+                            <input type="number" step="1" min="1" name="quantidade" value="10" class="form-control form-control-sm bg-dark text-light border-secondary" required aria-label="Quantidade">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small fw-bold">Lote do Fabricante *</label>
@@ -188,7 +188,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Data de Validade (ANVISA)</label>
-                            <input type="date" name="validade" value="@DateTime.Today.AddYears(2).ToString("yyyy-MM-dd")" class="form-control form-control-sm bg-dark text-light border-secondary" />
+                            <input type="date" name="validade" value="@DateTime.Today.AddYears(2).ToString("yyyy-MM-dd")" class="form-control form-control-sm bg-dark text-light border-secondary" aria-label="Validade">
                             <small class="text-secondary">Lotes com validade vencida serão bloqueados automaticamente.</small>
                         </div>
                         <div class="col-md-6">

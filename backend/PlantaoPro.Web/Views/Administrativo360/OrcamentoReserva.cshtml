@@ -156,7 +156,7 @@
                                                     <input type="hidden" name="produtoId" value="@item.ProdutoId" />
                                                     <input type="hidden" name="loteId" value="@lote.LoteId" />
                                                     <input type="hidden" name="localId" value="@lote.LocalId" />
-                                                    <input type="number" step="0.0001" min="0.0001" max="@Math.Min(item.FaltaAtender, lote.Disponivel)" name="quantidade" value="@sugestaoQtd.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture)" class="form-control form-control-sm bg-black text-light border-secondary" style="width: 100px;" required>
+                                                    <input type="number" step="0.0001" min="0.0001" max="@Math.Min(item.FaltaAtender, lote.Disponivel)" name="quantidade" value="@sugestaoQtd.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture)" class="form-control form-control-sm bg-black text-light border-secondary" style="width: 100px;" required aria-label="Quantidade">
                                                     <button type="submit" class="btn btn-sm btn-success fw-bold text-nowrap">
                                                         <i class="bi bi-bookmark-plus me-1"></i> Reservar
                                                     </button>

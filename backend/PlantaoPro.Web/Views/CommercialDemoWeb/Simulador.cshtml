@@ -6,13 +6,13 @@
 <form class="pp-form" asp-controller="CommercialDemoWeb" asp-action="SimuladorResultado" method="post">
     @Html.AntiForgeryToken()
     <div class="pp-progress"><span data-progress="75"></span></div>
-    <label>Médicos cadastrados<input type="number" name="medicos" min="1" value="60" required /></label>
-    <label>Hospitais/unidades<input type="number" name="unidades" min="1" value="3" required /></label>
-    <label>Plantões por mês<input type="number" name="plantoesMes" min="1" value="220" required /></label>
-    <label><input type="checkbox" name="whiteLabel" value="true" /> Deseja white label?</label>
-    <label><input type="checkbox" name="api" value="true" /> Deseja API?</label>
-    <label><input type="checkbox" name="bi" value="true" /> Deseja BI?</label>
-    <label><input type="checkbox" name="revenda" value="true" /> Deseja revender para outros clientes?</label>
+    <label>Médicos cadastrados<input type="number" name="medicos" min="1" value="60" required aria-label="Medicos"></label>
+    <label>Hospitais/unidades<input type="number" name="unidades" min="1" value="3" required aria-label="Unidades"></label>
+    <label>Plantões por mês<input type="number" name="plantoesMes" min="1" value="220" required aria-label="Plantoesmes"></label>
+    <label><input type="checkbox" name="whiteLabel" value="true" aria-label="Whitelabel"> Deseja white label?</label>
+    <label><input type="checkbox" name="api" value="true" aria-label="Api"> Deseja API?</label>
+    <label><input type="checkbox" name="bi" value="true" aria-label="Bi"> Deseja BI?</label>
+    <label><input type="checkbox" name="revenda" value="true" aria-label="Revenda"> Deseja revender para outros clientes?</label>
     <button class="btn btn-primary btn-lg" type="submit">Calcular plano ideal</button>
 </form>
 <partial name="_CommercialStyles" />

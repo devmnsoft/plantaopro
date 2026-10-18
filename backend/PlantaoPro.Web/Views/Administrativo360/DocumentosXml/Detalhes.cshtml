@@ -232,7 +232,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label small">Pedido de compra</label>
-                        <select name="PedidoId" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                        <select name="PedidoId" class="form-select form-select-sm bg-dark text-light border-secondary" required aria-label="Pedido">
                             <option value="">-- Selecione o Pedido de Compra --</option>
                             @foreach (var p in Model.Pedidos)
                             {
@@ -242,7 +242,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label small">Local de estoque</label>
-                        <select name="LocalId" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                        <select name="LocalId" class="form-select form-select-sm bg-dark text-light border-secondary" required aria-label="Local">
                             <option value="">-- Selecione o Local de Estoque --</option>
                             @foreach (var l in Model.Locais)
                             {
@@ -277,7 +277,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label small">Tipo de Manifestação</label>
-                        <select name="tipoManifestacao" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                        <select name="tipoManifestacao" class="form-select form-select-sm bg-dark text-light border-secondary" required aria-label="Tipomanifestacao">
                             <option value="CIENCIA_OPERACAO">Ciência da Operação</option>
                             <option value="CONFIRMACAO_OPERACAO">Confirmação da Operação</option>
                             <option value="DESCONHECIMENTO">Desconhecimento da Operação</option>

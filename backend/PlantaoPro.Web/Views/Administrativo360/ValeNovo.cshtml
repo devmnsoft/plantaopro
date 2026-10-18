@@ -140,7 +140,7 @@
                             <!-- Primeira linha padrão -->
                             <tr class="item-linha">
                                 <td>
-                                    <select name="Itens[0].ProdutoId" class="form-select form-select-sm bg-dark text-light border-secondary select-prod" required>
+                                    <select name="Itens[0].ProdutoId" class="form-select form-select-sm bg-dark text-light border-secondary select-prod" required aria-label="Produto">
                                         <option value="">-- Selecione o Produto --</option>
                                         @foreach (var prod in Model.ProdutosDisponiveis)
                                         {
@@ -149,7 +149,7 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <select name="Itens[0].LoteId" class="form-select form-select-sm bg-dark text-light border-secondary select-lote" required>
+                                    <select name="Itens[0].LoteId" class="form-select form-select-sm bg-dark text-light border-secondary select-lote" required aria-label="Lote">
                                         <option value="">-- Selecione o Lote --</option>
                                         @foreach (var lote in Model.LotesDisponiveis)
                                         {
@@ -158,7 +158,7 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <select name="Itens[0].ReservaId" class="form-select form-select-sm bg-dark text-light border-secondary select-reserva">
+                                    <select name="Itens[0].ReservaId" class="form-select form-select-sm bg-dark text-light border-secondary select-reserva" aria-label="Reservaid">
                                         <option value="">-- Sem reserva --</option>
                                         @foreach (var res in Model.ReservasAtivas)
                                         {
@@ -167,10 +167,10 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <input type="number" step="0.0001" min="0.0001" name="Itens[0].QuantidadeSolicitada" value="1.0000" class="form-control form-control-sm bg-dark text-light border-secondary text-end" required />
+                                    <input type="number" step="0.0001" min="0.0001" name="Itens[0].QuantidadeSolicitada" value="1.0000" class="form-control form-control-sm bg-dark text-light border-secondary text-end" required aria-label="Quantidadesolicitada">
                                 </td>
                                 <td>
-                                    <input type="number" step="0.01" min="0" name="Itens[0].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-dark text-light border-secondary text-end" />
+                                    <input type="number" step="0.01" min="0" name="Itens[0].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-dark text-light border-secondary text-end" aria-label="Precounitario">
                                 </td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-sm btn-outline-danger btn-remover" title="Remover item">
@@ -247,11 +247,11 @@
             var index = tbody.querySelectorAll(".item-linha").length;
             var tr = document.createElement("tr");
             tr.className = "item-linha";
-            tr.innerHTML = '<td><select name="Itens[' + index + '].ProdutoId" class="form-select form-select-sm bg-dark text-light border-secondary select-prod" required>' + prodHtml + '</select></td>' +
-                '<td><select name="Itens[' + index + '].LoteId" class="form-select form-select-sm bg-dark text-light border-secondary select-lote" required>' + loteHtml + '</select></td>' +
-                '<td><select name="Itens[' + index + '].ReservaId" class="form-select form-select-sm bg-dark text-light border-secondary select-reserva">' + reservaHtml + '</select></td>' +
-                '<td><input type="number" step="0.0001" min="0.0001" name="Itens[' + index + '].QuantidadeSolicitada" value="1.0000" class="form-control form-control-sm bg-dark text-light border-secondary text-end" required /></td>' +
-                '<td><input type="number" step="0.01" min="0" name="Itens[' + index + '].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-dark text-light border-secondary text-end" /></td>' +
+            tr.innerHTML = '<td><select name="Itens[' + index + '].ProdutoId" class="form-select form-select-sm bg-dark text-light border-secondary select-prod" required aria-label="Produto">' + prodHtml + '</select></td>' +
+                '<td><select name="Itens[' + index + '].LoteId" class="form-select form-select-sm bg-dark text-light border-secondary select-lote" required aria-label="Lote">' + loteHtml + '</select></td>' +
+                '<td><select name="Itens[' + index + '].ReservaId" class="form-select form-select-sm bg-dark text-light border-secondary select-reserva" aria-label="Reservaid">' + reservaHtml + '</select></td>' +
+                '<td><input type="number" step="0.0001" min="0.0001" name="Itens[' + index + '].QuantidadeSolicitada" value="1.0000" class="form-control form-control-sm bg-dark text-light border-secondary text-end" required aria-label="Quantidadesolicitada"></td>' +
+                '<td><input type="number" step="0.01" min="0" name="Itens[' + index + '].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-dark text-light border-secondary text-end" aria-label="Precounitario"></td>' +
                 '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-remover" title="Remover item"><i class="bi bi-trash"></i></button></td>';
             tbody.appendChild(tr);
         });

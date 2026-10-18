@@ -7,7 +7,7 @@
 
 <form method="get" class="row g-2 mb-3">
     <div class="col-md-4">
-        <select name="status" class="form-select">
+        <select name="status" class="form-select" aria-label="Status">
             <option value="">Todos os status</option>
             <option value="EM_IMPLANTACAO" selected="@(Model?.Status == "EM_IMPLANTACAO")">Em implantação</option>
             <option value="HOMOLOGACAO" selected="@(Model?.Status == "HOMOLOGACAO")">Homologação</option>

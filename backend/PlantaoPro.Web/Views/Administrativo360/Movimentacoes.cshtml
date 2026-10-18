@@ -128,7 +128,7 @@
 
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Local de Destino *</label>
-                    <select name="destinoId" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                    <select name="destinoId" class="form-select form-select-sm bg-black text-light border-secondary" required aria-label="Destino">
                         <option value="">Selecione o Local de Destino...</option>
                         @foreach (var loc in Model.Locais)
                         {

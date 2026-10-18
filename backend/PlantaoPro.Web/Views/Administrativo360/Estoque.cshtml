@@ -90,7 +90,7 @@
                 </div>
                 <div class="col-6 col-md-3">
                     <label class="form-label small text-secondary mb-1">Condição Técnica</label>
-                    <select name="condicao" class="form-select form-select-sm bg-black text-light border-secondary">
+                    <select name="condicao" class="form-select form-select-sm bg-black text-light border-secondary" aria-label="Condição">
                         <option value="">Todas as Condições</option>
                         <option value="LIBERADO" selected="@(Model.Condicao == "LIBERADO")">Liberado</option>
                         <option value="QUARENTENA" selected="@(Model.Condicao == "QUARENTENA")">Quarentena</option>
@@ -100,7 +100,7 @@
                 </div>
                 <div class="col-6 col-md-3">
                     <label class="form-label small text-secondary mb-1">Local de Armazenamento</label>
-                    <select name="localId" class="form-select form-select-sm bg-black text-light border-secondary">
+                    <select name="localId" class="form-select form-select-sm bg-black text-light border-secondary" aria-label="Local">
                         <option value="">Todos os Locais</option>
                         @foreach (var loc in Model.Locais)
                         {
@@ -109,7 +109,7 @@
                     </select>
                 </div>
                 <div class="col-12 col-md-1">
-                    <button type="submit" class="btn btn-outline-info btn-sm w-100"><i class="bi bi-search"></i></button>
+                    <button type="submit" class="btn btn-outline-info btn-sm w-100" aria-label="Buscar"><i class="bi bi-search"></i></button>
                 </div>
             </form>
         </div>

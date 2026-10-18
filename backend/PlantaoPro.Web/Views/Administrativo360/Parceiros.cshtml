@@ -56,7 +56,7 @@
                     </div>
                 </div>
                 <div class="col-md-4 col-lg-3">
-                    <select name="papel" class="form-select form-select-sm">
+                    <select name="papel" class="form-select form-select-sm" aria-label="Papel">
                         <option value="">Todos os Papéis</option>
                         <option value="HOSPITAL" selected="@(Model.Papel == "HOSPITAL")">Hospitais / Unidades</option>
                         <option value="PAGADOR" selected="@(Model.Papel == "PAGADOR")">Pagadores / Convênios</option>
@@ -159,7 +159,7 @@
                                 </td>
                                 <td class="text-end pe-3">
                                     <button class="btn btn-outline-primary btn-sm py-0 px-2 me-1" type="button"
-                                            onclick="editarParceiro('@p.Id', '@p.Nome', '@p.Documento', @p.Fornecedor.ToString().ToLower(), @p.Ativo.ToString().ToLower(), @p.EhHospital.ToString().ToLower(), @p.EhPagador.ToString().ToLower(), @p.EhCliente.ToString().ToLower())">
+                                            onclick="editarParceiro('@p.Id', '@p.Nome', '@p.Documento', @p.Fornecedor.ToString().ToLower(), @p.Ativo.ToString().ToLower(), @p.EhHospital.ToString().ToLower(), @p.EhPagador.ToString().ToLower(), @p.EhCliente.ToString().ToLower())" aria-label="Editar parceiro">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     <form method="post" asp-action="AlternarStatusParceiro" class="d-inline" onsubmit="return desabilitarAoEnviar(this);">

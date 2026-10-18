@@ -113,7 +113,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-light small">Regime fiscal</label>
-                    <select name="regimeFiscal" class="form-select form-select-sm bg-black text-light border-secondary">
+                    <select name="regimeFiscal" class="form-select form-select-sm bg-black text-light border-secondary" aria-label="Regime fiscal">
                         <option value="">Não definido (pendência P2)</option>
                         @Opcao("SIMPLES_NACIONAL", Model.RegimeFiscal, "Simples Nacional")
                         @Opcao("LUCRO_PRESUMIDO", Model.RegimeFiscal, "Lucro Presumido")
@@ -122,7 +122,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-light small">Operação fiscal principal</label>
-                    <select name="operacaoFiscal" class="form-select form-select-sm bg-black text-light border-secondary">
+                    <select name="operacaoFiscal" class="form-select form-select-sm bg-black text-light border-secondary" aria-label="Operação fiscal">
                         <option value="">Não definida (pendência P2)</option>
                         @Opcao("VENDA", Model.OperacaoFiscal, "Venda")
                         @Opcao("REMESSA", Model.OperacaoFiscal, "Remessa")
@@ -135,7 +135,7 @@
             <div class="row g-2 mb-3">
                 <div class="col-md-3">
                     <label class="form-label text-light small">Provedor de emissão</label>
-                    <select name="provedor" class="form-select form-select-sm bg-black text-light border-secondary">
+                    <select name="provedor" class="form-select form-select-sm bg-black text-light border-secondary" aria-label="Provedor">
                         <option value="">Não definido (pendência P2)</option>
                         @Opcao("SEFAZ_DIRETO", Model.Provedor, "Direto na Sefaz")
                         @Opcao("OPMENEXO", Model.Provedor, "OpMenexo")
@@ -145,7 +145,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-light small">Ambiente</label>
-                    <select name="ambiente" class="form-select form-select-sm bg-black text-light border-secondary">
+                    <select name="ambiente" class="form-select form-select-sm bg-black text-light border-secondary" aria-label="Ambiente">
                         @Opcao("PENDENTE", Model.Ambiente, "Pendente de definição")
                         @Opcao("HOMOLOGACAO", Model.Ambiente, "Homologação")
                         @Opcao("PRODUCAO", Model.Ambiente, "Produção")

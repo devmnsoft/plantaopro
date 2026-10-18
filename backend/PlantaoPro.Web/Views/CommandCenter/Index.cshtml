@@ -1,6 +1,6 @@
 @model PlantaoPro.Web.Models.ManagerCommandCenterViewModel
 @{
-    ViewData["Title"] = "Command Center";
+    ViewData["Title"] = UiText.L("Nav.CommandCenter");
     var isGlobal = ViewBag.IsGlobal as bool? == true;
     var definicoesCC = Model.Summary?.Definicoes ?? Array.Empty<PlantaoPro.Web.Models.KpiDefinicaoDto>();
 }
@@ -8,7 +8,7 @@
     <header class="cc-hero">
         <div>
             <span class="cc-eyebrow">@(isGlobal ? "Plataforma" : "Operação em tempo real")</span>
-            <h1>Command Center</h1>
+            <h1>@UiText.L("Nav.CommandCenter")</h1>
             <p>@(isGlobal
                 ? "Visão global de risco, cobertura e clientes sem misturar contextos."
                 : "Antecipe riscos, proteja a cobertura e concentre decisões do dia em uma visão segura.")</p>

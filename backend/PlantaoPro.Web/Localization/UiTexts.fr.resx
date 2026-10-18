@@ -223,6 +223,12 @@
   <data name="Nav.Pendencias" xml:space="preserve">
     <value>Centre des Pendants</value>
   </data>
+  <data name="Nav.CommandCenter" xml:space="preserve">
+    <value>Centre d'opérations</value>
+  </data>
+  <data name="Nav.MinhaAssinatura" xml:space="preserve">
+    <value>Mon abonnement</value>
+  </data>
   <data name="Nav.SectionOperation" xml:space="preserve">
     <value>Opérations</value>
   </data>
@@ -1481,7 +1487,7 @@
     <value>Mise en œuvre générale</value>
   </data>
   <data name="Onboarding.PageTitle" xml:space="preserve">
-    <value>Onboarding SaaS</value>
+    <value>Mise en route</value>
   </data>
   <data name="Onboarding.Eyebrow" xml:space="preserve">
     <value>Mise en œuvre pilotée par le contrat</value>

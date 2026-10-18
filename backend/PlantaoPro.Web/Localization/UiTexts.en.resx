@@ -223,6 +223,12 @@
   <data name="Nav.Pendencias" xml:space="preserve">
     <value>Pending Items</value>
   </data>
+  <data name="Nav.CommandCenter" xml:space="preserve">
+    <value>Operations center</value>
+  </data>
+  <data name="Nav.MinhaAssinatura" xml:space="preserve">
+    <value>My subscription</value>
+  </data>
   <data name="Nav.SectionOperation" xml:space="preserve">
     <value>Operations</value>
   </data>
@@ -1481,7 +1487,7 @@
     <value>General implementation</value>
   </data>
   <data name="Onboarding.PageTitle" xml:space="preserve">
-    <value>SaaS onboarding</value>
+    <value>Setup</value>
   </data>
   <data name="Onboarding.Eyebrow" xml:space="preserve">
     <value>Contract-driven implementation</value>

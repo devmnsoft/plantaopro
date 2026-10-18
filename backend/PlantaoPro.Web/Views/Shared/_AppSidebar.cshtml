@@ -40,7 +40,7 @@
             <div class="nav-section-title"><span>@UiText.L("Nav.SectionOperation")</span></div>
             @if (canManage || User.IsInRole(RolesConstants.Coordenacao) || User.IsInRole(RolesConstants.Coordenador))
             {
-                <a class="nav-link-app @Active("CommandCenter")" asp-controller="CommandCenter" asp-action="Index"><app-icon name="Dashboard" size="19" /><span>Command Center</span></a>
+                <a class="nav-link-app @Active("CommandCenter")" asp-controller="CommandCenter" asp-action="Index"><app-icon name="Dashboard" size="19" /><span>@UiText.L("Nav.CommandCenter")</span></a>
             }
             @if (Can("PLANTOES")) { <a class="nav-link-app @Active("Plantoes")" asp-controller="Plantoes" asp-action="Index"><app-icon name="Shift" size="19" /><span>@UiText.L("Nav.Plantoes")</span></a> }
             @if (Can("AGENDA")) { <a class="nav-link-app @Active("Agenda")" asp-controller="Agenda" asp-action="Index"><app-icon name="Calendar" size="19" /><span>@UiText.L("Nav.Agenda")</span></a> }
@@ -83,6 +83,11 @@
             @if (Can("PERFIS") && !isGlobalAdmin) { <a class="nav-link-app @Active("Perfis")" asp-controller="Perfis" asp-action="Index"><app-icon name="User" size="19" /><span>@UiText.L("Nav.Perfis")</span></a> }
             @if (Can("SEGURANCA")) { <a class="nav-link-app @Active("Permissoes")" asp-controller="Permissoes" asp-action="Matriz"><app-icon name="Security" size="19" /><span>@UiText.L("Nav.Permissoes")</span></a> }
             @if (Can("CONFIGURACOES")) { <a class="nav-link-app @Active("Configuracoes")" asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="19" /><span>@UiText.L("Nav.Configuracoes")</span></a> }
+            @* R43 (E0 navegação): Implantação e Minha Assinatura ficavam fora do menu — o admin
+               só os encontrava por atalho. ONBOARDING/ASSINATURAS são módulos core do admin da
+               conta (TenantAdministrationModules), sem contratação separada. *@
+            @if (Can("ONBOARDING") && !isGlobalAdmin) { <a class="nav-link-app @Active("Onboarding")" asp-controller="Onboarding" asp-action="Index"><app-icon name="WorkItem" size="19" /><span>@UiText.L("Onboarding.PageTitle")</span></a> }
+            @if (Can("ASSINATURAS") && !isGlobalAdmin) { <a class="nav-link-app @Active("MinhaAssinatura")" asp-controller="MinhaAssinatura" asp-action="Index"><app-icon name="Payment" size="19" /><span>@UiText.L("Nav.MinhaAssinatura")</span></a> }
         }
         @if (isGlobalAdmin)
         {

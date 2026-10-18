@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
+using PlantaoPro.Web.Security;
 using PlantaoPro.Web.Services;
 
 namespace PlantaoPro.Web.Controllers;
@@ -25,6 +26,18 @@ public sealed class MeuDiaController : Controller
             HelpContext = "meu-dia"
         };
         var token = HttpContext.Session.GetString("JwtToken") ?? string.Empty;
-        return View(await _productivity.GetMyDayAsync(token, cancellationToken));
+        var model = await _productivity.GetMyDayAsync(token, cancellationToken);
+        // R41 (E9 primeira experiência): quem administra a conta vê no Meu Dia o andamento da
+        // implantação. Leitura best-effort — se falhar, a página segue normal sem o aviso.
+        if (User.IsInRole(RolesConstants.AdministradorCliente) || User.IsInRole(RolesConstants.Administrador))
+        {
+            var (ok, status) = await _productivity.GetOnboardingStatusAsync(token, cancellationToken);
+            if (ok)
+            {
+                model.Onboarding = status;
+                model.OnboardingCarregado = true;
+            }
+        }
+        return View(model);
     }
 }

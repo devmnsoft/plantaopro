@@ -22,6 +22,32 @@ public sealed class ProductivityWebService
     public Task<ProductivityPageViewModel> GetMyDayAsync(string token, CancellationToken ct)
         => GetAsync(token, "api/produtividade/meu-dia", ct);
 
+    /// <summary>
+    /// Leitura best-effort do estado da implantação (api/onboarding/status) para o aviso de
+    /// primeira experiência no Meu Dia. Falha técnica/401/403 devolve Ok=false (aviso fica
+    /// oculto, sem derrubar a página); 404 = implantação ainda não iniciada (Ok=true sem status).
+    /// </summary>
+    public async Task<(bool Ok, OnboardingStatusWebModel? Status)> GetOnboardingStatusAsync(string token, CancellationToken ct)
+    {
+        try
+        {
+            var client = CreateClient(token);
+            using var response = await client.GetAsync("api/onboarding/status", ct);
+            if (response.StatusCode == HttpStatusCode.NotFound) return (true, null);
+            if (!response.IsSuccessStatusCode) return (false, null);
+            return (true, await response.Content.ReadFromJsonAsync<OnboardingStatusWebModel>(Json, ct));
+        }
+        catch (OperationCanceledException)
+        {
+            return (false, null);
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogDebug(exception, "Productivity: leitura de api/onboarding/status indisponível agora (banner permanece oculto).");
+            return (false, null);
+        }
+    }
+
     public async Task<HttpResponseMessage> SnoozeAsync(string token, string key, DateTimeOffset until, CancellationToken ct)
     {
         var client = CreateClient(token);

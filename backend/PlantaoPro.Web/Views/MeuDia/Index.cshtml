@@ -11,6 +11,35 @@
     var definicoesMeuDia = Model.Summary?.Definicoes ?? Enumerable.Empty<PlantaoPro.Web.Models.KpiDefinicaoDto>();
 }
 <div class="pp-page my-day">
+    @if (Model.OnboardingCarregado)
+    {
+        var onboard = Model.Onboarding;
+        if (onboard is null || !string.Equals(onboard.Status, "FINALIZADO", StringComparison.OrdinalIgnoreCase))
+        {
+            <section class="card border-0 mb-3" aria-label="Andamento da implantação">
+                <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3 py-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-rocket-takeoff text-primary fs-4" aria-hidden="true"></i>
+                        @if (onboard is null)
+                        {
+                            <div>
+                                <strong>Prepare sua conta para o primeiro uso</strong>
+                                <span class="d-block text-muted small">A lista de implantação organiza tudo o que falta: dados da empresa, primeiro acesso da equipe e os primeiros lançamentos.</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div>
+                                <strong>Sua implantação está @onboard.Progresso% pronta</strong>
+                                <span class="d-block text-muted small">@(string.IsNullOrWhiteSpace(onboard.ProximaAcao) ? "Continue a lista para terminar de preparar sua conta." : onboard.ProximaAcao)</span>
+                            </div>
+                        }
+                    </div>
+                    <a class="btn btn-primary btn-sm" asp-controller="Onboarding" asp-action="Index">@(onboard is null ? "Ver o passo a passo" : "Continuar de onde parou")</a>
+                </div>
+            </section>
+        }
+    }
     <section class="day-command-hero">
         <div>
             <span class="pp-section-kicker">@now.ToString("dddd, dd 'de' MMMM")</span>

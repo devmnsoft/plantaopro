@@ -15,6 +15,10 @@ public sealed class ProductivityPageViewModel
     public string? Error { get; set; }
     /// <summary>Classificação técnica da falha (TIMEOUT, TRANSPORTE, NAO_AUTENTICADO, SEM_PERMISSAO, FALHA_SERVIDOR, RESPOSTA_INVALIDA, CANCELADO). Ausente sem erro.</summary>
     public string? ErrorKind { get; set; }
+    /// <summary>R41: estado da implantação da instituição (api/onboarding/status), carregado com best-effort para o admin da conta. Nulo quando não iniciado ou quando a leitura falhou.</summary>
+    public OnboardingStatusWebModel? Onboarding { get; set; }
+    /// <summary>R41: true apenas quando a leitura de onboarding foi bem-sucedida (status presente ou 404 legítimo).</summary>
+    public bool OnboardingCarregado { get; set; }
 }
 
 public sealed class ProductivityItemViewModel

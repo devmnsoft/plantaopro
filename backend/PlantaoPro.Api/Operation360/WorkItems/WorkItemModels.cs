@@ -19,7 +19,9 @@ public static class WorkItemStatus
 public sealed record WorkItemDto(Guid Id, string Tipo, string Titulo, string Descricao, string Status,
     string Prioridade, Guid? ResponsavelId, Guid? UnidadeId, int Posicao, DateTime? VenceEm,
     int Versao, DateTime CriadoEm, DateTime AtualizadoEm);
-public sealed record WorkItemHistoryDto(Guid Id, string Acao, string? Origem, string? Destino, Guid UsuarioId, DateTimeOffset CriadoEm);
+// R19 (r19b1 F7e): mesmo contrato do WorkItemDto — history e materializado pelo Dapper direto da
+// tabela work_item_history (criado_em timestamptz); DTOFF no parametro quebraria o match.
+public sealed record WorkItemHistoryDto(Guid Id, string Acao, string? Origem, string? Destino, Guid UsuarioId, DateTime CriadoEm);
 public sealed record WorkItemMoveRequest(Guid ItemId, string Source, string Destination, int Position, int Version, Guid IdempotencyKey);
 public sealed record WorkItemVersionRequest(int Version, Guid IdempotencyKey);
 public sealed record WorkItemCommentRequest(string Comment, int Version, Guid IdempotencyKey);

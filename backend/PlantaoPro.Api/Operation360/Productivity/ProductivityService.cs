@@ -1,6 +1,8 @@
 using Dapper; using Npgsql;
 namespace PlantaoPro.Api.Operation360.Productivity;
-public sealed record ProductivityItemDto(Guid Id,string Tipo,Guid? ReferenciaId,string Titulo,string Url,DateTimeOffset Data);
+// R19 (r19b1 F7e): Data e materializado pelo Dapper direto de user_favorites/recent_items
+// (timestamptz); DTOFF no parametro do record quebraria o match do construtor.
+public sealed record ProductivityItemDto(Guid Id,string Tipo,Guid? ReferenciaId,string Titulo,string Url,DateTime Data);
 public sealed record FavoriteRequest(string Tipo,Guid? ReferenciaId,string Titulo,string Url);
 public interface IProductivityRepository { Task<IReadOnlyList<ProductivityItemDto>> FavoritesAsync(Guid tenantId,Guid userId,CancellationToken ct); Task<ProductivityItemDto> AddFavoriteAsync(Guid tenantId,Guid userId,FavoriteRequest request,CancellationToken ct); Task<bool> DeleteFavoriteAsync(Guid tenantId,Guid userId,Guid id,CancellationToken ct); Task<IReadOnlyList<ProductivityItemDto>> RecentAsync(Guid tenantId,Guid userId,CancellationToken ct); Task<int> ClearRecentAsync(Guid tenantId,Guid userId,Guid? id,CancellationToken ct); }
 public sealed class ProductivityRepository:IProductivityRepository

@@ -117,7 +117,7 @@
                         @if (Model.Count == 0)
                         {
                             <tr>
-                                <td colspan="9" class="text-center py-4 text-muted">
+                                <td colspan="9" class="text-center py-4 text-white-50">
                                     Nenhuma cirurgia operacional encontrada com os filtros informados.
                                 </td>
                             </tr>
@@ -145,7 +145,7 @@
                                         @c.DataPrevista.ToString("dd/MM/yyyy")
                                         @if (c.HoraPrevista.HasValue)
                                         {
-                                            <span class="text-muted d-block small">@c.HoraPrevista.Value.ToString("HH:mm")</span>
+                                            <span class="text-white-50 d-block small">@c.HoraPrevista.Value.ToString("HH:mm")</span>
                                         }
                                     </td>
                                     <td>@c.Hospital</td>
@@ -158,7 +158,7 @@
                                         }
                                         else
                                         {
-                                            <span class="text-muted">—</span>
+                                            <span class="text-white-50">—</span>
                                         }
                                     </td>
                                     <td>@c.LocalDestino</td>

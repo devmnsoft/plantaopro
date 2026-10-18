@@ -66,7 +66,7 @@
                     <a asp-action="ComissoesPendentes" class="btn btn-sm btn-outline-secondary">Limpar</a>
                 </div>
                 <div class="col-md-6 text-end">
-                    <span class="text-muted small">Total Pendente Listado: </span>
+                    <span class="text-white-50 small">Total Pendente Listado: </span>
                     <strong class="fs-5 font-monospace text-warning">@totalComissao.ToString("C2", ptBr)</strong>
                 </div>
             </form>
@@ -76,7 +76,7 @@
     <!-- Lista e Formulário de Geração de AP -->
     @if (Model.Comissoes.Count == 0)
     {
-        <div class="card bg-dark border-secondary text-light p-5 text-center text-muted">
+        <div class="card bg-dark border-secondary text-light p-5 text-center">
             <i class="bi bi-check-circle fs-1 text-success mb-2"></i>
             <p class="mb-0">Não há comissões pendentes de geração de contas a pagar.</p>
         </div>

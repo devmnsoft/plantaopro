@@ -61,7 +61,7 @@
                         @if (!Model.Contas.Any())
                         {
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">
+                                <td colspan="8" class="text-center py-4 text-white-50">
                                     Nenhuma conta de portal configurada.
                                 </td>
                             </tr>
@@ -76,7 +76,7 @@
                                     <div>@(c.UsuarioAcesso ?? "Não informado")</div>
                                     @if (!string.IsNullOrWhiteSpace(c.IdentificadorExterno))
                                     {
-                                        <div class="small text-muted">ID: @c.IdentificadorExterno</div>
+                                        <div class="small text-white-50">ID: @c.IdentificadorExterno</div>
                                     }
                                 </td>
                                 <td><span class="badge bg-dark border">@c.Ambiente</span></td>
@@ -98,7 +98,7 @@
                                             break;
                                     }
                                 </td>
-                                <td class="text-muted small">
+                                <td class="text-white-50 small">
                                     @(c.UltimaSincronizacao?.ToString("dd/MM/yyyy HH:mm") ?? "Nunca")
                                 </td>
                                 <td>

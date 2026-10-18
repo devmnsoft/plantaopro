@@ -128,7 +128,7 @@
                                 else
                                 {
                                     <tr>
-                                        <td colspan="8" class="text-center py-4 text-muted">
+                                        <td colspan="8" class="text-center py-4 text-white-50">
                                             @if (!string.IsNullOrWhiteSpace(Model.Busca) || !string.IsNullOrWhiteSpace(Model.Status))
                                             { <span>Nenhum contrato encontrado com os filtros informados.</span> }
                                             else
@@ -142,7 +142,7 @@
                     @if (Model.Pagina.TotalPages > 1)
                     {
                         <div class="d-flex flex-wrap justify-content-between align-items-center px-3 py-2 border-top border-secondary gap-2">
-                            <span class="small text-muted">Exibindo @Num(iniItem)–@Num(fimItem) de @Num(total)</span>
+                            <span class="small text-white-50">Exibindo @Num(iniItem)–@Num(fimItem) de @Num(total)</span>
                             <div class="d-flex gap-1">
                                 <a asp-action="Contratos" asp-route-busca="Model.Busca" asp-route-status="Model.Status" asp-route-page="Model.Page - 1" class="btn btn-sm btn-outline-secondary @(Model.Page <= 1 ? "disabled" : "")"><i class="bi bi-chevron-left me-1"></i>Anterior</a>
                                 <span class="btn btn-sm btn-secondary disabled">Página @Model.Page de @Model.Pagina.TotalPages</span>

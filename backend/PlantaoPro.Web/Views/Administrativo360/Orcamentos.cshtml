@@ -100,7 +100,7 @@
                         @if (Model == null || Model.Count == 0)
                         {
                             <tr>
-                                <td colspan="9" class="text-center py-4 text-muted">
+                                <td colspan="9" class="text-center py-4 text-white-50">
                                     <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                                     Nenhum orçamento encontrado. Cadastre um novo orçamento para iniciar a jornada cirúrgica.
                                 </td>
@@ -126,11 +126,11 @@
                                     <td>@o.Hospital</td>
                                     <td>
                                         <div class="text-light">@o.Procedimento</div>
-                                        <small class="text-muted">@(string.IsNullOrWhiteSpace(o.Medico) ? "Médico não atribuído" : o.Medico)</small>
+                                        <small class="text-white-50">@(string.IsNullOrWhiteSpace(o.Medico) ? "Médico não atribuído" : o.Medico)</small>
                                     </td>
                                     <td><small class="text-secondary">@o.ResponsavelFinanceiro</small></td>
                                     <td>@o.DataPrevista.ToString("dd/MM/yyyy")</td>
-                                    <td><small class="text-muted">@o.Validade.ToString("dd/MM/yyyy")</small></td>
+                                    <td><small class="text-white-50">@o.Validade.ToString("dd/MM/yyyy")</small></td>
                                     <td><strong class="text-success">@o.TotalGeral.ToString("C")</strong></td>
                                     <td><span class="badge @badgeClass">@o.Situacao</span></td>
                                     <td class="text-end">

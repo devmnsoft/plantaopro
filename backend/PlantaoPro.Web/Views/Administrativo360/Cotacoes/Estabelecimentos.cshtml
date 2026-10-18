@@ -45,7 +45,7 @@
                         @if (!Model.Estabelecimentos.Any())
                         {
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">
+                                <td colspan="7" class="text-center py-4 text-white-50">
                                     Nenhum estabelecimento cadastrado.
                                 </td>
                             </tr>
@@ -55,7 +55,7 @@
                             <tr>
                                 <td><code class="text-warning">@e.Cnpj</code></td>
                                 <td><strong class="text-light">@e.RazaoSocial</strong></td>
-                                <td class="text-muted">@(e.NomeFantasia ?? "-")</td>
+                                <td class="text-white-50">@(e.NomeFantasia ?? "-")</td>
                                 <td>@(e.InscricaoEstadual ?? "-")</td>
                                 <td><span class="badge bg-dark border">@e.Ambiente</span></td>
                                 <td>
@@ -63,7 +63,7 @@
                                         @(e.Ativo ? "Ativo" : "Inativo")
                                     </span>
                                 </td>
-                                <td class="text-muted small">@e.CriadoEm.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-white-50 small">@e.CriadoEm.ToString("dd/MM/yyyy HH:mm")</td>
                             </tr>
                         }
                     </tbody>

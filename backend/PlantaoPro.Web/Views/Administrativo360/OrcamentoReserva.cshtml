@@ -55,7 +55,7 @@
             <div class="card-header border-secondary d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
                     <h5 class="h6 mb-0 text-light fw-bold">@item.Produto</h5>
-                    <small class="text-muted">SKU: @item.Sku</small>
+                    <small class="text-white-50">SKU: @item.Sku</small>
                 </div>
                 <div class="d-flex gap-3 align-items-center">
                     <div class="small">
@@ -97,7 +97,7 @@
                             @if (item.LotesElegiveis.Count == 0)
                             {
                                 <tr>
-                                    <td colspan="8" class="text-center py-3 text-muted">
+                                    <td colspan="8" class="text-center py-3 text-white-50">
                                         Nenhum lote liberado com saldo físico encontrado para este produto no momento.
                                     </td>
                                 </tr>
@@ -120,12 +120,12 @@
                                             }
                                             else
                                             {
-                                                <span class="text-muted">Sem validade</span>
+                                                <span class="text-white-50">Sem validade</span>
                                             }
                                         </td>
                                         <td>@lote.Local</td>
                                         <td class="text-center">@lote.Fisico.ToString("N2")</td>
-                                        <td class="text-center text-muted">@lote.Reservado.ToString("N2")</td>
+                                        <td class="text-center text-white-50">@lote.Reservado.ToString("N2")</td>
                                         <td class="text-center fw-bold @(lote.Disponivel > 0 ? "text-success" : "text-secondary")">
                                             @lote.Disponivel.ToString("N2")
                                         </td>
@@ -183,7 +183,7 @@
         <div class="card bg-dark border-secondary mb-4">
             <div class="card-header border-secondary d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h5 class="h6 mb-0 text-light fw-bold"><i class="bi bi-box-seam me-2"></i>Reservas Ativas</h5>
-                <span class="text-muted small">Cancelar uma reserva libera o saldo do lote para nova reserva ou consumo.</span>
+                <span class="text-white-50 small">Cancelar uma reserva libera o saldo do lote para nova reserva ou consumo.</span>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">

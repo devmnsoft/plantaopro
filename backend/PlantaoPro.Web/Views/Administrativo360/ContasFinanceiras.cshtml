@@ -56,13 +56,13 @@
     <div class="row g-3 mb-4">
         <div class="col-12 col-md-6 col-lg-4">
             <div class="card bg-dark border-secondary text-light p-3">
-                <span class="text-muted small">Saldo Total em Contas Ativas</span>
+                <span class="text-white-50 small">Saldo Total em Contas Ativas</span>
                 <span class="fs-4 fw-bold font-monospace text-info">@saldoTotal.ToString("C2", ptBr)</span>
             </div>
         </div>
         <div class="col-12 col-md-6 col-lg-4">
             <div class="card bg-dark border-secondary text-light p-3">
-                <span class="text-muted small">Total de Contas</span>
+                <span class="text-white-50 small">Total de Contas</span>
                 <span class="fs-4 fw-bold font-monospace text-light">@Model.Contas.Count (@Model.Contas.Count(c => c.Ativo) ativas)</span>
             </div>
         </div>
@@ -92,7 +92,7 @@
                     @if (Model.Contas.Count == 0)
                     {
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-4">
+                            <td colspan="8" class="text-center text-white-50 py-4">
                                 Nenhuma conta financeira cadastrada. Clique em "Nova Conta" para cadastrar.
                             </td>
                         </tr>
@@ -107,7 +107,7 @@
                                 <td>@(c.Banco ?? "—")</td>
                                 <td>@(c.Agencia != null && c.Conta != null ? $"{c.Agencia} / {c.Conta}" : "—")</td>
                                 <td>
-                                    <span class="font-monospace text-muted small">@c.SaldoInicial.ToString("C2", ptBr)</span>
+                                    <span class="font-monospace text-white-50 small">@c.SaldoInicial.ToString("C2", ptBr)</span>
                                     <span class="text-secondary small d-block">em @c.DataSaldoInicial.ToString("dd/MM/yyyy")</span>
                                 </td>
                                 <td class="text-end font-monospace fw-bold @(c.SaldoAtual >= 0 ? "text-success" : "text-danger")">
@@ -187,7 +187,7 @@
                                                                        value="@c.Conta" />
                                                             </div>
                                                         </div>
-                                                        <div class="alert alert-secondary small text-muted mb-0">
+                                                        <div class="alert alert-secondary small mb-0">
                                                             <i class="bi bi-info-circle me-1"></i> O saldo inicial é fixado no momento da abertura e não pode ser editado para preservar a integridade contábil do histórico.
                                                         </div>
                                                     </div>

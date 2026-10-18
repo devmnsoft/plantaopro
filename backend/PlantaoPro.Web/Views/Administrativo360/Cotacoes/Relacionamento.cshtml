@@ -78,7 +78,7 @@
                         @if (!Model.Mapeamentos.Any())
                         {
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">
+                                <td colspan="8" class="text-center py-4 text-white-50">
                                     Nenhuma correspondência cadastrada.
                                 </td>
                             </tr>
@@ -94,14 +94,14 @@
                                     <strong class="text-warning">@m.EntidadeInternaDescricao</strong>
                                     @if (m.EntidadeInternaId.HasValue)
                                     {
-                                        <div class="small text-muted font-monospace">@m.EntidadeInternaId</div>
+                                        <div class="small text-white-50 font-monospace">@m.EntidadeInternaId</div>
                                     }
                                 </td>
                                 <td>@m.FatorConversao.ToString("N4")</td>
                                 <td>
                                     <span class="badge @(m.Situacao == "ATIVO" ? "bg-success" : "bg-danger")">@m.Situacao</span>
                                 </td>
-                                <td class="text-muted small">@m.CriadoEm.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-white-50 small">@m.CriadoEm.ToString("dd/MM/yyyy HH:mm")</td>
                             </tr>
                         }
                     </tbody>

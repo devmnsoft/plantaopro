@@ -119,7 +119,7 @@
                         @if (!Model.Cotacoes.Any())
                         {
                             <tr>
-                                <td colspan="9" class="text-center py-4 text-muted">
+                                <td colspan="9" class="text-center py-4 text-white-50">
                                     @UiText.L("Adm360.Cotacoes.EmptyState")
                                 </td>
                             </tr>
@@ -134,13 +134,13 @@
                                 <td>
                                     <strong class="text-light">@c.IdentificadorExterno</strong>
                                     <span class="badge bg-dark border border-secondary ms-1">v@(c.RevisaoExterna)</span>
-                                    <div class="small text-muted">@c.Origem</div>
+                                    <div class="small text-white-50">@c.Origem</div>
                                 </td>
                                 <td>
                                     <div class="text-light">@c.HospitalNome</div>
                                 </td>
                                 <td>
-                                    <span class="text-muted small">@(c.Procedimento ?? UiText.L("Adm360.Cotacoes.NotSpecified"))</span>
+                                    <span class="text-white-50 small">@(c.Procedimento ?? UiText.L("Adm360.Cotacoes.NotSpecified"))</span>
                                 </td>
                                 <td>
                                     <div class="@(expirado ? "text-danger fw-bold" : "text-light")">
@@ -198,7 +198,7 @@
                                     }
                                     else
                                     {
-                                        <span class="text-muted small">@UiText.L("Adm360.Cotacoes.QuotePending")</span>
+                                        <span class="text-white-50 small">@UiText.L("Adm360.Cotacoes.QuotePending")</span>
                                     }
                                 </td>
                                 <td class="text-end">

@@ -68,25 +68,25 @@
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100">
-                <span class="text-muted small">Total Principal</span>
+                <span class="text-white-50 small">Total Principal</span>
                 <span class="fs-5 fw-bold font-monospace">@totalPrincipal.ToString("C2", ptBr)</span>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-success">
-                <span class="text-muted small">Total Pago</span>
+                <span class="text-white-50 small">Total Pago</span>
                 <span class="fs-5 fw-bold font-monospace text-success">@totalPago.ToString("C2", ptBr)</span>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-warning">
-                <span class="text-muted small">Saldo a Pagar</span>
+                <span class="text-white-50 small">Saldo a Pagar</span>
                 <span class="fs-5 fw-bold font-monospace text-warning">@totalSaldo.ToString("C2", ptBr)</span>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-danger">
-                <span class="text-muted small">Vencido em Aberto</span>
+                <span class="text-white-50 small">Vencido em Aberto</span>
                 <span class="fs-5 fw-bold font-monospace text-danger">@totalVencido.ToString("C2", ptBr)</span>
             </div>
         </div>
@@ -157,7 +157,7 @@
                     @if (Model.Titulos.Count == 0)
                     {
                         <tr>
-                            <td colspan="11" class="text-center text-muted py-4">
+                            <td colspan="11" class="text-center text-white-50 py-4">
                                 Nenhum título a pagar encontrado para os filtros selecionados.
                             </td>
                         </tr>

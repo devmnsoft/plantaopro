@@ -52,19 +52,19 @@
     <div class="row g-3 mb-4">
         <div class="col-12 col-md-4">
             <div class="card bg-dark border-secondary text-light p-3 text-center">
-                <span class="text-muted small">Total Principal</span>
+                <span class="text-white-50 small">Total Principal</span>
                 <span class="fs-5 fw-bold font-monospace">@totalPrincipal.ToString("C2", ptBr)</span>
             </div>
         </div>
         <div class="col-12 col-md-4">
             <div class="card bg-dark border-secondary text-light p-3 text-center border-success">
-                <span class="text-muted small">Total Recebido</span>
+                <span class="text-white-50 small">Total Recebido</span>
                 <span class="fs-5 fw-bold font-monospace text-success">@totalRecebido.ToString("C2", ptBr)</span>
             </div>
         </div>
         <div class="col-12 col-md-4">
             <div class="card bg-dark border-secondary text-light p-3 text-center border-warning">
-                <span class="text-muted small">Saldo a Receber</span>
+                <span class="text-white-50 small">Saldo a Receber</span>
                 <span class="fs-5 fw-bold font-monospace text-warning">@totalSaldo.ToString("C2", ptBr)</span>
             </div>
         </div>
@@ -135,7 +135,7 @@
                     @if (Model.Titulos.Count == 0)
                     {
                         <tr>
-                            <td colspan="10" class="text-center text-muted py-4">
+                            <td colspan="10" class="text-center text-white-50 py-4">
                                 <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                                 Nenhum título a receber encontrado.
                             </td>

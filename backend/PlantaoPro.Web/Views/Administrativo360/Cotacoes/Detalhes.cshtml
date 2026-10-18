@@ -90,43 +90,43 @@
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <span class="text-muted small">@UiText.L("Adm360.CotDet.CardProvedorOrigem")</span>
+                    <span class="text-white-50 small">@UiText.L("Adm360.CotDet.CardProvedorOrigem")</span>
                     <h5 class="fw-bold text-warning mb-1">@Model.Cotacao.Provedor</h5>
                     <span class="pp-badge pp-badge--neutral">@Model.Cotacao.Origem</span>
-                    <div class="mt-2 small text-muted">@UiText.L("Adm360.CotDet.LblEstabelecimento")@Model.Cotacao.EstabelecimentoNome</div>
+                    <div class="mt-2 small text-white-50">@UiText.L("Adm360.CotDet.LblEstabelecimento")@Model.Cotacao.EstabelecimentoNome</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <span class="text-muted small">@UiText.L("Adm360.CotDet.CardHospitalSolicitante")</span>
+                    <span class="text-white-50 small">@UiText.L("Adm360.CotDet.CardHospitalSolicitante")</span>
                     <h5 class="fw-bold text-light mb-1">@(Model.Cotacao.HospitalNome ?? Model.Cotacao.HospitalSolicitanteExterno ?? UiText.L("Adm360.CotDet.HospitalNaoIdentificado"))</h5>
-                    <div class="small text-muted">@UiText.L("Adm360.CotDet.LblProcedimento")@(Model.Cotacao.Procedimento ?? UiText.L("Adm360.CotDet.Nd"))</div>
-                    <div class="small text-muted">@UiText.L("Adm360.CotDet.LblDataPrevista")@(Model.Cotacao.DataPrevista?.ToString("dd/MM/yyyy") ?? UiText.L("Adm360.CotDet.Nd"))</div>
+                    <div class="small text-white-50">@UiText.L("Adm360.CotDet.LblProcedimento")@(Model.Cotacao.Procedimento ?? UiText.L("Adm360.CotDet.Nd"))</div>
+                    <div class="small text-white-50">@UiText.L("Adm360.CotDet.LblDataPrevista")@(Model.Cotacao.DataPrevista?.ToString("dd/MM/yyyy") ?? UiText.L("Adm360.CotDet.Nd"))</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <span class="text-muted small">@UiText.L("Adm360.Cotacoes.ThResponseDeadline")</span>
+                    <span class="text-white-50 small">@UiText.L("Adm360.Cotacoes.ThResponseDeadline")</span>
                     <h5 class="fw-bold @(expirado ? "text-danger" : "text-light") mb-1">
                         @Model.Cotacao.PrazoResposta.ToString("dd/MM/yyyy HH:mm")
                     </h5>
                     <span class="pp-badge @(expirado ? "pp-badge--danger" : "pp-badge--info")">
                         @(expirado ? UiText.L("Adm360.Cotacoes.StatusExpirada") : UiText.L("Adm360.CotDet.PrazoDentro"))
                     </span>
-                    <div class="small text-muted mt-1">@UiText.L("Adm360.CotDet.LblFuso")@Model.Cotacao.FusoHorario</div>
+                    <div class="small text-white-50 mt-1">@UiText.L("Adm360.CotDet.LblFuso")@Model.Cotacao.FusoHorario</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <span class="text-muted small">@UiText.L("Adm360.CotDet.CardStatusOrcamento")</span>
+                    <span class="text-white-50 small">@UiText.L("Adm360.CotDet.CardStatusOrcamento")</span>
                     <h5 class="fw-bold text-light mb-1">@Model.Cotacao.StatusInterno</h5>
-                    <div class="small text-muted">@UiText.L("Adm360.CotDet.LblPortal")@Model.Cotacao.StatusExterno</div>
+                    <div class="small text-white-50">@UiText.L("Adm360.CotDet.LblPortal")@Model.Cotacao.StatusExterno</div>
                     @if (Model.Cotacao.OrcamentoId.HasValue)
                     {
                         <div class="mt-1">
@@ -171,7 +171,7 @@
                                     <strong class="text-light">@item.DescricaoExterna</strong>
                                     @if (!string.IsNullOrWhiteSpace(item.CodigoExterno))
                                     {
-                                        <div class="small text-muted">@UiText.L("Adm360.CotDet.LblCodigo")@item.CodigoExterno</div>
+                                        <div class="small text-white-50">@UiText.L("Adm360.CotDet.LblCodigo")@item.CodigoExterno</div>
                                     }
                                     @if (!string.IsNullOrWhiteSpace(item.FabricanteExterno))
                                     {
@@ -216,7 +216,7 @@
                                     }
                                     else
                                     {
-                                        <span class="text-muted">-</span>
+                                        <span class="text-white-50">-</span>
                                     }
                                 </td>
                                 <td>R$ @item.PrecoUnitarioOfertado.ToString("N2")</td>
@@ -285,7 +285,7 @@
                                                      <label class="form-label small mt-2" for="uuidProduto-@item.Id">@UiText.L("Adm360.CotDet.LblIdentificadorManual")</label>
                                                     <input type="text" id="uuidProduto-@item.Id" name="ProdutoId" class="form-control form-control-sm bg-dark text-light border-secondary" oninput="atualizarAnvisaInfo('@item.Id', this.value)"
                                                            value="@item.ProdutoId" placeholder="Ex: d3f6584c-2c64-4e5a-9ea9-4e1428647520" />
-                                                    <div class="form-text text-muted small">@UiText.L("Adm360.CotDet.SelectAjuda")</div>
+                                                    <div class="form-text text-white-50 small">@UiText.L("Adm360.CotDet.SelectAjuda")</div>
                                                 </div>
                                                 <div class="row g-2 mb-3">
                                                     <div class="col-md-6">
@@ -398,14 +398,14 @@
                     <ul class="list-group list-group-flush bg-dark">
                         @if (!Model.Cotacao.Anexos.Any())
                         {
-                            <li class="list-group-item bg-dark text-muted py-3">@UiText.L("Adm360.CotDet.AnexosVazio")</li>
+                            <li class="list-group-item bg-dark text-white-50 py-3">@UiText.L("Adm360.CotDet.AnexosVazio")</li>
                         }
                         @foreach (var anexo in Model.Cotacao.Anexos)
                         {
                             <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between align-items-center">
                                 <div>
                                     <div class="fw-bold">@anexo.NomeArquivo</div>
-                                    <div class="small text-muted">@((anexo.TamanhoBytes / 1024.0).ToString("N1")) KB — SHA256: @anexo.Sha256Hash[..8]...</div>
+                                    <div class="small text-white-50">@((anexo.TamanhoBytes / 1024.0).ToString("N1")) KB — SHA256: @anexo.Sha256Hash[..8]...</div>
                                 </div>
                                 <a href="/Administrativo360/Cotacoes/@Model.Cotacao.Id/Anexos/@anexo.Id" class="btn btn-sm btn-outline-light">
                                     <i class="bi bi-download me-1"></i> @UiText.L("Adm360.CotDet.BtnBaixar")
@@ -429,7 +429,7 @@
                     <ul class="list-group list-group-flush bg-dark">
                         @if (!Model.Respostas.Any())
                         {
-                            <li class="list-group-item bg-dark text-muted py-3">@UiText.L("Adm360.CotDet.OutboxVazio")</li>
+                            <li class="list-group-item bg-dark text-white-50 py-3">@UiText.L("Adm360.CotDet.OutboxVazio")</li>
                         }
                         @foreach (var resp in Model.Respostas)
                         {
@@ -510,7 +510,7 @@
                                         }
                                     </div>
                                 </div>
-                                <div class="small text-muted">
+                                <div class="small text-white-50">
                                     @UiText.L("Adm360.CotDet.LblTentativas")@resp.Tentativas | @UiText.L("Adm360.CotDet.LblProtocolo")@(resp.ProtocoloExterno ?? UiText.L("Adm360.CotDet.StatusPendente"))
                                 </div>
                                 @if (!string.IsNullOrWhiteSpace(resp.MensagemRetorno))
@@ -528,8 +528,8 @@
                                         <a href="/Administrativo360/Cotacoes/@Model.Cotacao.Id/Exportacao/@resp.Id" class="btn btn-sm btn-outline-success">
                                             <i class="bi bi-download me-1"></i> @UiText.L("Adm360.CotDet.BtnBaixarExportado")
                                         </a>
-                                        <span class="small text-muted" title="@resp.ExportacaoSha256Hash">SHA256: @(string.IsNullOrEmpty(resp.ExportacaoSha256Hash) ? "-" : resp.ExportacaoSha256Hash[..8])…</span>
-                                        <div class="small text-muted w-100">@resp.ExportacaoNomeArquivo</div>
+                                        <span class="small text-white-50" title="@resp.ExportacaoSha256Hash">SHA256: @(string.IsNullOrEmpty(resp.ExportacaoSha256Hash) ? "-" : resp.ExportacaoSha256Hash[..8])…</span>
+                                        <div class="small text-white-50 w-100">@resp.ExportacaoNomeArquivo</div>
                                     </div>
                                 }
 
@@ -547,12 +547,12 @@
                                                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="@UiText.L("Implantacao.CloseAria")"></button>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <p class="small text-muted mb-3">@UiText.L("Adm360.CotDet.EstornoModalCorpo")</p>
+                                                        <p class="small text-white-50 mb-3">@UiText.L("Adm360.CotDet.EstornoModalCorpo")</p>
                                                         <label for="estornoJustificativa-@resp.Id" class="form-label small fw-bold">@UiText.L("Adm360.CotDet.EstornoLblJustificativa")</label>
                                                         <textarea id="estornoJustificativa-@resp.Id" name="justificativa" rows="3" required minlength="10" maxlength="500" autofocus
                                                             class="form-control bg-dark text-light border-secondary"
                                                             placeholder="@UiText.L("Adm360.CotDet.EstornoPhJustificativa")"></textarea>
-                                                        <div class="form-text text-muted small">@UiText.L("Adm360.CotDet.EstornoAjuda")</div>
+                                                        <div class="form-text text-white-50 small">@UiText.L("Adm360.CotDet.EstornoAjuda")</div>
                                                     </div>
                                                     <div class="modal-footer border-secondary">
                                                         <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">@UiText.L("Shift.Back")</button>

@@ -45,7 +45,7 @@
                         @if (!Model.ContasPortal.Any())
                         {
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">
+                                <td colspan="7" class="text-center py-4 text-white-50">
                                     Nenhuma conta de portal configurada.
                                 </td>
                             </tr>
@@ -75,7 +75,7 @@
                                             break;
                                     }
                                 </td>
-                                <td class="text-muted small">
+                                <td class="text-white-50 small">
                                     @(c.UltimaSincronizacao?.ToString("dd/MM/yyyy HH:mm") ?? "Nenhuma")
                                 </td>
                                 <td>
@@ -116,7 +116,7 @@
                         @if (!Model.SincronizacoesDfe.Any())
                         {
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">
+                                <td colspan="7" class="text-center py-4 text-white-50">
                                     Nenhuma sincronização DF-e registrada.
                                 </td>
                             </tr>
@@ -175,7 +175,7 @@
                         @if (!Model.RespostasRecentes.Any())
                         {
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">
+                                <td colspan="7" class="text-center py-4 text-white-50">
                                     Nenhuma transmissão outbox registrada.
                                 </td>
                             </tr>
@@ -211,7 +211,7 @@
                                     }
                                     @if (!string.IsNullOrWhiteSpace(r.MensagemRetorno))
                                     {
-                                        <div class="small text-muted">@r.MensagemRetorno</div>
+                                        <div class="small text-white-50">@r.MensagemRetorno</div>
                                     }
                                 </td>
                                 <td>
@@ -219,7 +219,7 @@
                                 </td>
                                 <td>@r.Tentativas</td>
                                 <td>@(r.ProtocoloExterno ?? "-")</td>
-                                <td class="small text-muted">
+                                <td class="small text-white-50">
                                     @(r.EnviadoEm?.ToString("dd/MM/yyyy HH:mm") ?? "Pendente")
                                 </td>
                             </tr>

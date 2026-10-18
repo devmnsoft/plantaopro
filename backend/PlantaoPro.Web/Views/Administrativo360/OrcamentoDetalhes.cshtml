@@ -77,28 +77,28 @@
             <div class="card bg-dark border-secondary h-100 p-3">
                 <small class="text-secondary text-uppercase fw-bold">Data Prevista Cirurgia</small>
                 <div class="fs-5 text-light fw-bold">@Model.DataPrevista.ToString("dd/MM/yyyy")</div>
-                <small class="text-muted">Validade Proposta: @Model.Validade.ToString("dd/MM/yyyy")</small>
+                <small class="text-white-50">Validade Proposta: @Model.Validade.ToString("dd/MM/yyyy")</small>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-dark border-secondary h-100 p-3">
                 <small class="text-secondary text-uppercase fw-bold">Responsável Financeiro</small>
                 <div class="fs-6 text-light fw-bold text-truncate" title="@Model.ResponsavelFinanceiro">@Model.ResponsavelFinanceiro</div>
-                <small class="text-muted">Médico: @(string.IsNullOrWhiteSpace(Model.Medico) ? "Não atribuído" : Model.Medico)</small>
+                <small class="text-white-50">Médico: @(string.IsNullOrWhiteSpace(Model.Medico) ? "Não atribuído" : Model.Medico)</small>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-dark border-secondary h-100 p-3">
                 <small class="text-secondary text-uppercase fw-bold">Total Produtos</small>
                 <div class="fs-5 text-light">@Model.TotalProdutos.ToString("C")</div>
-                <small class="text-muted">Desconto: @Model.DescontoGeral.ToString("C")</small>
+                <small class="text-white-50">Desconto: @Model.DescontoGeral.ToString("C")</small>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-dark border-success h-100 p-3 bg-opacity-25">
                 <small class="text-success text-uppercase fw-bold">Valor Total Geral</small>
                 <div class="fs-4 text-success fw-bold">@Model.TotalGeral.ToString("C")</div>
-                <small class="text-muted">Calculado no servidor</small>
+                <small class="text-white-50">Calculado no servidor</small>
             </div>
         </div>
     </div>
@@ -135,11 +135,11 @@
                             <tr>
                                 <td>
                                     <div class="text-light fw-bold">@it.Produto</div>
-                                    <small class="text-muted">SKU: @it.Sku | Un: @it.Unidade</small>
+                                    <small class="text-white-50">SKU: @it.Sku | Un: @it.Unidade</small>
                                 </td>
                                 <td class="text-center fw-bold text-light">@it.Quantidade.ToString("N2")</td>
                                 <td class="text-end">@it.PrecoUnitario.ToString("C")</td>
-                                <td class="text-end text-muted">@it.Desconto.ToString("C")</td>
+                                <td class="text-end text-white-50">@it.Desconto.ToString("C")</td>
                                 <td class="text-end fw-bold text-success">@it.Total.ToString("C")</td>
                                 <td class="text-center text-info fw-bold">@it.QuantidadeReservada.ToString("N2")</td>
                                 <td class="text-center text-warning fw-bold">@it.FaltaAtender.ToString("N2")</td>

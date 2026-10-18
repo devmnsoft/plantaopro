@@ -55,31 +55,31 @@
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100">
-                <span class="text-muted small">Saldo Atual das Contas (@f.DataBase.ToString("dd/MM/yyyy"))</span>
+                <span class="text-white-50 small">Saldo Atual das Contas (@f.DataBase.ToString("dd/MM/yyyy"))</span>
                 <span class="fs-5 fw-bold font-monospace text-info">@f.SaldoAtualContas.ToString("C2", ptBr)</span>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100">
-                <span class="text-muted small">Saldo Abertura Período</span>
+                <span class="text-white-50 small">Saldo Abertura Período</span>
                 <span class="fs-5 fw-bold font-monospace text-light">@f.SaldoAberturaPeriodo.ToString("C2", ptBr)</span>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-success">
-                <span class="text-muted small">Entradas Realizadas</span>
+                <span class="text-white-50 small">Entradas Realizadas</span>
                 <span class="fs-5 fw-bold font-monospace text-success">+ @f.TotalEntradasRealizadas.ToString("C2", ptBr)</span>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-danger">
-                <span class="text-muted small">Saídas Realizadas</span>
+                <span class="text-white-50 small">Saídas Realizadas</span>
                 <span class="fs-5 fw-bold font-monospace text-danger">- @f.TotalSaidasRealizadas.ToString("C2", ptBr)</span>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-info">
-                <span class="text-muted small">Saldo Fechamento Período</span>
+                <span class="text-white-50 small">Saldo Fechamento Período</span>
                 <span class="fs-5 fw-bold font-monospace @(f.SaldoFechamentoPeriodo >= 0 ? "text-success" : "text-danger")">
                     @f.SaldoFechamentoPeriodo.ToString("C2", ptBr)
                 </span>
@@ -87,19 +87,19 @@
         </div>
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-warning">
-                <span class="text-muted small">Entradas Previstas (AR Aberto)</span>
+                <span class="text-white-50 small">Entradas Previstas (AR Aberto)</span>
                 <span class="fs-5 fw-bold font-monospace text-warning">+ @f.TotalEntradasPrevistas.ToString("C2", ptBr)</span>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100">
-                <span class="text-muted small">Saídas Previstas (AP Aberto)</span>
-                <span class="fs-5 fw-bold font-monospace text-muted">- @f.TotalSaidasPrevistas.ToString("C2", ptBr)</span>
+                <span class="text-white-50 small">Saídas Previstas (AP Aberto)</span>
+                <span class="fs-5 fw-bold font-monospace text-white-50">- @f.TotalSaidasPrevistas.ToString("C2", ptBr)</span>
             </div>
         </div>
         <div class="col-6 col-md-4 col-lg-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-warning">
-                <span class="text-muted small">Vencidos em Aberto</span>
+                <span class="text-white-50 small">Vencidos em Aberto</span>
                 <span class="fs-6 font-monospace text-warning d-block">AR: @f.TotalVencidosReceber.ToString("C2", ptBr)</span>
                 <span class="fs-6 font-monospace text-danger d-block">AP: @f.TotalVencidosPagar.ToString("C2", ptBr)</span>
             </div>
@@ -128,7 +128,7 @@
                     @if (Model.Contas.Count == 0)
                     {
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">
+                            <td colspan="6" class="text-center text-white-50 py-4">
                                 Nenhuma conta financeira cadastrada. Clique em "Nova Conta Financeira" para iniciar.
                             </td>
                         </tr>
@@ -170,7 +170,7 @@
             <form method="get" class="d-flex align-items-center gap-2">
                 <input type="date" name="inicio" class="form-control form-control-sm bg-dark text-light border-secondary"
                        value="@Model.Inicio.ToString("yyyy-MM-dd")" />
-                <span class="text-muted">até</span>
+                <span class="text-white-50">até</span>
                 <input type="date" name="fim" class="form-control form-control-sm bg-dark text-light border-secondary"
                        value="@Model.Fim.ToString("yyyy-MM-dd")" />
                 <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
@@ -195,7 +195,7 @@
                     @if (f.Itens.Count == 0)
                     {
                         <tr>
-                            <td colspan="9" class="text-center text-muted py-4">
+                            <td colspan="9" class="text-center text-white-50 py-4">
                                 Nenhum lançamento ou previsão encontrado no período selecionado.
                             </td>
                         </tr>
@@ -229,7 +229,7 @@
                                 <td class="text-end font-monospace text-warning">
                                     @(it.PrevistoEntrada > 0 ? it.PrevistoEntrada.ToString("C2", ptBr) : "—")
                                 </td>
-                                <td class="text-end font-monospace text-muted">
+                                <td class="text-end font-monospace text-white-50">
                                     @(it.PrevistoSaida > 0 ? it.PrevistoSaida.ToString("C2", ptBr) : "—")
                                 </td>
                                 <td class="text-end font-monospace text-success">

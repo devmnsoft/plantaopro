@@ -66,7 +66,7 @@
                         @if (!Model.Triagens.Any())
                         {
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">
+                                <td colspan="7" class="text-center py-4 text-white-50">
                                     Nenhum documento aguardando triagem. Esta fila concentra apenas itens retidos em quarentena.
                                 </td>
                             </tr>
@@ -78,12 +78,12 @@
                                     <code class="text-info small" title="@t.ChaveAcesso">@((t.ChaveAcesso.Length > 20) ? (t.ChaveAcesso[..10] + "…" + t.ChaveAcesso[^6..]) : t.ChaveAcesso)</code>
                                     @if (!string.IsNullOrWhiteSpace(t.NomeArquivo))
                                     {
-                                        <div class="small text-muted">@t.NomeArquivo</div>
+                                        <div class="small text-white-50">@t.NomeArquivo</div>
                                     }
                                 </td>
                                 <td>
                                     <span class="badge bg-secondary">@(t.TipoDocumento switch { "NFC_E" => "NFC-e 65", "NFS_E" => "NFS-e 67", "ABRASF" => "ABRASF", "RESUMO" => "Resumo", _ => "NF-e 55" })</span>
-                                    <div class="small text-muted">@t.Origem</div>
+                                    <div class="small text-white-50">@t.Origem</div>
                                 </td>
                                 <td>
                                     <span class="badge bg-warning text-dark" title="@t.MotivoQuarentena">@RotuloQuarentena(t.MotivoQuarentena)</span>
@@ -95,7 +95,7 @@
                                         <span class="text-light">@t.ResponsavelNome</span>
                                         @if (!string.IsNullOrWhiteSpace(t.TriagemObservacao))
                                         {
-                                            <div class="small text-muted" title="@t.TriagemObservacao">Obs: @(t.TriagemObservacao.Length > 40 ? t.TriagemObservacao[..40] + "…" : t.TriagemObservacao)</div>
+                                            <div class="small text-white-50" title="@t.TriagemObservacao">Obs: @(t.TriagemObservacao.Length > 40 ? t.TriagemObservacao[..40] + "…" : t.TriagemObservacao)</div>
                                         }
                                     }
                                     else
@@ -114,7 +114,7 @@
                                     }
                                     else
                                     {
-                                        <span class="text-muted small">—</span>
+                                        <span class="text-white-50 small">—</span>
                                     }
                                 </td>
                                 <td class="text-end">
@@ -159,12 +159,12 @@
                         <div class="modal-header border-secondary">
                             <div>
                                 <h5 class="modal-title h6" id="modalAbrirLabel-@t.DocumentoId">@(t.TriagemAberta ? "Reabrir" : "Abrir") triagem do documento</h5>
-                                <div class="small text-muted">Chave: <code class="text-info">@t.ChaveAcesso</code></div>
+                                <div class="small text-white-50">Chave: <code class="text-info">@t.ChaveAcesso</code></div>
                             </div>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
                         </div>
                         <div class="modal-body">
-                            <p class="small text-muted mb-3">O documento segue em quarentena até a resolução. Cada abertura é registrada como evento de auditoria com responsável, prazo e observação.</p>
+                            <p class="small text-white-50 mb-3">O documento segue em quarentena até a resolução. Cada abertura é registrada como evento de auditoria com responsável, prazo e observação.</p>
                             <div class="mb-3">
                                 <label for="responsavel-@t.DocumentoId" class="form-label small fw-bold">Responsável *</label>
                                 <select id="responsavel-@t.DocumentoId" name="responsavelId" class="form-select bg-dark text-light border-secondary" required autofocus>
@@ -182,7 +182,7 @@
                             <div class="mb-3">
                                 <label for="prazo-@t.DocumentoId" class="form-label small fw-bold">Prazo (horário local) *</label>
                                 <input type="datetime-local" id="prazo-@t.DocumentoId" name="prazoLocal" class="form-control bg-dark text-light border-secondary" min="@prazoMinimoLocal" required />
-                                <div class="form-text text-muted small">Deve ser um momento futuro; convertido para UTC antes do registro.</div>
+                                <div class="form-text text-white-50 small">Deve ser um momento futuro; convertido para UTC antes do registro.</div>
                             </div>
                             <div class="mb-2">
                                 <label for="observacao-@t.DocumentoId" class="form-label small fw-bold">Observação (opcional)</label>
@@ -210,17 +210,17 @@
                             <div class="modal-header border-secondary">
                                 <div>
                                     <h5 class="modal-title h6" id="modalResolverLabel-@t.DocumentoId">Resolver triagem do documento</h5>
-                                    <div class="small text-muted">Chave: <code class="text-info">@t.ChaveAcesso</code></div>
+                                    <div class="small text-white-50">Chave: <code class="text-info">@t.ChaveAcesso</code></div>
                                 </div>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
                             </div>
                             <div class="modal-body">
-                                <p class="small text-muted mb-3">Resolver remove o documento da quarentena com justificativa auditável. A conferência (gate do recebimento em estoque) permanece decisão separada na Central XML.</p>
+                                <p class="small text-white-50 mb-3">Resolver remove o documento da quarentena com justificativa auditável. A conferência (gate do recebimento em estoque) permanece decisão separada na Central XML.</p>
                                 <label for="justificativa-@t.DocumentoId" class="form-label small fw-bold">Justificativa da resolução *</label>
                                 <textarea id="justificativa-@t.DocumentoId" name="justificativa" rows="3" required minlength="10" maxlength="500" autofocus
                                     class="form-control bg-dark text-light border-secondary"
                                     placeholder="Ex.: destinatário regularizado junto ao emitente; valores conferidos sem divergência"></textarea>
-                                <div class="form-text text-muted small">Mínimo de 10 caracteres. Registrada na trilha de auditoria junto ao usuário que resolveu.</div>
+                                <div class="form-text text-white-50 small">Mínimo de 10 caracteres. Registrada na trilha de auditoria junto ao usuário que resolveu.</div>
                             </div>
                             <div class="modal-footer border-secondary">
                                 <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>

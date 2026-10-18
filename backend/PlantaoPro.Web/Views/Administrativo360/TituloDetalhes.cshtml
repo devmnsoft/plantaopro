@@ -55,13 +55,13 @@
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center">
-                <span class="text-muted small">Valor Principal</span>
+                <span class="text-white-50 small">Valor Principal</span>
                 <span class="fs-5 fw-bold font-monospace">@t.ValorPrincipal.ToString("C2", ptBr)</span>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center border-success">
-                <span class="text-muted small">Valor Recebido</span>
+                <span class="text-white-50 small">Valor Recebido</span>
                 <span class="fs-5 fw-bold font-monospace text-success">@t.ValorRecebido.ToString("C2", ptBr)</span>
             </div>
         </div>
@@ -75,7 +75,7 @@
         </div>
         <div class="col-6 col-md-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center">
-                <span class="text-muted small">Vencimento</span>
+                <span class="text-white-50 small">Vencimento</span>
                 <span class="fs-5 fw-bold @(t.Vencido ? "text-danger" : "text-light")">
                     @t.DataVencimento.ToString("dd/MM/yyyy")
                 </span>
@@ -196,7 +196,7 @@
                             @if (t.Baixas.Count == 0)
                             {
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">
+                                    <td colspan="6" class="text-center text-white-50 py-4">
                                         Nenhuma baixa registrada para este título até o momento.
                                     </td>
                                 </tr>
@@ -267,7 +267,7 @@
                                             }
                                             else
                                             {
-                                                <span class="text-muted small">Estornado@(string.IsNullOrWhiteSpace(b.RecebidoPor) ? "" : " · recebido por " + b.RecebidoPor)</span>
+                                                <span class="text-white-50 small">Estornado@(string.IsNullOrWhiteSpace(b.RecebidoPor) ? "" : " · recebido por " + b.RecebidoPor)</span>
                                             }
                                         </td>
                                     </tr>

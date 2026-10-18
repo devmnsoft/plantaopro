@@ -61,9 +61,9 @@
         <div class="col-md-4">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <span class="text-muted small">Emitente (Fornecedor)</span>
+                    <span class="text-white-50 small">Emitente (Fornecedor)</span>
                     <h5 class="fw-bold text-light mb-1">@Model.Documento.EmitenteNome</h5>
-                    <div class="small text-muted">CNPJ: @Model.Documento.EmitenteCnpj</div>
+                    <div class="small text-white-50">CNPJ: @Model.Documento.EmitenteCnpj</div>
                     <div class="mt-2 small text-secondary">Chave de Acesso:</div>
                     <code class="text-info font-monospace small d-block text-break">@Model.Documento.ChaveAcesso</code>
                 </div>
@@ -72,20 +72,20 @@
         <div class="col-md-4">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <span class="text-muted small">Destinatário (Estabelecimento Autorizado)</span>
+                    <span class="text-white-50 small">Destinatário (Estabelecimento Autorizado)</span>
                     <h5 class="fw-bold text-light mb-1">@Model.Documento.DestinatarioNome</h5>
                     <div class="small text-warning">CNPJ: @Model.Documento.DestinatarioCnpj</div>
-                    <div class="mt-2 small text-muted">Estabelecimento: @Model.Documento.EstabelecimentoNome</div>
-                    <div class="small text-muted">Emissão: @Model.Documento.DataEmissao.ToString("dd/MM/yyyy HH:mm")</div>
+                    <div class="mt-2 small text-white-50">Estabelecimento: @Model.Documento.EstabelecimentoNome</div>
+                    <div class="small text-white-50">Emissão: @Model.Documento.DataEmissao.ToString("dd/MM/yyyy HH:mm")</div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <span class="text-muted small">Valores e Situação Fiscal</span>
+                    <span class="text-white-50 small">Valores e Situação Fiscal</span>
                     <h4 class="fw-bold text-success mb-1">R$ @Model.Documento.ValorTotal.ToString("N2")</h4>
-                    <div class="small text-muted">Produtos: R$ @Model.Documento.ValorProdutos.ToString("N2")</div>
+                    <div class="small text-white-50">Produtos: R$ @Model.Documento.ValorProdutos.ToString("N2")</div>
                     <div class="mt-2">
                         <span class="badge bg-secondary me-1">@Model.Documento.TipoDocumento</span>
                         <span class="badge bg-info text-dark me-1">Manifestação: @Model.Documento.StatusManifestacao</span>
@@ -128,7 +128,7 @@
                                 <td>@item.NumeroItem</td>
                                 <td>
                                     <strong class="text-light">@item.DescricaoProdutoEmitente</strong>
-                                    <div class="small text-muted">Cód: @item.CodigoProdutoEmitente</div>
+                                    <div class="small text-white-50">Cód: @item.CodigoProdutoEmitente</div>
                                 </td>
                                 <td>
                                     <span class="badge bg-dark border">@item.Ncm</span>
@@ -157,7 +157,7 @@
                                     }
                                     else
                                     {
-                                        <span class="text-muted">-</span>
+                                        <span class="text-white-50">-</span>
                                     }
                                 </td>
                                 <td>
@@ -184,7 +184,7 @@
             <ul class="list-group list-group-flush bg-dark">
                 @if (!Model.Documento.Eventos.Any())
                 {
-                    <li class="list-group-item bg-dark text-muted py-3">Nenhum evento registrado para este documento.</li>
+                    <li class="list-group-item bg-dark text-white-50 py-3">Nenhum evento registrado para este documento.</li>
                 }
                 @foreach (var ev in Model.Documento.Eventos)
                 {
@@ -195,10 +195,10 @@
                                 <strong>@ev.DescricaoEvento</strong>
                                 @if (!string.IsNullOrWhiteSpace(ev.Protocolo))
                                 {
-                                    <span class="small text-muted ms-2">Protocolo: @ev.Protocolo</span>
+                                    <span class="small text-white-50 ms-2">Protocolo: @ev.Protocolo</span>
                                 }
                             </div>
-                            <span class="small text-muted">@ev.DataEvento.ToString("dd/MM/yyyy HH:mm:ss")</span>
+                            <span class="small text-white-50">@ev.DataEvento.ToString("dd/MM/yyyy HH:mm:ss")</span>
                         </div>
                         @if (!string.IsNullOrWhiteSpace(ev.Detalhes))
                         {

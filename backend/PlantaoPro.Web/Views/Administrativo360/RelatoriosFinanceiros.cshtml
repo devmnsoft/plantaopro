@@ -164,7 +164,7 @@
                         @if (Model.Vendas.Count == 0)
                         {
                             <tr>
-                                <td colspan="10" class="text-center text-muted py-4">@UiText.L("Adm360.RelFin.VendasVazia")</td>
+                                <td colspan="10" class="text-center text-white-50 py-4">@UiText.L("Adm360.RelFin.VendasVazia")</td>
                             </tr>
                         }
                         else
@@ -215,7 +215,7 @@
                         @if (Model.Comissoes.Count == 0)
                         {
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">@UiText.L("Adm360.RelFin.ComissoesVazia")</td>
+                                <td colspan="7" class="text-center text-white-50 py-4">@UiText.L("Adm360.RelFin.ComissoesVazia")</td>
                             </tr>
                         }
                         else
@@ -274,7 +274,7 @@
                         @if (Model.Margens.Count == 0)
                         {
                             <tr>
-                                <td colspan="9" class="text-center text-muted py-4">@UiText.L("Adm360.RelFin.MargemVazia")</td>
+                                <td colspan="9" class="text-center text-white-50 py-4">@UiText.L("Adm360.RelFin.MargemVazia")</td>
                             </tr>
                         }
                         else
@@ -286,8 +286,8 @@
                                     <td>@m.ValeNumero</td>
                                     <td>@m.Cliente</td>
                                     <td class="text-end font-monospace text-success">@m.ReceitaLiquida.ToString("C2", ptBr)</td>
-                                    <td class="text-end font-monospace text-muted">@m.CustoConsumido.ToString("C2", ptBr)</td>
-                                    <td class="text-end font-monospace text-muted">@m.ComissaoPrevista.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-white-50">@m.CustoConsumido.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-white-50">@m.ComissaoPrevista.ToString("C2", ptBr)</td>
                                     <td class="text-end font-monospace text-info">@m.ComissaoApropriada.ToString("C2", ptBr)</td>
                                     <td class="text-end font-monospace fw-bold @(m.MargemContribuicao >= 0 ? "text-success" : "text-danger")">
                                         @m.MargemContribuicao.ToString("C2", ptBr)
@@ -333,7 +333,7 @@
                         @if (Model.Vencimentos.Count == 0)
                         {
                             <tr>
-                                <td colspan="12" class="text-center text-muted py-4">@UiText.L("Adm360.RelFin.VencimentosVazia")</td>
+                                <td colspan="12" class="text-center text-white-50 py-4">@UiText.L("Adm360.RelFin.VencimentosVazia")</td>
                             </tr>
                         }
                         else
@@ -351,7 +351,7 @@
                                     <td>@it.DataEmissao.ToString("dd/MM/yyyy")</td>
                                     <td class="@(it.Vencido ? "text-danger fw-bold" : "")">@it.DataVencimento.ToString("dd/MM/yyyy")</td>
                                     <td class="text-end font-monospace">@it.ValorPrincipal.ToString("C2", ptBr)</td>
-                                    <td class="text-end font-monospace text-muted">@it.ValorRecebido.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-white-50">@it.ValorRecebido.ToString("C2", ptBr)</td>
                                     <td class="text-end font-monospace @(it.SaldoAberto > 0 ? "fw-bold text-warning" : "text-muted")">@it.SaldoAberto.ToString("C2", ptBr)</td>
                                     <td>
                                         @if (it.Vencido)
@@ -431,7 +431,7 @@
                         @if (Model.Dre.Count == 0)
                         {
                             <tr>
-                                <td colspan="11" class="text-center text-muted py-4">@UiText.L("Adm360.RelFin.DreVazia")</td>
+                                <td colspan="11" class="text-center text-white-50 py-4">@UiText.L("Adm360.RelFin.DreVazia")</td>
                             </tr>
                         }
                         else
@@ -443,7 +443,7 @@
                                     <td>
                                         @if (ehOrfa)
                                         {
-                                            <em class="text-muted">@it.Cliente</em>
+                                            <em class="text-white-50">@it.Cliente</em>
                                         }
                                         else
                                         {
@@ -454,10 +454,10 @@
                                     <td class="text-end font-monospace">@it.ReceitaBruta.ToString("C2", ptBr)</td>
                                     <td class="text-end font-monospace text-warning">@it.Deducoes.ToString("C2", ptBr)</td>
                                     <td class="text-end font-monospace text-success">@it.ReceitaLiquida.ToString("C2", ptBr)</td>
-                                    <td class="text-end font-monospace text-muted">@it.CustoRealizado.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-white-50">@it.CustoRealizado.ToString("C2", ptBr)</td>
                                     <td class="text-end font-monospace fw-bold @(it.ResultadoBruto >= 0 ? "text-success" : "text-danger")">@it.ResultadoBruto.ToString("C2", ptBr)</td>
-                                    <td class="text-end font-monospace text-muted">@it.ComissoesPrevistas.ToString("C2", ptBr)</td>
-                                    <td class="text-end font-monospace text-muted">@it.DespesasAtribuidas.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-white-50">@it.ComissoesPrevistas.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-white-50">@it.DespesasAtribuidas.ToString("C2", ptBr)</td>
                                     <td class="text-end font-monospace fw-bold @(it.ResultadoGerencial >= 0 ? "text-success" : "text-danger")">@it.ResultadoGerencial.ToString("C2", ptBr)</td>
                                     <td class="text-nowrap">
                                         @if (it.ClienteId.HasValue)

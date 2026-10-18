@@ -77,7 +77,7 @@
                                 @(Model.CapacidadesAtivas.Contains("PORTAIS_COTACAO") ? UiText.L("Adm360.Dash.CapabilityEnabled") : UiText.L("Adm360.Dash.CapabilityDisabled"))
                             </span>
                         </div>
-                        <p class="small text-muted mb-2">@UiText.L("Adm360.Dash.CapQuotePortalsDesc")</p>
+                        <p class="small text-white-50 mb-2">@UiText.L("Adm360.Dash.CapQuotePortalsDesc")</p>
                         <form method="post" action="/Administrativo360/Gestao/HabilitarCapacidade" class="d-inline">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="capacidade" value="PORTAIS_COTACAO" />
@@ -97,7 +97,7 @@
                                 @(Model.CapacidadesAtivas.Contains("XML_RECEBIDOS") ? UiText.L("Adm360.Dash.CapabilityEnabled") : UiText.L("Adm360.Dash.CapabilityDisabled"))
                             </span>
                         </div>
-                        <p class="small text-muted mb-2">@UiText.L("Adm360.Dash.CapXmlCenterDesc")</p>
+                        <p class="small text-white-50 mb-2">@UiText.L("Adm360.Dash.CapXmlCenterDesc")</p>
                         <form method="post" action="/Administrativo360/Gestao/HabilitarCapacidade" class="d-inline">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="capacidade" value="XML_RECEBIDOS" />
@@ -117,7 +117,7 @@
                                 @(Model.CapacidadesAtivas.Contains("DASHBOARD_GERENCIAL") ? UiText.L("Adm360.Dash.CapabilityEnabled") : UiText.L("Adm360.Dash.CapabilityDisabled"))
                             </span>
                         </div>
-                        <p class="small text-muted mb-2">@UiText.L("Adm360.Dash.CapDashboardDesc")</p>
+                        <p class="small text-white-50 mb-2">@UiText.L("Adm360.Dash.CapDashboardDesc")</p>
                         <form method="post" action="/Administrativo360/Gestao/HabilitarCapacidade" class="d-inline">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="capacidade" value="DASHBOARD_GERENCIAL" />
@@ -140,9 +140,9 @@
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <div class="text-muted small">@UiText.L("Adm360.Dash.KpiQuotesReceived")</div>
+                    <div class="text-white-50 small">@UiText.L("Adm360.Dash.KpiQuotesReceived")</div>
                     <h3 class="fw-bold text-light mb-0">@c.TotalRecebidas</h3>
-                    <div class="small text-muted mt-2">
+                    <div class="small text-white-50 mt-2">
                         <a href="/Administrativo360/Cotacoes" class="text-warning text-decoration-none">@UiText.L("Adm360.Dash.LinkViewFullList") &rarr;</a>
                     </div>
                 </div>
@@ -151,63 +151,63 @@
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <div class="text-muted small">@UiText.L("Adm360.Dash.KpiAwaitingMatching")</div>
+                    <div class="text-white-50 small">@UiText.L("Adm360.Dash.KpiAwaitingMatching")</div>
                     <h3 class="fw-bold text-warning mb-0">@c.AguardandoRelacionamento</h3>
-                    <div class="small text-muted mt-2">@UiText.L("Adm360.Dash.KpiAwaitingMatchingDesc")</div>
+                    <div class="small text-white-50 mt-2">@UiText.L("Adm360.Dash.KpiAwaitingMatchingDesc")</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <div class="text-muted small">@UiText.L("Adm360.Dash.KpiDueSoon24h")</div>
+                    <div class="text-white-50 small">@UiText.L("Adm360.Dash.KpiDueSoon24h")</div>
                     <h3 class="fw-bold @(c.ProximasDoPrazo > 0 ? "text-danger" : "text-light") mb-0">@c.ProximasDoPrazo</h3>
-                    <div class="small text-muted mt-2">@UiText.L("Adm360.Dash.KpiDueSoonDesc")</div>
+                    <div class="small text-white-50 mt-2">@UiText.L("Adm360.Dash.KpiDueSoonDesc")</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <div class="text-muted small">@UiText.L("Adm360.Dash.KpiLinkedQuotes")</div>
+                    <div class="text-white-50 small">@UiText.L("Adm360.Dash.KpiLinkedQuotes")</div>
                     <h3 class="fw-bold text-info mb-0">@c.OrcamentosGerados</h3>
-                    <div class="small text-muted mt-2">@UiText.L("Adm360.Dash.KpiLinkedQuotesDesc")</div>
+                    <div class="small text-white-50 mt-2">@UiText.L("Adm360.Dash.KpiLinkedQuotesDesc")</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <div class="text-muted small">@UiText.L("Adm360.Dash.KpiAcceptedResponses")</div>
+                    <div class="text-white-50 small">@UiText.L("Adm360.Dash.KpiAcceptedResponses")</div>
                     <h3 class="fw-bold text-success mb-0">@c.RespostasAceitas</h3>
-                    <div class="small text-muted mt-2">@UiText.L("Adm360.Dash.KpiAcceptedResponsesDesc")</div>
+                    <div class="small text-white-50 mt-2">@UiText.L("Adm360.Dash.KpiAcceptedResponsesDesc")</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <div class="text-muted small">@UiText.L("Adm360.Dash.KpiWinningProposals")</div>
+                    <div class="text-white-50 small">@UiText.L("Adm360.Dash.KpiWinningProposals")</div>
                     <h3 class="fw-bold text-success mb-0">@c.PropostasVencedoras</h3>
-                    <div class="small text-muted mt-2">@UiText.L("Adm360.Dash.LostLabel") @c.PropostasPerdidas</div>
+                    <div class="small text-white-50 mt-2">@UiText.L("Adm360.Dash.LostLabel") @c.PropostasPerdidas</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <div class="text-muted small">@UiText.L("Adm360.Dash.KpiSuccessRate")</div>
+                    <div class="text-white-50 small">@UiText.L("Adm360.Dash.KpiSuccessRate")</div>
                     <h3 class="fw-bold text-primary mb-0">@c.TaxaSucessoPercentual.ToString("N1")%</h3>
-                    <div class="small text-muted mt-2">@UiText.L("Adm360.Dash.KpiSuccessRateDesc")</div>
+                    <div class="small text-white-50 mt-2">@UiText.L("Adm360.Dash.KpiSuccessRateDesc")</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <div class="text-muted small">@UiText.L("Adm360.Dash.KpiAvgResponseTime")</div>
+                    <div class="text-white-50 small">@UiText.L("Adm360.Dash.KpiAvgResponseTime")</div>
                     <h3 class="fw-bold text-light mb-0">@c.TempoMedioRespostaHoras.ToString("N1") h</h3>
-                    <div class="small text-muted mt-2">@UiText.L("Adm360.Dash.IntegrationFailuresLabel") @c.FalhasIntegracao</div>
+                    <div class="small text-white-50 mt-2">@UiText.L("Adm360.Dash.IntegrationFailuresLabel") @c.FalhasIntegracao</div>
                 </div>
             </div>
         </div>
@@ -221,9 +221,9 @@
         <div class="col-md-4">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <div class="text-muted small">@UiText.L("Adm360.Dash.KpiTotalDocuments")</div>
+                    <div class="text-white-50 small">@UiText.L("Adm360.Dash.KpiTotalDocuments")</div>
                     <h3 class="fw-bold text-light mb-0">@x.TotalRecebidos</h3>
-                    <div class="small text-muted mt-2">
+                    <div class="small text-white-50 mt-2">
                         <span class="badge bg-success">@x.Completos @UiText.L("Adm360.Dash.UnitCompleteDocs")</span>
                         <span class="badge bg-secondary ms-1">@x.Resumos @UiText.L("Adm360.Dash.UnitSummaryDocs")</span>
                     </div>
@@ -233,9 +233,9 @@
         <div class="col-md-4">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <div class="text-muted small">@UiText.L("Adm360.Dash.KpiPendingVerification")</div>
+                    <div class="text-white-50 small">@UiText.L("Adm360.Dash.KpiPendingVerification")</div>
                     <h3 class="fw-bold text-warning mb-0">@x.PendentesConferencia</h3>
-                    <div class="small text-muted mt-2">
+                    <div class="small text-white-50 mt-2">
                         <a href="/Administrativo360/DocumentosXml?status=PENDENTE" class="text-info text-decoration-none">@UiText.L("Adm360.Dash.LinkRunVerification") &rarr;</a>
                     </div>
                 </div>
@@ -244,16 +244,16 @@
         <div class="col-md-4">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <div class="text-muted small">@UiText.L("Adm360.Dash.KpiLinkedQuarantine")</div>
+                    <div class="text-white-50 small">@UiText.L("Adm360.Dash.KpiLinkedQuarantine")</div>
                     <h3 class="fw-bold text-success mb-0">@x.Vinculados</h3>
-                    <div class="small text-muted mt-2">
+                    <div class="small text-white-50 mt-2">
                         @if (x.Quarentenados > 0)
                         {
                             <span class="badge bg-danger">@x.Quarentenados @UiText.L("Adm360.Dash.UnitInQuarantine")</span>
                         }
                         else
                         {
-                            <span class="badge bg-dark border text-muted">0 @UiText.L("Adm360.Dash.UnitInQuarantine")</span>
+                            <span class="badge bg-dark border text-white-50">0 @UiText.L("Adm360.Dash.UnitInQuarantine")</span>
                         }
                     </div>
                 </div>
@@ -269,29 +269,29 @@
         <div class="col-md-4">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <div class="text-muted small">@UiText.L("Adm360.Dash.KpiActivePortalAccounts")</div>
+                    <div class="text-white-50 small">@UiText.L("Adm360.Dash.KpiActivePortalAccounts")</div>
                     <h3 class="fw-bold text-success mb-0">@i.ContasAtivas</h3>
-                    <div class="small text-muted mt-2">@UiText.L("Adm360.Dash.BlockedLabel") @i.ConexoesBloqueadas</div>
+                    <div class="small text-white-50 mt-2">@UiText.L("Adm360.Dash.BlockedLabel") @i.ConexoesBloqueadas</div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <div class="text-muted small">@UiText.L("Adm360.Dash.KpiFailuresLast24h")</div>
+                    <div class="text-white-50 small">@UiText.L("Adm360.Dash.KpiFailuresLast24h")</div>
                     <h3 class="fw-bold @(i.FalhasUltimas24h > 0 ? "text-danger" : "text-light") mb-0">@i.FalhasUltimas24h</h3>
-                    <div class="small text-muted mt-2">@UiText.L("Adm360.Dash.KpiFailuresLast24hDesc")</div>
+                    <div class="small text-white-50 mt-2">@UiText.L("Adm360.Dash.KpiFailuresLast24hDesc")</div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-body">
-                    <div class="text-muted small">@UiText.L("Adm360.Dash.KpiLastGlobalSync")</div>
+                    <div class="text-white-50 small">@UiText.L("Adm360.Dash.KpiLastGlobalSync")</div>
                     <h4 class="fw-bold text-light mb-0">
                         @(i.UltimaSincronizacaoGeral?.ToString("dd/MM/yyyy HH:mm") ?? UiText.L("Adm360.Dash.NoneValue"))
                     </h4>
-                    <div class="small text-muted mt-2">
+                    <div class="small text-white-50 mt-2">
                         <a href="/Administrativo360/Gestao/Monitor" class="text-success text-decoration-none">@UiText.L("Adm360.Dash.LinkOpenFullMonitor") &rarr;</a>
                     </div>
                 </div>

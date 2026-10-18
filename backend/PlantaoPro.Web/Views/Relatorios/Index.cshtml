@@ -2,11 +2,11 @@
     ViewData["Title"] = "Central de Relatórios e BI";
     var reports = new[]
     {
-        new { Title = "Plantões por período", Description = "Investigue cobertura e riscos operacionais por período com dados autorizados do tenant.", Icon = "bi-calendar2-check", Action = "Cobertura", Category = "Escalas e plantões", Scope = "Seu tenant", Formats = "Tela · CSV · impressão" },
-        new { Title = "Execução e conferência", Description = "Acompanhe registros, incompletos, conferência, correções e aprovações.", Icon = "bi-clipboard2-check", Action = "Execucao", Category = "Operacional", Scope = "Seu tenant", Formats = "Tela · CSV · impressão" },
+        new { Title = "Plantões por período", Description = "Investigue cobertura e riscos operacionais por período com dados autorizados da sua instituição.", Icon = "bi-calendar2-check", Action = "Cobertura", Category = "Escalas e plantões", Scope = "Sua instituição", Formats = "Tela · CSV · impressão" },
+        new { Title = "Execução e conferência", Description = "Acompanhe registros, incompletos, conferência, correções e aprovações.", Icon = "bi-clipboard2-check", Action = "Execucao", Category = "Operacional", Scope = "Sua instituição", Formats = "Tela · CSV · impressão" },
         new { Title = "Apuração por período", Description = "Separe valores apurados, fechados, pagos, ajustes e impedimentos.", Icon = "bi-cash-stack", Action = "Apuracao", Category = "Financeiro", Scope = "Perfil financeiro", Formats = "Tela · CSV · impressão" },
-        new { Title = "Convites e confirmações", Description = "Analise respostas e conversão dos convites enviados aos profissionais.", Icon = "bi-send-check", Action = "Convites", Category = "Operacional", Scope = "Seu tenant", Formats = "Tela" },
-        new { Title = "Produtividade profissional", Description = "Consulte os indicadores operacionais disponíveis sem expor conteúdo clínico.", Icon = "bi-activity", Action = "ProdutividadeMedica", Category = "Profissionais", Scope = "Seu tenant", Formats = "Tela" },
+        new { Title = "Convites e confirmações", Description = "Analise respostas e conversão dos convites enviados aos profissionais.", Icon = "bi-send-check", Action = "Convites", Category = "Operacional", Scope = "Sua instituição", Formats = "Tela" },
+        new { Title = "Produtividade profissional", Description = "Consulte os indicadores operacionais disponíveis sem expor conteúdo clínico.", Icon = "bi-activity", Action = "ProdutividadeMedica", Category = "Profissionais", Scope = "Sua instituição", Formats = "Tela" },
         new { Title = "Nível de serviço", Description = "Visualize os indicadores de SLA existentes e os pontos que exigem atenção.", Icon = "bi-speedometer2", Action = "Sla", Category = "Suporte", Scope = "Conforme permissão", Formats = "Tela" },
         new { Title = "Receita e cobrança SaaS", Description = "Consolide o faturamento real da plataforma por competência.", Icon = "bi-receipt", Action = "FaturamentoSaas", Category = "Financeiro", Scope = "Super Admin", Formats = "Tela" },
         new { Title = "Carteira de clientes SaaS", Description = "Consulte a carteira paginada e exporte somente as colunas autorizadas.", Icon = "bi-buildings", Action = "Saas", Category = "SaaS e clientes", Scope = "Super Admin", Formats = "Tela · CSV" }
@@ -67,7 +67,7 @@
     </section>
 
     <section class="pp-report-personalization" aria-labelledby="personalization-title">
-        <div class="pp-section-header"><div><span class="pp-eyebrow">Seu espaço</span><h2 id="personalization-title">Favoritos, recentes e filtros salvos</h2><p>Esses recursos exigem persistência segura por usuário e tenant. Permanecem claramente bloqueados para não simular operações.</p></div></div>
+        <div class="pp-section-header"><div><span class="pp-eyebrow">Seu espaço</span><h2 id="personalization-title">Favoritos, recentes e filtros salvos</h2><p>Esses recursos exigem persistência segura por usuário e por instituição. Permanecem claramente bloqueados para não simular operações.</p></div></div>
         <div class="pp-report-personalization__grid">
             <article><i class="bi bi-star" aria-hidden="true"></i><div><h3>Favoritos</h3><p>Nenhum favorito disponível nesta versão.</p></div><span>Persistência necessária</span></article>
             <article><i class="bi bi-clock-history" aria-hidden="true"></i><div><h3>Recentes</h3><p>O histórico não é inferido no navegador.</p></div><span>Auditoria necessária</span></article>

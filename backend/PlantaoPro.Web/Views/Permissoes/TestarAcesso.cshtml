@@ -2,11 +2,11 @@
 @{
     ViewData["Title"] = "Matriz de permissões";
 }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Matriz de permissões", "Teste visual de acesso por perfil, módulo, plano e tenant, com explicação do bloqueio.", "bi-shield-lock")' />
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Matriz de permissões", "Teste visual de acesso por perfil, módulo, plano e cliente, com explicação do bloqueio.", "bi-shield-lock")' />
 <div class="row g-3 mb-4">
     <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Perfis", Model.Perfis.Count.ToString(), "Perfis avaliados", "bi-people", null, "primary")' /></div>
     <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Módulos", Model.Modulos.Count.ToString(), "Cobertura de navegação", "bi-grid", null, "success")' /></div>
-    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Bloqueios", "4", "Perfil, plano, módulo e tenant", "bi-lock", null, "warning")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Bloqueios", "4", "Perfil, plano, módulo e cliente", "bi-lock", null, "warning")' /></div>
     <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Auditoria", "Ativa", "Acessos negados rastreados", "bi-journal-check", null, "success")' /></div>
 </div>
 <div class="card card-body mb-4">

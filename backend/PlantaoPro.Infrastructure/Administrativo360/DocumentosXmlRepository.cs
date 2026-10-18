@@ -1131,7 +1131,7 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                 new { command.ResponsavelId, tenantId }, tx, cancellationToken: ct));
 
             if (responsavelNome is null)
-                throw new Administrativo360BusinessException("O responsável informado não existe ou não pertence ao tenant atual.");
+                throw new Administrativo360BusinessException("O responsável informado não existe ou não pertence à sua instituição.");
 
             await cn.ExecuteAsync(new CommandDefinition(@"
                 UPDATE plantaopro.adm360_documentos_recebidos

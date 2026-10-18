@@ -12,7 +12,7 @@
     var description = reason == "CLIENTE_BLOQUEADO"
         ? "O login foi permitido, mas as operações normais ficam indisponíveis enquanto o status do cliente não for regularizado. Consulte as faturas pendentes ou acione o suporte."
         : reason == "MODULO_NAO_CONTRATADO"
-            ? "Esta rota exige um módulo contratado e habilitado para o tenant atual. O menu já oculta módulos indisponíveis; esta validação protege o acesso direto."
+            ? "Esta rota exige um módulo contratado e habilitado para a sua instituição atual. O menu já oculta módulos indisponíveis; esta validação protege o acesso direto."
             : reason == "VERIFICACAO_INDISPONIVEL"
                 ? "Não foi possível confirmar a contratação deste módulo agora. Nada mudou na sua assinatura: tente novamente em instantes."
                 : "Você não possui permissão para acessar este recurso. Se acredita que isso é um erro, procure o administrador do cliente.";

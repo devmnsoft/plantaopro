@@ -11,7 +11,7 @@
         : (hasTenantInFocus ? tenantName : "Instituição vinculada à sessão");
     var contextDescription = isGlobalAdmin
         ? (hasTenantInFocus ? "Visão Super Admin com cliente selecionado; ações permanecem auditáveis." : "Visão consolidada de clientes, módulos, cobrança e auditoria.")
-        : "Dados e ações limitados ao tenant e às permissões deste perfil.";
+        : "Dados e ações limitados à sua instituição e às permissões deste perfil.";
 }
 <section class="pp-context-bar @(isGlobalAdmin ? "is-global" : "is-tenant") @(isAssisted ? "is-assisted" : string.Empty)" aria-label="Contexto de acesso atual" data-context-bar>
     <div class="pp-context-bar__scope">
@@ -27,7 +27,7 @@
     <dl class="pp-context-bar__identity">
         <div><dt>Usuário</dt><dd>@userName</dd></div>
         <div><dt>Perfil</dt><dd>@profile.Replace('_', ' ')</dd></div>
-        <div><dt>Modo</dt><dd>@(isAssisted ? "Acesso assistido" : isGlobalAdmin ? "Global" : "Tenant")</dd></div>
+        <div><dt>Modo</dt><dd>@(isAssisted ? "Acesso assistido" : isGlobalAdmin ? "Global" : "Instituição")</dd></div>
     </dl>
     <div class="pp-context-bar__actions">
         @if (isGlobalAdmin)

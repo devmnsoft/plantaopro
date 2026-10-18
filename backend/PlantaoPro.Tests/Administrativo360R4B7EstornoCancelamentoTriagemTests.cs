@@ -930,7 +930,7 @@ public sealed class Administrativo360R4B7EstornoCancelamentoTriagemTests
             var exResp = await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
                 repoDoc.AbrirTriagemDocumentoAsync(TenantSantaCasa, UsuarioGestor,
                     new AbrirTriagemDocumentoCommand(docB, Guid.NewGuid(), DateTime.UtcNow.AddHours(1), null)));
-            Assert.Equal("O responsável informado não existe ou não pertence ao tenant atual.", exResp.Message);
+            Assert.Equal("O responsável informado não existe ou não pertence à sua instituição.", exResp.Message);
 
             // Prazo no passado.
             var exPrazo = await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>

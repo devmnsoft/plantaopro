@@ -55,7 +55,7 @@ public sealed class TenantIsolationValidatorService
         if (entidadeTenantId is null || entidadeTenantId.Value != tenantId)
         {
             await RegistrarBloqueioAsync(null, entidade, entidadeId, "entidade_de_outro_tenant", ip);
-            return ApiResponse<string>.Fail("Registro não pertence ao tenant atual.", 403);
+            return ApiResponse<string>.Fail("O registro não pertence à sua instituição.", 403);
         }
         return await ValidarAcessoTenantAsync(tenantId, entidade, entidadeId, ip);
     }

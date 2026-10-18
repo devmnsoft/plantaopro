@@ -2,7 +2,7 @@
 @{
     var editing = Model.Id != Guid.Empty;
     ViewData["Title"] = editing ? "Editar usuário" : "Novo usuário";
-    ViewData["Subtitle"] = editing ? "Atualize dados e perfis dentro do tenant atual." : "Crie um acesso individual com senha temporária e menor privilégio.";
+    ViewData["Subtitle"] = editing ? "Atualize dados e perfis dentro da instituição atual." : "Crie um acesso individual com senha temporária e menor privilégio.";
 }
 <div class="pp-page">
     <header class="pp-page-hero">
@@ -51,7 +51,7 @@
                             }
                         </select>
                     }
-                    <small id="tenant-help" class="form-help">O usuário e seus perfis permanecerão isolados neste tenant.</small>
+                    <small id="tenant-help" class="form-help">O usuário e seus perfis permanecerão isolados nesta instituição.</small>
                     <span asp-validation-for="TenantId" class="text-danger small"></span>
                 </div>
             }

@@ -7,7 +7,7 @@
 }
 <div class="pp-page">
     <header class="pp-page-hero">
-        <div class="pp-page-hero__copy"><span class="pp-eyebrow">Identidade e acesso</span><h2>Usuários por cliente</h2><p>Acompanhe perfil, status e último acesso sem expor usuários de outro tenant.</p></div>
+        <div class="pp-page-hero__copy"><span class="pp-eyebrow">Identidade e acesso</span><h2>Usuários por cliente</h2><p>Acompanhe perfil, status e último acesso sem expor usuários de outra instituição.</p></div>
         <div class="pp-hero-actions">
             <a class="btn btn-outline-primary" asp-controller="Perfis" asp-action="Index"><app-icon name="User" size="18" /> Gerenciar perfis</a>
             <a class="btn btn-primary" asp-action="Create"><i class="bi bi-person-plus" aria-hidden="true"></i> Novo usuário</a>
@@ -27,7 +27,7 @@
     }
     <section class="pp-card">
         <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Usuário</th><th>Cliente</th><th>Perfis</th><th>Último acesso</th><th>Identidade</th><th>Vínculo</th><th class="text-end">Ações</th></tr></thead><tbody>
-        @if (users.Length == 0) { <tr><td colspan="7"><div class="pp-empty-state"><h3>Nenhum usuário encontrado</h3><p>Revise a busca ou o tenant selecionado.</p></div></td></tr> }
+        @if (users.Length == 0) { <tr><td colspan="7"><div class="pp-empty-state"><h3>Nenhum usuário encontrado</h3><p>Revise a busca ou o cliente selecionado.</p></div></td></tr> }
         @foreach (var user in users)
         {
             <tr>

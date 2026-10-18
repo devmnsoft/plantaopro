@@ -28,7 +28,7 @@
     <details class="screen-guide-card mb-4">
         <summary><i class="bi bi-compass me-1" aria-hidden="true"></i>Como usar esta tela</summary>
         <div>
-            <p><strong>Abrir triagem.</strong> Atribui um responsável do tenant, um prazo futuro e uma observação opcional. Cada abertura é registrada como evento TRIAGEM na trilha de auditoria; reabrir atualiza os campos.</p>
+            <p><strong>Abrir triagem.</strong> Atribui um responsável da instituição, um prazo futuro e uma observação opcional. Cada abertura é registrada como evento TRIAGEM na trilha de auditoria; reabrir atualiza os campos.</p>
             <p><strong>Resolver triagem.</strong> Libera o documento da quarentena e exige justificativa. Resolver não é conferir: a conferência autorizada que libera o recebimento continua sendo decisão separada na Central XML.</p>
             <p><strong>Prazo.</strong> Você informa o horário local; o sistema converte para UTC antes do registro. Itens vencidos aparecem primeiro, com selo destacado.</p>
         </div>
@@ -168,7 +168,7 @@
                             <div class="mb-3">
                                 <label for="responsavel-@t.DocumentoId" class="form-label small fw-bold">Responsável *</label>
                                 <select id="responsavel-@t.DocumentoId" name="responsavelId" class="form-select bg-dark text-light border-secondary" required autofocus>
-                                    <option value="" selected disabled>Selecione um usuário do tenant…</option>
+                                    <option value="" selected disabled>Selecione um usuário da instituição…</option>
                                     @foreach (var u in Model.Usuarios.Where(x => !x.Locked).OrderBy(x => x.Rotulo))
                                     {
                                         <option value="@u.Id" title="@u.Role">@u.Rotulo</option>
@@ -176,7 +176,7 @@
                                 </select>
                                 @if (!Model.Usuarios.Any())
                                 {
-                                    <div class="form-text text-danger small">Nenhum usuário disponível para atribuição neste tenant.</div>
+                                    <div class="form-text text-danger small">Nenhum usuário disponível para atribuição nesta instituição.</div>
                                 }
                             </div>
                             <div class="mb-3">

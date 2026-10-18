@@ -2,7 +2,7 @@
 @{
  ViewData["Title"] = "Configurações";
  var groups = new[] {
-  new { Title="Organização e unidade", Text="Identidade institucional e parâmetros do tenant.", Controller="Parametrizacoes", Action="Index", Available=true },
+  new { Title="Organização e unidade", Text="Identidade institucional e parâmetros da instituição.", Controller="Parametrizacoes", Action="Index", Available=true },
   new { Title="Usuários, perfis e permissões", Text="Acessos sujeitos às policies do servidor.", Controller="Usuarios", Action="Index", Available=true },
   new { Title="Jornada clínica", Text="Parâmetros assistenciais disponíveis na Saúde 360.", Controller="Saude360", Action="Index", Available=true },
   new { Title="Jornada operacional", Text="Plantões, escalas e regras da operação.", Controller="Plantoes", Action="Index", Available=true },
@@ -15,7 +15,7 @@
  };
 }
 <div class="pp-page pp-settings-page" data-configuration-groups>
- <header class="pp-page-hero" aria-labelledby="settings-title"><div class="pp-page-hero__copy"><span class="pp-eyebrow">Central administrativa</span><h1 id="settings-title">Configurações por domínio</h1><p>Dez frentes operacionais com acesso às rotas existentes. “Disponível” indica navegação, não presume que o tenant esteja configurado.</p></div><div class="pp-hero-actions"><a class="btn btn-primary" asp-controller="Usuario" asp-action="Edit">Editar meu perfil</a></div></header>
+ <header class="pp-page-hero" aria-labelledby="settings-title"><div class="pp-page-hero__copy"><span class="pp-eyebrow">Central administrativa</span><h1 id="settings-title">Configurações por domínio</h1><p>Dez frentes operacionais com acesso às rotas existentes. “Disponível” indica navegação, não presume que a instituição esteja configurada.</p></div><div class="pp-hero-actions"><a class="btn btn-primary" asp-controller="Usuario" asp-action="Edit">Editar meu perfil</a></div></header>
  @if (!string.IsNullOrWhiteSpace(ViewBag.ErrorMessage as string)) { <div class="pp-notice" role="alert"><strong>Não foi possível consultar a conta.</strong> @ViewBag.ErrorMessage</div> }
  <section class="pp-card pp-account-card" aria-labelledby="account-title"><div><span class="pp-eyebrow">Conta autenticada</span><h2 id="account-title">@(string.IsNullOrWhiteSpace(Model.Nome) ? "Dados da conta indisponíveis" : Model.Nome)</h2><p>@(string.IsNullOrWhiteSpace(Model.Email) ? "Seu perfil ainda não foi encontrado." : Model.Email)</p></div></section>
  <section aria-labelledby="domains-title"><div class="pp-section-header"><div><h2 id="domains-title">Domínios de configuração</h2><p>O status de configuração permanece não informado até existir uma fonte específica.</p></div></div><div class="pp-governance-grid">

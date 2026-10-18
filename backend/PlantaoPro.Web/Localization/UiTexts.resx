@@ -1070,7 +1070,7 @@
     <value>Risco</value>
   </data>
   <data name="Clinical.PhWhenToUse" xml:space="preserve">
-    <value>Use esta tela para conduzir a jornada assistencial com dados reais da API e contexto por tenant.</value>
+    <value>Use esta tela para conduzir a jornada assistencial com dados reais do sistema e contexto da sua instituição.</value>
   </data>
   <data name="Clinical.PhStep1" xml:space="preserve">
     <value>Revise os indicadores e registros.</value>
@@ -1088,7 +1088,7 @@
     <value>Acesso clínico é auditado.</value>
   </data>
   <data name="Clinical.PhTipTenant" xml:space="preserve">
-    <value>Registros respeitam o tenant atual.</value>
+    <value>Registros respeitam a instituição atual.</value>
   </data>
   <data name="Clinical.PhTipSensitive" xml:space="preserve">
     <value>Dados sensíveis não aparecem em logs técnicos.</value>
@@ -1154,7 +1154,7 @@
     <value>Continue somente com vínculo e status reais</value>
   </data>
   <data name="Clinical.NextBody" xml:space="preserve">
-    <value>Abra um registro retornado pela API para confirmar paciente, agendamento e identificadores antes de avançar. Ações sem vínculo permanecem indisponíveis.</value>
+    <value>Abra um registro para confirmar paciente, agendamento e identificadores antes de avançar. Ações sem vínculo permanecem indisponíveis.</value>
   </data>
   <data name="Clinical.NextRulesButton" xml:space="preserve">
     <value>Ver regras da jornada</value>
@@ -1175,13 +1175,13 @@
     <value>Faturamento</value>
   </data>
   <data name="Clinical.PatientBlockBody" xml:space="preserve">
-    <value>Selecione um paciente retornado pela API para consultar este bloco. Nenhum histórico demonstrativo é exibido.</value>
+    <value>Selecione um paciente para consultar este bloco. Nenhum histórico demonstrativo é exibido.</value>
   </data>
   <data name="Clinical.EmptyTitle" xml:space="preserve">
     <value>Nenhum registro de {0}</value>
   </data>
   <data name="Clinical.EmptyBody" xml:space="preserve">
-    <value>A API não retornou registros reais para este módulo.</value>
+    <value>O sistema ainda não tem registros reais para este módulo.</value>
   </data>
   <data name="Clinical.EmptyTableBody" xml:space="preserve">
     <value>Comece pela ação principal desta tela ou ajuste os filtros da jornada.</value>
@@ -1205,7 +1205,7 @@
     <value>Indisponível</value>
   </data>
   <data name="Clinical.KpiUnavailableHint" xml:space="preserve">
-    <value>a API não confirmou o total</value>
+    <value>o total ainda não foi confirmado</value>
   </data>
   <data name="Clinical.KpiAccess" xml:space="preserve">
     <value>Controle de acesso</value>
@@ -1214,7 +1214,7 @@
     <value>Protegido</value>
   </data>
   <data name="Clinical.KpiProtectedHint" xml:space="preserve">
-    <value>tenant, perfil e auditoria</value>
+    <value>instituição, perfil e auditoria</value>
   </data>
   <data name="Clinical.RecordsKicker" xml:space="preserve">
     <value>Registros assistenciais</value>
@@ -1241,7 +1241,7 @@
     <value>LGPD e auditoria:</value>
   </data>
   <data name="Clinical.LgpdBody" xml:space="preserve">
-    <value>as ações deste módulo usam endpoints autenticados, escopo por tenant e trilha de auditoria clínica/operacional.</value>
+    <value>as ações deste módulo usam conexão autenticada, escopo da sua instituição e trilha de auditoria clínica/operacional.</value>
   </data>
   <data name="Clinical.PageHelpAria" xml:space="preserve">
     <value>Ajuda contextual da tela</value>
@@ -1262,7 +1262,7 @@
     <value>Manual</value>
   </data>
   <data name="Clinical.FormHelpDescription" xml:space="preserve">
-    <value>Preencha os campos com orientação contextual, validação server-side e envio para a API configurada.</value>
+    <value>Preencha os campos com orientação contextual, verificação integrada e envio seguro dos dados.</value>
   </data>
   <data name="Clinical.FormHelpWhenToUse" xml:space="preserve">
     <value>Use este formulário para registrar uma etapa real da jornada Paciente -&gt; Agendamento -&gt; Check-in -&gt; Triagem -&gt; Consulta -&gt; Financeiro.</value>
@@ -1271,7 +1271,7 @@
     <value>Preencha os dados obrigatórios do contexto.</value>
   </data>
   <data name="Clinical.FormHelpStep2" xml:space="preserve">
-    <value>Use os seletores por nome; o sistema grava o identificador internamente sem expor GUID ao usuário.</value>
+    <value>Use os seletores por nome; o sistema grava o identificador internamente sem expor códigos técnicos ao usuário.</value>
   </data>
   <data name="Clinical.FormHelpStep3" xml:space="preserve">
     <value>Clique em Salvar e aguarde o toast de confirmação.</value>
@@ -1283,7 +1283,7 @@
     <value>Não informe dados clínicos sensíveis em campos administrativos.</value>
   </data>
   <data name="Clinical.FormHelpTip2" xml:space="preserve">
-    <value>Todo POST usa antiforgery e endpoint API real.</value>
+    <value>Todo envio usa verificação antifalsificação e comunicação real com o sistema.</value>
   </data>
   <data name="Clinical.FormHelpTip3" xml:space="preserve">
     <value>Campos opcionais ajudam em casos sem CPF ou convênio.</value>
@@ -1292,7 +1292,7 @@
     <value>Recepção, triagem, médico e financeiro visualizam somente o que o perfil permitir.</value>
   </data>
   <data name="Clinical.FormSubline" xml:space="preserve">
-    <value>Formulário auditável com escopo por tenant e sem exposição de dados clínicos em logs.</value>
+    <value>Formulário auditável com escopo da sua instituição e sem exposição de dados clínicos nos registros de eventos.</value>
   </data>
   <data name="Clinical.FormHiddenHint" xml:space="preserve">
     <value>Formulário Saúde 360 com validação, antiforgery e preservação dos dados em caso de erro.</value>
@@ -1439,7 +1439,7 @@
     <value>Encaminhar para consulta</value>
   </data>
   <data name="Clinical.TriageReferDisabledTitle" xml:space="preserve">
-    <value>O encaminhamento será liberado quando a API retornar o identificador da consulta vinculada.</value>
+    <value>O encaminhamento será liberado quando o sistema registrar a consulta vinculada.</value>
   </data>
   <data name="Clinical.LookupSelected" xml:space="preserve">
     <value>Registro selecionado</value>
@@ -1502,7 +1502,7 @@
     <value>Sem cliente selecionado</value>
   </data>
   <data name="Onboarding.NoClientBody" xml:space="preserve">
-    <value>O onboarding pertence a um cliente (tenant). Crie um novo cliente com plano para gerar a jornada adaptada ao contrato, ou selecione um cliente existente em AdminSaaS.</value>
+    <value>Cada jornada de onboarding pertence a um cliente. Crie um novo cliente com plano para gerar a jornada adaptada ao contrato, ou selecione um cliente existente em AdminSaaS.</value>
   </data>
   <data name="Onboarding.RegisterClient" xml:space="preserve">
     <value>Cadastrar cliente</value>
@@ -1637,7 +1637,7 @@
     <value>Conclusão</value>
   </data>
   <data name="Onboarding.CompanySectionBody" xml:space="preserve">
-    <value>Dados fiscais e canais de contato do tenant.</value>
+    <value>Dados fiscais e canais de contato do cliente.</value>
   </data>
   <data name="Onboarding.LabelCompanyName" xml:space="preserve">
     <value>Razão social</value>
@@ -1649,7 +1649,7 @@
     <value>Nome fantasia</value>
   </data>
   <data name="Onboarding.HelpCnpj" xml:space="preserve">
-    <value>Informe o CNPJ para criar o tenant.</value>
+    <value>Informe o CNPJ para criar o cliente.</value>
   </data>
   <data name="Onboarding.LabelCorporateEmail" xml:space="preserve">
     <value>E-mail corporativo</value>
@@ -1682,7 +1682,7 @@
     <value>Período de teste</value>
   </data>
   <data name="Onboarding.HelpInitialStatus" xml:space="preserve">
-    <value>Define a disponibilidade inicial do tenant.</value>
+    <value>Define a disponibilidade inicial do cliente.</value>
   </data>
   <data name="Onboarding.LabelUnitName" xml:space="preserve">
     <value>Nome da unidade</value>
@@ -1709,7 +1709,7 @@
     <value>Administrador inicial</value>
   </data>
   <data name="Onboarding.AdminSectionBody" xml:space="preserve">
-    <value>Este usuário receberá acesso administrativo ao novo tenant.</value>
+    <value>Este usuário receberá acesso administrativo ao novo cliente.</value>
   </data>
   <data name="Onboarding.HelpAdminEmail" xml:space="preserve">
     <value>O e-mail corporativo será usado para criar o administrador inicial.</value>
@@ -1865,7 +1865,7 @@
     <value>Captação &amp; Entrada</value>
   </data>
   <data name="Adm360.Cotacoes.GuideStep1Body" xml:space="preserve">
-    <value>As cotações são captadas via conector de portal ou importação manual com unicidade por revisão externa e proteção de payload.</value>
+    <value>As cotações são captadas via conector de portal ou importação manual com unicidade por revisão externa e proteção da integridade dos dados.</value>
   </data>
   <data name="Adm360.Cotacoes.GuideStep2Title" xml:space="preserve">
     <value>De/Para &amp; Validação</value>
@@ -1880,7 +1880,7 @@
     <value>Gera rascunho cirúrgico canônico idempotente no Administrativo 360, mantendo rastreabilidade total.</value>
   </data>
   <data name="Adm360.Cotacoes.GuideStep4Title" xml:space="preserve">
-    <value>Fila Outbox Segura</value>
+    <value>Fila de Envios Segura</value>
   </data>
   <data name="Adm360.Cotacoes.GuideStep4Body" xml:space="preserve">
     <value>A resposta aprovada gera snapshot imutável e entra na fila de envio com retentativa e consulta de processamento.</value>
@@ -2000,16 +2000,16 @@
     <value>Data Fim</value>
   </data>
   <data name="Adm360.Dash.CapabilitiesTitle" xml:space="preserve">
-    <value>Capacidades Contratadas no Tenant</value>
+    <value>Capacidades Contratadas por Instituição</value>
   </data>
   <data name="Adm360.Dash.CapabilitiesIsolationBadge" xml:space="preserve">
-    <value>Isolamento Multi-tenant Ativo</value>
+    <value>Isolamento entre Instituições Ativo</value>
   </data>
   <data name="Adm360.Dash.CapQuotePortalsTitle" xml:space="preserve">
     <value>Portais de Cotação</value>
   </data>
   <data name="Adm360.Dash.CapQuotePortalsDesc" xml:space="preserve">
-    <value>Captação OPMENEXO, INPART e transmissão outbox.</value>
+    <value>Captação OPMENEXO, INPART e envios automáticos.</value>
   </data>
   <data name="Adm360.Dash.CapXmlCenterTitle" xml:space="preserve">
     <value>Central XML Recebidos</value>
@@ -2123,7 +2123,7 @@
     <value>Falhas nas Últimas 24h</value>
   </data>
   <data name="Adm360.Dash.KpiFailuresLast24hDesc" xml:space="preserve">
-    <value>Tentativas de outbox e comunicação</value>
+    <value>Tentativas de envio e comunicação</value>
   </data>
   <data name="Adm360.Dash.KpiLastGlobalSync" xml:space="preserve">
     <value>Última Sincronização Geral</value>
@@ -2141,7 +2141,7 @@
     <value>Gestão Organizacional</value>
   </data>
   <data name="Adm360.Org.Subheading" xml:space="preserve">
-    <value>Departamentos, cargos, colaboradores e contratos de trabalho — dados restritos ao tenant autenticado, com histórico preservado em todas as transições.</value>
+    <value>Departamentos, cargos, colaboradores e contratos de trabalho — dados restritos à instituição autenticada, com histórico preservado em todas as transições.</value>
   </data>
   <data name="Adm360.Org.KpiDepartments" xml:space="preserve">
     <value>Departamentos cadastrados</value>
@@ -2721,7 +2721,7 @@
     <value>vigência regulatória até </value>
   </data>
   <data name="Adm360.CotDet.LblIdentificadorManual" xml:space="preserve">
-    <value>ou identificador manual (UUID)</value>
+    <value>ou identificador manual</value>
   </data>
   <data name="Adm360.CotDet.OptSelecioneProduto" xml:space="preserve">
     <value>-- Selecione o Produto --</value>
@@ -3546,7 +3546,7 @@
     <value>Baixar</value>
   </data>
   <data name="Adm360.CotDet.OutboxTitulo" xml:space="preserve">
-    <value>Histórico e Fila Outbox de Transmissão</value>
+    <value>Histórico e Fila de Envios</value>
   </data>
   <data name="Adm360.CotDet.OutboxVazio" xml:space="preserve">
     <value>Nenhuma resposta transmitida ou em fila.</value>

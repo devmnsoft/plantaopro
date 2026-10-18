@@ -61,7 +61,7 @@
     }
     else
     {
-        <div class="card"><table class="table mb-0"><thead><tr><th>E-mail</th><th>Perfis</th><th>Expira em</th><th>Estado</th><th></th></tr></thead><tbody>
+        <div class="card"><div class="table-responsive"><table class="table mb-0"><thead><tr><th>E-mail</th><th>Perfis</th><th>Expira em</th><th>Estado</th><th></th></tr></thead><tbody>
         @foreach (var c in Model.Convites)
         {
             <tr>
@@ -81,7 +81,7 @@
                 </td>
             </tr>
         }
-        </tbody></table></div>
+        </tbody></table></div></div>
     }
     }
 </section>

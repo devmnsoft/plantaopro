@@ -11,11 +11,11 @@
     }
     else
     {
-        <div class="card"><table class="table mb-0"><thead><tr><th>Vencimento</th><th>Status</th><th>Valor</th></tr></thead><tbody>
+        <div class="card"><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Vencimento</th><th>Status</th><th>Valor</th></tr></thead><tbody>
         @foreach (var f in Model.Faturas)
         {
             <tr><td>@(f.Data?.ToString("dd/MM/yyyy") ?? "—")</td><td>@f.Status</td><td>@f.Valor</td></tr>
         }
-        </tbody></table></div>
+        </tbody></table></div></div>
     }
 </section>

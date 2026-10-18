@@ -126,6 +126,10 @@ public partial class Administrativo360Controller
         ViewBag.Situacao = d.Situacao;
         ViewBag.Numero = d.Numero;
         ViewBag.Revisao = d.Revisao;
+
+        // E6 (rodada 32): espelha o NOVO — sem lookups os selects da tela de edição chegam vazios.
+        await PreencherLookupsOrcamentoAsync(client, form);
+
         return View(form);
     }
 

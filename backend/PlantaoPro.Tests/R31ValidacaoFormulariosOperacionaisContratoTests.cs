@@ -69,6 +69,7 @@ public class R31ValidacaoFormulariosOperacionaisContratoTests
         Assert.Matches(@"name=""Procedimento""[^>]*required[^>]*maxlength=""180""", orcEd);
         Assert.Matches(@"name=""VendedorId""[^>]*maxlength=""36""", orcEd);
         Assert.DoesNotContain("ID do Produto", orcEd, StringComparison.Ordinal);
-        Assert.Contains("Código do produto", orcEd, StringComparison.Ordinal);
+        // Nota R32: o placeholder "Código do produto" deixou de existir quando o campo virou select de
+        // lookup (R32LookupsCampoDeIdContratoTests cobre a estrutura nova).
     }
 }

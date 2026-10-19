@@ -133,6 +133,10 @@ create table if not exists plantaopro.exportacao_logs (
 
 create index if not exists idx_plantao_historico_plantao on plantaopro.plantao_historico(plantao_id, reg_date desc);
 create index if not exists idx_medico_recomendacao_log_plantao on plantaopro.medico_recomendacao_log(plantao_id, score desc);
+-- R66 (rodada 66): convergencia entre as duas criacoes de alertas_operacionais
+-- existentes nas migrations de maio/2026 (uma sem coluna status; esta, com). O
+-- ADD COLUMN IF NOT EXISTS garante que o indice abaixo funcione em qualquer ordem.
+alter table if exists plantaopro.alertas_operacionais add column if not exists status varchar(30) not null default 'ABERTO';
 create index if not exists idx_alertas_operacionais_status on plantaopro.alertas_operacionais(status, severidade, reg_date desc);
 create index if not exists idx_pagamento_contestacoes_pagamento on plantaopro.pagamento_contestacoes(pagamento_id, status);
 create index if not exists idx_comunicacao_contextos_ref on plantaopro.comunicacao_contextos(tipo, referencia_id);

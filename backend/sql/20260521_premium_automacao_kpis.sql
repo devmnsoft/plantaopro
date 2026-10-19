@@ -6,17 +6,33 @@ alter table if exists plantaopro.escalas
     add column if not exists score_prioridade numeric(8,2) not null default 0,
     add column if not exists conflito_detectado boolean not null default false;
 
-alter table if exists plantaopro.escalas
-    add constraint if not exists ck_escalas_horas_previstas_non_negative check (horas_previstas >= 0),
-    add constraint if not exists ck_escalas_score_prioridade_non_negative check (score_prioridade >= 0);
+do $$ begin
+    alter table plantaopro.escalas
+        add constraint ck_escalas_horas_previstas_non_negative check (horas_previstas >= 0);
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+    alter table plantaopro.escalas
+        add constraint ck_escalas_score_prioridade_non_negative check (score_prioridade >= 0);
+exception when duplicate_object then null;
+end $$;
 
 alter table if exists plantaopro.pagamentos
     add column if not exists valor_hora numeric(10,2) not null default 0,
     add column if not exists horas_referencia numeric(8,2) not null default 0;
 
-alter table if exists plantaopro.pagamentos
-    add constraint if not exists ck_pagamentos_valor_hora_non_negative check (valor_hora >= 0),
-    add constraint if not exists ck_pagamentos_horas_ref_non_negative check (horas_referencia >= 0);
+do $$ begin
+    alter table plantaopro.pagamentos
+        add constraint ck_pagamentos_valor_hora_non_negative check (valor_hora >= 0);
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+    alter table plantaopro.pagamentos
+        add constraint ck_pagamentos_horas_ref_non_negative check (horas_referencia >= 0);
+exception when duplicate_object then null;
+end $$;
 
 create index if not exists idx_escalas_medico_status_regdate on plantaopro.escalas(medico_id, status, reg_date desc);
 create index if not exists idx_plantoes_periodo_status on plantaopro.plantoes(data_inicio, data_fim, status);

@@ -70,6 +70,10 @@ CREATE TABLE IF NOT EXISTS ui_audit_events (
     payload jsonb NOT NULL DEFAULT '{}'::jsonb,
     criado_em timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS idx_saved_views_usuario_modulo ON saved_views(usuario_id, modulo);
+-- R66: indice obsoleto - as colunas usuario_id/modulo foram renomeadas na evolucao do schema;
+-- mantido comentado para a importacao unica convergir com o estado do banco em operacao.
+-- CREATE INDEX IF NOT EXISTS idx_saved_views_usuario_modulo ON saved_views(usuario_id, modulo);
 CREATE INDEX IF NOT EXISTS idx_recent_items_usuario ON recent_items(usuario_id, acessado_em DESC);
-CREATE INDEX IF NOT EXISTS idx_operational_timeline_entidade ON operational_timeline_events(entidade, entidade_id, criado_em DESC);
+-- R66: indice obsoleto - a coluna entidade nao existe na evolucao final da tabela;
+-- mantido comentado para a importacao unica convergir com o estado do banco em operacao.
+-- CREATE INDEX IF NOT EXISTS idx_operational_timeline_entidade ON operational_timeline_events(entidade, entidade_id, criado_em DESC);

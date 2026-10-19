@@ -114,6 +114,74 @@ create table if not exists plantaopro.permissao_logs(
     reg_status char(1) not null default 'A'
 );
 
+-- R66 (rodada 66): convergencia para instalacao unica — as tabelas acima podem ja
+-- existir em formato canonico diferente (criadas por secoes anteriores do script);
+-- garante que todas as colunas usadas pelos indices/constraints existam.
+alter table if exists plantaopro.api_request_logs add column if not exists endpoint text not null default 'API';
+alter table if exists plantaopro.api_request_logs add column if not exists method varchar(12) not null default 'GET';
+alter table if exists plantaopro.api_request_logs add column if not exists status_code int not null default 0;
+alter table if exists plantaopro.api_request_logs add column if not exists usuario_id uuid null;
+alter table if exists plantaopro.api_request_logs add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.api_request_logs add column if not exists perfil varchar(120) null;
+alter table if exists plantaopro.api_request_logs add column if not exists ip varchar(80) null;
+alter table if exists plantaopro.api_request_logs add column if not exists duration_ms bigint not null default 0;
+alter table if exists plantaopro.api_request_logs add column if not exists sucesso boolean not null default true;
+alter table if exists plantaopro.api_request_logs add column if not exists error_message text null;
+alter table if exists plantaopro.api_request_logs add column if not exists reg_date timestamp not null default now();
+alter table if exists plantaopro.api_request_logs add column if not exists reg_status char(1) not null default 'A';
+
+alter table if exists plantaopro.api_error_logs add column if not exists endpoint text not null default 'API';
+alter table if exists plantaopro.api_error_logs add column if not exists method varchar(12) not null default 'GET';
+alter table if exists plantaopro.api_error_logs add column if not exists status_code int not null default 0;
+alter table if exists plantaopro.api_error_logs add column if not exists usuario_id uuid null;
+alter table if exists plantaopro.api_error_logs add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.api_error_logs add column if not exists perfil varchar(120) null;
+alter table if exists plantaopro.api_error_logs add column if not exists ip varchar(80) null;
+alter table if exists plantaopro.api_error_logs add column if not exists error_message text null;
+alter table if exists plantaopro.api_error_logs add column if not exists reg_date timestamp not null default now();
+alter table if exists plantaopro.api_error_logs add column if not exists reg_status char(1) not null default 'A';
+
+alter table if exists plantaopro.acessos_negados_log add column if not exists usuario_id uuid null;
+alter table if exists plantaopro.acessos_negados_log add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.acessos_negados_log add column if not exists entidade varchar(80) null;
+alter table if exists plantaopro.acessos_negados_log add column if not exists entidade_id uuid null;
+alter table if exists plantaopro.acessos_negados_log add column if not exists motivo text not null default '';
+alter table if exists plantaopro.acessos_negados_log add column if not exists ip varchar(80) null;
+alter table if exists plantaopro.acessos_negados_log add column if not exists perfil varchar(120) null;
+alter table if exists plantaopro.acessos_negados_log add column if not exists reg_date timestamp not null default now();
+alter table if exists plantaopro.acessos_negados_log add column if not exists reg_status char(1) not null default 'A';
+
+alter table if exists plantaopro.exportacao_logs add column if not exists usuario_id uuid null;
+alter table if exists plantaopro.exportacao_logs add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.exportacao_logs add column if not exists tipo varchar(80) not null default 'EXPORTACAO';
+alter table if exists plantaopro.exportacao_logs add column if not exists ip varchar(80) null;
+alter table if exists plantaopro.exportacao_logs add column if not exists reg_date timestamp not null default now();
+alter table if exists plantaopro.exportacao_logs add column if not exists reg_status char(1) not null default 'A';
+
+alter table if exists plantaopro.usuario_atividade add column if not exists usuario_id uuid not null default '00000000-0000-0000-0000-000000000000'::uuid;
+alter table if exists plantaopro.usuario_atividade add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.usuario_atividade add column if not exists atividade varchar(120) not null default 'ATIVIDADE';
+alter table if exists plantaopro.usuario_atividade add column if not exists detalhes jsonb not null default '{}'::jsonb;
+alter table if exists plantaopro.usuario_atividade add column if not exists reg_date timestamp not null default now();
+alter table if exists plantaopro.usuario_atividade add column if not exists reg_status char(1) not null default 'A';
+
+alter table if exists plantaopro.observabilidade_eventos add column if not exists tipo varchar(80) not null default 'EVENTO';
+alter table if exists plantaopro.observabilidade_eventos add column if not exists severidade varchar(30) not null default 'MEDIA';
+alter table if exists plantaopro.observabilidade_eventos add column if not exists origem varchar(120) not null default 'SISTEMA';
+alter table if exists plantaopro.observabilidade_eventos add column if not exists mensagem text not null default '';
+alter table if exists plantaopro.observabilidade_eventos add column if not exists detalhes jsonb not null default '{}'::jsonb;
+alter table if exists plantaopro.observabilidade_eventos add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.observabilidade_eventos add column if not exists reg_date timestamp not null default now();
+alter table if exists plantaopro.observabilidade_eventos add column if not exists reg_status char(1) not null default 'A';
+
+alter table if exists plantaopro.permissao_logs add column if not exists usuario_id uuid null;
+alter table if exists plantaopro.permissao_logs add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.permissao_logs add column if not exists permissao varchar(120) not null default 'PERMISSAO';
+alter table if exists plantaopro.permissao_logs add column if not exists autorizado boolean not null default false;
+alter table if exists plantaopro.permissao_logs add column if not exists motivo text null;
+alter table if exists plantaopro.permissao_logs add column if not exists reg_date timestamp not null default now();
+alter table if exists plantaopro.permissao_logs add column if not exists reg_status char(1) not null default 'A';
+
 create index if not exists ix_auditoria_acoes_cliente_reg_date on plantaopro.auditoria_acoes_criticas(cliente_id, reg_date desc);
 create index if not exists ix_auditoria_acoes_usuario_reg_date on plantaopro.auditoria_acoes_criticas(usuario_id, reg_date desc);
 create index if not exists ix_auditoria_acoes_entidade on plantaopro.auditoria_acoes_criticas(entidade, entidade_id);

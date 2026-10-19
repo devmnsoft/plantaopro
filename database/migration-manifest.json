@@ -1,1387 +1,1399 @@
 {
-  "schemaVersion": "v2.16.7",
-  "generatedAt": "2026-10-14",
-  "migrations": [
-    {
-      "version": "20260607_saas_lgpd_jornada_comercial_ajuda",
-      "source": "database/migrations/20260607_saas_lgpd_jornada_comercial_ajuda.sql",
-      "checksum": "344b376b176e2843c2ee5b3e409794331cd1d879fbdb433f3190211c7ee245db",
-      "dependsOn": [],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_fix_api_error_logs_defaults",
-      "source": "database/migrations/2026_fix_api_error_logs_defaults.sql",
-      "checksum": "192db90a8714e71a41887a647273f53aa416effb84459d6938fa6b9348241052",
-      "dependsOn": [
-        "20260607_saas_lgpd_jornada_comercial_ajuda"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_fix_api_error_logs_not_null",
-      "source": "database/migrations/2026_fix_api_error_logs_not_null.sql",
-      "checksum": "98804b1ff25f0229e85516bc7fc3c1c9418e1583ef36150d14cd32c86b6bc8b5",
-      "dependsOn": [
-        "2026_fix_api_error_logs_defaults"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_fix_cid_tabela_schema",
-      "source": "database/migrations/2026_fix_cid_tabela_schema.sql",
-      "checksum": "0c73d860469067652e8a634815b095d743c199253d29ab219001bfae05d94f91",
-      "dependsOn": [
-        "2026_fix_api_error_logs_not_null"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_fix_clinica_financeiro_minimo",
-      "source": "database/migrations/2026_fix_clinica_financeiro_minimo.sql",
-      "checksum": "cd6316fae3f95616752694d095564011e14f71ab8367d0e5347c006d05861f94",
-      "dependsOn": [
-        "2026_fix_cid_tabela_schema"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_plantao_pro_automacao_operacional_fase4",
-      "source": "database/migrations/2026_plantao_pro_automacao_operacional_fase4.sql",
-      "checksum": "8f9f0c01a26cc85dd1ecba10d7dd253adf967c8a4d153104ff9c2f77b54e2ddd",
-      "dependsOn": [
-        "2026_fix_clinica_financeiro_minimo"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_plantao_pro_piloto_comercial_operacao_b2b",
-      "source": "database/migrations/2026_plantao_pro_piloto_comercial_operacao_b2b.sql",
-      "checksum": "7eaf99a4f89ad9ec7ace746b0541e537c2f71f8a3f46da1dcfaafffbbed74635",
-      "dependsOn": [
-        "2026_plantao_pro_automacao_operacional_fase4"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_plantao_pro_saas_comercial_lgpd_jornada",
-      "source": "database/migrations/2026_plantao_pro_saas_comercial_lgpd_jornada.sql",
-      "checksum": "a9c5b9c9631cfd2c724f4afa03cf25f1dd2a5ed821cc31c45d45e55576c91665",
-      "dependsOn": [
-        "2026_plantao_pro_piloto_comercial_operacao_b2b"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_plantao_pro_saas_inteligente",
-      "source": "database/migrations/2026_plantao_pro_saas_inteligente.sql",
-      "checksum": "0a84413356137cf461bf59b37531f8de237c439671e49a2e5e6fd95019ece231",
-      "dependsOn": [
-        "2026_plantao_pro_saas_comercial_lgpd_jornada"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_plantao_pro_saas_inteligente_auditavel",
-      "source": "database/migrations/2026_plantao_pro_saas_inteligente_auditavel.sql",
-      "checksum": "a9c5b9c9631cfd2c724f4afa03cf25f1dd2a5ed821cc31c45d45e55576c91665",
-      "dependsOn": [
-        "2026_plantao_pro_saas_inteligente"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_plantao_pro_saas_inteligente_funcional",
-      "source": "database/migrations/2026_plantao_pro_saas_inteligente_funcional.sql",
-      "checksum": "4b0e2f0774e1f8e1a4cb6cf38c6171bb3130c6fff666ce25199fa4ad8484c471",
-      "dependsOn": [
-        "2026_plantao_pro_saas_inteligente_auditavel"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_plantao_pro_saas_jornada_lgpd_inteligencia",
-      "source": "database/migrations/2026_plantao_pro_saas_jornada_lgpd_inteligencia.sql",
-      "checksum": "e7c34907da664d81c6ffcced76776b2af708316d15c95435fa2f5d6e01a647ab",
-      "dependsOn": [
-        "2026_plantao_pro_saas_inteligente_funcional"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_plantao_pro_saas_lgpd_jornada_inteligente",
-      "source": "database/migrations/2026_plantao_pro_saas_lgpd_jornada_inteligente.sql",
-      "checksum": "9c22fc55fed0fc481f7db0c2f1b7a5390b68887f62ce178fb8a71de83413eb5d",
-      "dependsOn": [
-        "2026_plantao_pro_saas_jornada_lgpd_inteligencia"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_plantao_pro_saude360_base_clinica",
-      "source": "database/migrations/2026_plantao_pro_saude360_base_clinica.sql",
-      "checksum": "8e4456bae3d834c609d183ccfa3de3b75df7b5a2acc8b91d40ea44532d564984",
-      "dependsOn": [
-        "2026_plantao_pro_saas_lgpd_jornada_inteligente"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_plantao_pro_saude360_modulos_clinicos",
-      "source": "database/migrations/2026_plantao_pro_saude360_modulos_clinicos.sql",
-      "checksum": "a6c3f3c923a5f2a340ba9ce5e3ec3b3c05deec84998969c8a0eb02eff9889a9b",
-      "dependsOn": [
-        "2026_plantao_pro_saude360_base_clinica"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_10_v2337_p0_convergencia_tenant_modulos_reg_status",
-      "source": "database/migrations/2026_10_v2337_p0_convergencia_tenant_modulos_reg_status.sql",
-      "checksum": "464e02c21b47f3e8fc129c0ad6db3e76b3deef4326beab6023f96a6a74c1bc2a",
-      "dependsOn": [
-        "2026_plantao_pro_saude360_modulos_clinicos"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_plantao_pro_self_service_white_label",
-      "source": "database/migrations/2026_plantao_pro_self_service_white_label.sql",
-      "checksum": "bf5caefd0b2d92920074868daa8968ea7908b893a8dc2402bd430afafe9c31f1",
-      "dependsOn": [
-        "2026_plantao_pro_saude360_modulos_clinicos",
-        "2026_10_v2337_p0_convergencia_tenant_modulos_reg_status"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_plantao_pro_versao_comercial_demo",
-      "source": "database/migrations/2026_plantao_pro_versao_comercial_demo.sql",
-      "checksum": "718af6f67e9800a9a11b1cba6009fb220a37a813032f5852f7792b2216c4e51e",
-      "dependsOn": [
-        "2026_plantao_pro_self_service_white_label"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_plantao_pro_white_label_b2b_launch",
-      "source": "database/migrations/2026_plantao_pro_white_label_b2b_launch.sql",
-      "checksum": "86647d73b462b2209736509cf5ae3236401facf6417fc238de12fee13eeea4c3",
-      "dependsOn": [
-        "2026_plantao_pro_versao_comercial_demo"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_plantao_pro_white_label_self_service",
-      "source": "database/migrations/2026_plantao_pro_white_label_self_service.sql",
-      "checksum": "db66645c110d72987fd990d24c64cc0698be4f5f9708931b2af3c43607990a17",
-      "dependsOn": [
-        "2026_plantao_pro_white_label_b2b_launch"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_saas_comercial_core",
-      "source": "database/migrations/2026_saas_comercial_core.sql",
-      "checksum": "50d463de359adb68f3b093aac0b0e3e60e65a4f3595c6991ed8d5a7d6cd4d02f",
-      "dependsOn": [
-        "2026_plantao_pro_white_label_self_service"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_saude360_base_clinica_minima",
-      "source": "database/migrations/2026_saude360_base_clinica_minima.sql",
-      "checksum": "eb838fa1f939d47a43d3c30af69c014419c88c40ad4f781a7a905d9a5d5cf9d0",
-      "dependsOn": [
-        "2026_saas_comercial_core"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_saude360_bi_integracoes_mobile",
-      "source": "database/migrations/2026_saude360_bi_integracoes_mobile.sql",
-      "checksum": "5983ff5599b05351d150a0cdd8787bf5d80d2170551d4dbeea3bc827c2497a64",
-      "dependsOn": [
-        "2026_saude360_base_clinica_minima"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_saude360_cid_oficial",
-      "source": "database/migrations/2026_saude360_cid_oficial.sql",
-      "checksum": "4a49f8318e59133f0edec23de47c897bc2d67219cdc3c6bee2223288f908c860",
-      "dependsOn": [
-        "2026_saude360_bi_integracoes_mobile"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_saude360_cid_prescricao",
-      "source": "database/migrations/2026_saude360_cid_prescricao.sql",
-      "checksum": "2dfc294adb8feb3741dd180e6a1d1f21717edc0c16139d210c0ee01da825a5b8",
-      "dependsOn": [
-        "2026_saude360_cid_oficial"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_saude360_consultas_base",
-      "source": "database/migrations/2026_saude360_consultas_base.sql",
-      "checksum": "f82fdbd61ccf29ab94773f99058d9c93b66e7f307935aca095950527dad88a0f",
-      "dependsOn": [
-        "2026_saude360_cid_prescricao"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_saude360_convenios_planos_saude",
-      "source": "database/migrations/2026_saude360_convenios_planos_saude.sql",
-      "checksum": "91ceb6024f16972c22e95ec489d1db137b636ee01bec74877e1939ba0cc702c5",
-      "dependsOn": [
-        "2026_saude360_consultas_base"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_saude360_financeiro_clinica",
-      "source": "database/migrations/2026_saude360_financeiro_clinica.sql",
-      "checksum": "556d85fbabede82ed9b60470fa9e89d3cbba8352299a925939d04b1f952afb2a",
-      "dependsOn": [
-        "2026_saude360_convenios_planos_saude"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_saude360_indices_performance",
-      "source": "database/migrations/2026_saude360_indices_performance.sql",
-      "checksum": "0c10e72d65f058c4c39803e95732894da0623dc45b8f6b450955a5b0fef26977",
-      "dependsOn": [
-        "2026_saude360_financeiro_clinica"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_v113_operacional_real",
-      "source": "database/migrations/2026_v113_operacional_real.sql",
-      "checksum": "5a3ecb94d9cdad2e508dc8c3183a0d2c3ff2f7bc9f67c6247cbd226c0fc68599",
-      "dependsOn": [
-        "2026_saude360_indices_performance"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v114_consolidacao_produto",
-      "source": "database/migrations/2026_v114_consolidacao_produto.sql",
-      "checksum": "a120e44846606bb5a714f36c0c3064e985df2231b5768821f09e7a594fdda337",
-      "dependsOn": [
-        "2026_v113_operacional_real"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v115_regras_faturamento_repasses",
-      "source": "database/migrations/2026_v115_regras_faturamento_repasses.sql",
-      "checksum": "a2830c43932f4f5c64bdc8835076d18d97f76b6a3312b0b1d2e4b10b60670cb8",
-      "dependsOn": [
-        "2026_v114_consolidacao_produto"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v116_consolidacao_operacional_final",
-      "source": "database/migrations/2026_v116_consolidacao_operacional_final.sql",
-      "checksum": "1904a36e67fb82235ae70ed2ff9b35246694a5d7867260c97c408b5f7045ea2a",
-      "dependsOn": [
-        "2026_v115_regras_faturamento_repasses"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_v117_hardening_v116_runtime",
-      "source": "database/migrations/2026_v117_hardening_v116_runtime.sql",
-      "checksum": "0de388697683e3748ebc1d2f7a0f348bec0ccfb051ad587c0170286bf88b47a3",
-      "dependsOn": [
-        "2026_v116_consolidacao_operacional_final"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_v1186_schema_permissoes_compatibilidade",
-      "source": "database/migrations/2026_v1186_schema_permissoes_compatibilidade.sql",
-      "checksum": "7a64ca1e899ba4d0aaf99dbc0e128a4f21c8128ec2526bda50a45cd3f4f4f7d7",
-      "dependsOn": [
-        "2026_v117_hardening_v116_runtime"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_v1187_central_seguranca_acessos",
-      "source": "database/migrations/2026_v1187_central_seguranca_acessos.sql",
-      "checksum": "3d0f4ba172c1e9aa3b3f8d691c8cc58728d620c4856742add952ea8ab0bcabcf",
-      "dependsOn": [
-        "2026_v1186_schema_permissoes_compatibilidade"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_v1188_implantacao_go_live",
-      "source": "database/migrations/2026_v1188_implantacao_go_live.sql",
-      "checksum": "219c010bc98a32552392603bd63578dab21132b30366a58dc11acd6599b99d6c",
-      "dependsOn": [
-        "2026_v1187_central_seguranca_acessos"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_v1189_operacoes_continuidade",
-      "source": "database/migrations/2026_v1189_operacoes_continuidade.sql",
-      "checksum": "01909376c31af7016d3cddc4ba045523febc132dc9333c8e98befcf31ec4eb8e",
-      "dependsOn": [
-        "2026_v1188_implantacao_go_live"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_v1189_identity_schema_login",
-      "source": "database/migrations/2026_v1189_identity_schema_login.sql",
-      "checksum": "9c907952163462e2b63841a52aaed77cfcb34151898e076432c8784af803d6c5",
-      "transactional": true,
-      "dependsOn": [
-        "2026_v1189_operacoes_continuidade"
-      ]
-    },
-    {
-      "version": "2026_v1201_experiencia_premium_meu_dia",
-      "source": "database/migrations/2026_v1201_experiencia_premium_meu_dia.sql",
-      "checksum": "c64c5c9f4865eb89e2243bd2c4f033e2eb7a144abf87fb7c8fe31296fdd66178",
-      "dependsOn": [
-        "2026_v1189_identity_schema_login"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_v1250_jornada_clinica_operacional",
-      "source": "database/migrations/2026_v1250_jornada_clinica_operacional.sql",
-      "checksum": "2695c0500536102d0948e19512264529471dd219bff8fcc4d1310b3a4d14a8e5",
-      "dependsOn": [
-        "2026_v1201_experiencia_premium_meu_dia"
-      ],
-      "status": "active",
-      "transactional": true
-    },
-    {
-      "version": "2026_v1410_cobertura_escalas_fechamento_financeiro",
-      "source": "database/schema/270_v1410_cobertura_escalas_fechamento_financeiro.sql",
-      "checksum": "bfc383c6236d37f7863246636f12d111a57a67b8d168ed9b00beacaaa554c721",
-      "dependsOn": [
-        "2026_v1250_jornada_clinica_operacional"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v1951_pagamentos_plantoes",
-      "source": "database/schema/305_v1951_pagamentos_plantoes.sql",
-      "checksum": "fcfb9d72d6f208a95433e9357a772aadcd2aa802dd5c1cb1bb69395aaa773da0",
-      "dependsOn": [
-        "2026_v1410_cobertura_escalas_fechamento_financeiro"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v187_fechamento_operacional_financeiro",
-      "source": "database/schema/320_v187_fechamento_operacional_financeiro.sql",
-      "checksum": "5f64684c9f494a9023d31df3334adba89652ef8138edaa0e6ba7a015525a2f13",
-      "dependsOn": [
-        "2026_v1951_pagamentos_plantoes"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v188_prontuario_longitudinal",
-      "source": "database/schema/330_v188_prontuario_longitudinal.sql",
-      "checksum": "a6d32c3f466bca2dd209dc9b91163700755da2e721aa57079c8e86d223de9e66",
-      "dependsOn": [
-        "2026_v187_fechamento_operacional_financeiro"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v189_clinical_operational_hardening",
-      "source": "database/schema/340_v189_clinical_operational_hardening.sql",
-      "checksum": "abfa8ca830797ca5589a55292307a021d4741179c0baa552521fd390642941a5",
-      "dependsOn": [
-        "2026_v188_prontuario_longitudinal"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v192_saved_views",
-      "source": "database/migrations/2026_v192_saved_views.sql",
-      "checksum": "df55fc3e7c192bc4d6d7d6c8064d38638980e782215fea5a33e5c2ace2bef7b6",
-      "dependsOn": [
-        "2026_v189_clinical_operational_hardening"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_08_v195_financeiro_revenue_cycle",
-      "source": "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql",
-      "checksum": "2fc8ef99593ac024377f398873b0bdaefbffe9bb9a139812479f7de87aaecd72",
-      "dependsOn": [
-        "2026_v192_saved_views"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v2069_reparar_base_notificacoes",
-      "source": "database/schema/345_v2069_reparar_base_notificacoes.sql",
-      "checksum": "f0fdf1e80d44c76e160e87707631f2fda7420833d7a691d2e77f4e2c533be304",
-      "dependsOn": [
-        "2026_08_v195_financeiro_revenue_cycle"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v2070_notificacoes_alertas_operacionais",
-      "source": "database/schema/350_v2070_notificacoes_alertas_operacionais.sql",
-      "checksum": "e7b73da88edb97aa0a99c07edf360a8dd2177603d79642168a39e8766076bac2",
-      "dependsOn": [
-        "2026_v2069_reparar_base_notificacoes"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v2158_financeiro_medico_conferencia",
-      "source": "database/schema/360_v2158_financeiro_medico_conferencia.sql",
-      "checksum": "d9df5b1c3e0113e1fdc7e172a7f46d449d2391eefde3ab819edafe2e2509b057",
-      "dependsOn": [
-        "2026_v2070_notificacoes_alertas_operacionais"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v2159_saude360_agenda_recepcao",
-      "source": "database/schema/370_v2159_saude360_agenda_recepcao.sql",
-      "checksum": "cec52f65dc1477179d1e90453c2262e7d4a4b9d5fcc8e250fbafd922145b0211",
-      "dependsOn": [
-        "2026_v2158_financeiro_medico_conferencia"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v2160_triagem_consulta_jornada",
-      "source": "database/schema/380_v2160_triagem_consulta_jornada.sql",
-      "checksum": "313d92fe8c3319ad979d9e1af2808ac748e932110204d0b321cddaed62141403",
-      "dependsOn": [
-        "2026_v2159_saude360_agenda_recepcao"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v2163_portal_cliente_modulos",
-      "source": "database/schema/390_v2163_portal_cliente_modulos.sql",
-      "checksum": "496b631938ba68ac14d8b582644a985eb3d5535337d020f10c313a74b2eeaab7",
-      "dependsOn": [
-        "2026_v2160_triagem_consulta_jornada"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v2167_execucao_conferencia",
-      "source": "database/migrations/2026_v2167_execucao_conferencia.sql",
-      "checksum": "1d1107426a2b42690017aba350eb8365e7f0a3c33d2d441f92c9800eb86b916e",
-      "dependsOn": [
-        "2026_v2163_portal_cliente_modulos"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_v2168_conferencia_integridade",
-      "source": "database/schema/410_v2168_conferencia_integridade.sql",
-      "checksum": "4d4087ec92c261b8331729416e6cd3ea9620fb33d33b49992cda1e5462669138",
-      "dependsOn": [
-        "2026_v2167_execucao_conferencia"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v2170_cobertura_substituicoes",
-      "source": "database/schema/420_v2170_cobertura_substituicoes.sql",
-      "checksum": "7c7fd13bb91f61ad13f1c1da01903d7af52208aef5dc01345888bc15f591d30b",
-      "dependsOn": [
-        "2026_v2168_conferencia_integridade"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v2171_ocorrencias_operacionais",
-      "source": "database/schema/430_ocorrencias_operacionais.sql",
-      "checksum": "2689f6f0dcb0529fed9def6b88cca53417e305a12e28e06fa4d64bb618bd8850",
-      "dependsOn": [
-        "2026_v2170_cobertura_substituicoes"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2190_administrativo360_base",
-      "source": "database/migrations/2026_09_v2190_administrativo360_base.sql",
-      "checksum": "49da91626a61ed59b8566c0a4c504ccc11d7b0b4b9d438adfb1a913c3a632fb6",
-      "dependsOn": [
-        "2026_v2171_ocorrencias_operacionais"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2191_administrativo360_suprimentos",
-      "source": "database/migrations/2026_09_v2191_administrativo360_suprimentos.sql",
-      "checksum": "60f41199b8720064c7c6f08bb4a1ebba851b063fa50d12d31a528f4e77babc1e",
-      "dependsOn": [
-        "2026_09_v2190_administrativo360_base"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2192_administrativo360_regras_estoque_orcamentos",
-      "source": "database/migrations/2026_09_v2192_administrativo360_regras_estoque_orcamentos.sql",
-      "checksum": "b5cc310b22733357834e1c566fe61425f7007d74a9a542749aaaaa4e1fc2f612",
-      "dependsOn": [
-        "2026_09_v2191_administrativo360_suprimentos"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2193_administrativo360_cirurgia_vales_reconciliacao",
-      "source": "database/migrations/2026_09_v2193_administrativo360_cirurgia_vales_reconciliacao.sql",
-      "checksum": "6442e40d9cf12b1bd48a6c0d75a48da889a688d424a3fac328e4c7c50abd695e",
-      "dependsOn": [
-        "2026_09_v2192_administrativo360_regras_estoque_orcamentos"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2194_administrativo360_valorizacao_vendas_financeiro",
-      "source": "database/migrations/2026_09_v2194_administrativo360_valorizacao_vendas_financeiro.sql",
-      "checksum": "26243e62271f5b1ecab4d9fc1b95e80224d2149d70c029272cfbfc2b088b6d2d",
-      "dependsOn": [
-        "2026_09_v2193_administrativo360_cirurgia_vales_reconciliacao"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2195_administrativo360_contas_pagar_fechamento",
-      "source": "database/migrations/2026_09_v2195_administrativo360_contas_pagar_fechamento.sql",
-      "checksum": "008797d3f103fe9b2cf867e89ff6c2fd01ba22665b73df953c9a65543455d81e",
-      "dependsOn": [
-        "2026_09_v2194_administrativo360_valorizacao_vendas_financeiro"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2196_administrativo360_cotacoes_xml_dashboard",
-      "source": "database/migrations/2026_09_v2196_administrativo360_cotacoes_xml_dashboard.sql",
-      "checksum": "1a61b839c29de84ccfbf0db263698a668eaee55033d8929f4d4eaaa3f6744885",
-      "dependsOn": [
-        "2026_09_v2195_administrativo360_contas_pagar_fechamento"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2197_reconciliar_contratos_modulos",
-      "source": "database/migrations/2026_09_v2197_reconciliar_contratos_modulos.sql",
-      "checksum": "71eb03eda2961fbaa29d80df37c0f6c7f846bd3472d7002684e894493aceb2a4",
-      "dependsOn": [
-        "2026_09_v2196_administrativo360_cotacoes_xml_dashboard"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2198_reconciliar_duplicidades_contratos_modulos",
-      "source": "database/migrations/2026_09_v2198_reconciliar_duplicidades_contratos_modulos.sql",
-      "checksum": "0d4b352f984115ab6a956b72fc2c1f5b3a398ad2aa5b02a3d3e083229b931cf5",
-      "dependsOn": [
-        "2026_09_v2197_reconciliar_contratos_modulos"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2199_corrigir_trigger_adm360_validar_tenant",
-      "source": "database/migrations/2026_09_v2199_corrigir_trigger_adm360_validar_tenant.sql",
-      "checksum": "06c4dc1ea9c82cc242357bd6a11d5d691dc768f8b114ecdbcae7892c1df73a65",
-      "dependsOn": [
-        "2026_09_v2198_reconciliar_duplicidades_contratos_modulos"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2200_reconciliar_colunas_medicos_compatibilidade",
-      "source": "database/migrations/2026_09_v2200_reconciliar_colunas_medicos_compatibilidade.sql",
-      "checksum": "926b11c2d6da671365a22e590491196857f2d6cc1a4edc3b8dd59fa5c0261ae6",
-      "dependsOn": [
-        "2026_09_v2199_corrigir_trigger_adm360_validar_tenant"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial",
-      "source": "database/migrations/2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial.sql",
-      "checksum": "8a24bfa9b0b5209748b201f60080ad57bcc705b06cd395ed23439aec689fa4ff",
-      "dependsOn": [
-        "2026_09_v2200_reconciliar_colunas_medicos_compatibilidade"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2200_administrativo360_exportacao_proposta_imutavel",
-      "source": "database/migrations/2026_09_v2200_administrativo360_exportacao_proposta_imutavel.sql",
-      "checksum": "56aa38e963c82fded0e437e0f2ee1e2777a61feb7468e8cc6a2d31e5216ea727",
-      "dependsOn": [
-        "2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2202_reconciliar_auditoria_observabilidade",
-      "source": "database/migrations/2026_09_v2202_reconciliar_auditoria_observabilidade.sql",
-      "checksum": "6a564a4d23efcbfcc05f84066ed55672163c1f3ae2ca6296f374480c22181d23",
-      "dependsOn": [
-        "2026_09_v2200_administrativo360_exportacao_proposta_imutavel"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2300_administrativo360_status_transmissao_exportacao",
-      "source": "database/migrations/2026_09_v2300_administrativo360_status_transmissao_exportacao.sql",
-      "checksum": "e220614f3a1161b38ccd84cad2d27211e5cf9e6f2c2dc4bf64887452296c4d41",
-      "dependsOn": [
-        "2026_09_v2200_administrativo360_exportacao_proposta_imutavel"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2301_administrativo360_eventos_imutabilidade",
-      "source": "database/migrations/2026_09_v2301_administrativo360_eventos_imutabilidade.sql",
-      "checksum": "77e3d861188b1984a8637940af7b73e8b00cea7ae86b189a9cd1c62e1d673f4d",
-      "dependsOn": [
-        "2026_09_v2300_administrativo360_status_transmissao_exportacao"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant",
-      "source": "database/migrations/2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant.sql",
-      "checksum": "bc6baaff554451db2b2b50d37c432460ddee9b01d00d10cf18ebe0105670172a",
-      "dependsOn": [
-        "2026_09_v2301_administrativo360_eventos_imutabilidade"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_v1270_normalizar_permissoes_e_prontuario",
-      "source": "database/migrations/2026_v1270_normalizar_permissoes_e_prontuario.sql",
-      "checksum": "7cf9a32a19fefe763619fb5c949987151a534bfa107a15d454d364871a841e49",
-      "dependsOn": [
-        "2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2303_administrativo360_documentos_xml_b1",
-      "source": "database/migrations/2026_09_v2303_administrativo360_documentos_xml_b1.sql",
-      "checksum": "50f78ce6e574d3fc7bf3863dc1fbad702ec73e29e999ae6d710ccf4943e36e6c",
-      "dependsOn": [
-        "2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_09_v2304_administrativo360_transmissao_tentativas",
-      "source": "database/migrations/2026_09_v2304_administrativo360_transmissao_tentativas.sql",
-      "checksum": "37dcd938230badfecbd29f865fb56939966596a6d2f8d9f029bdef5f7c91729d",
-      "dependsOn": [
-        "2026_09_v2303_administrativo360_documentos_xml_b1"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_10_v2305_administrativo360_imutabilidade_por_papel",
-      "source": "database/migrations/2026_10_v2305_administrativo360_imutabilidade_por_papel.sql",
-      "checksum": "4b4e31a9a37edd2670d2cb566b39a49cb278ff721efc5b1d47616693cc017ee4",
-      "dependsOn": [
-        "2026_09_v2304_administrativo360_transmissao_tentativas"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_10_v2306_saude360_plano_principal_unico",
-      "source": "database/migrations/2026_10_v2306_saude360_plano_principal_unico.sql",
-      "checksum": "8efd39faf5a9b2eb8e7f2322e6eddf8010d909903ff7f190ee5e608acf783b73",
-      "dependsOn": [
-        "2026_10_v2305_administrativo360_imutabilidade_por_papel"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_10_v2307_ai_camada_canonica",
-      "source": "database/migrations/2026_10_v2307_ai_camada_canonica.sql",
-      "checksum": "47d5f9faaa95fa023673a5fe4484b8f874d44914ca9aed0bb12780f6e935eed0",
-      "dependsOn": [
-        "2026_10_v2306_saude360_plano_principal_unico"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_10_v2308_ai_governanca_modelos_orcamento",
-      "source": "database/migrations/2026_10_v2308_ai_governanca_modelos_orcamento.sql",
-      "checksum": "08c97f9e2d9957e0ead8055a4abcc5ce934fd76f5bf96d1c8d0570c818600554",
-      "dependsOn": [
-        "2026_10_v2307_ai_camada_canonica"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_10_v2309_administrativo360_documentos_xml_a3",
-      "source": "database/migrations/2026_10_v2309_administrativo360_documentos_xml_a3.sql",
-      "checksum": "9516a4d9446a930284d7284781a649cfbf6691b038aef4191f5d6f99b9e4d957",
-      "dependsOn": [
-        "2026_09_v2303_administrativo360_documentos_xml_b1"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_10_v2310_adm360_eventos_tipo_conferencia",
-      "source": "database/migrations/2026_10_v2310_adm360_eventos_tipo_conferencia.sql",
-      "checksum": "9177b33b502201c3f54c5d2483a354da5ce27f76c8da1a61407bfb8debd795f1",
-      "dependsOn": [
-        "2026_10_v2309_administrativo360_documentos_xml_a3"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_10_v2311_adm360_documentos_identidade_eventos",
-      "source": "database/migrations/2026_10_v2311_adm360_documentos_identidade_eventos.sql",
-      "checksum": "5075bfe673fcf1d093b36eda354eb5f93287e2675af402da23599c2c4b85b477",
-      "dependsOn": [
-        "2026_10_v2310_adm360_eventos_tipo_conferencia"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": true
-    },
-    {
-      "version": "2026_10_v2312_saas_assinaturas_colunas_comerciais_b6",
-      "source": "database/migrations/2026_10_v2312_saas_assinaturas_colunas_comerciais_b6.sql",
-      "checksum": "67149e1d4e2c6c3585da34c4cdef92a246c83354a6e258456b2d7db2f903ad11",
-      "dependsOn": [
-        "2026_10_v2311_adm360_documentos_identidade_eventos"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2313_saas_planos_permite_relatorios_b6",
-      "source": "database/migrations/2026_10_v2313_saas_planos_permite_relatorios_b6.sql",
-      "checksum": "fd2b80cd31711c5d727da1b76cb805de59c5deaa7baf9947f041608ff38478ea",
-      "dependsOn": [
-        "2026_10_v2312_saas_assinaturas_colunas_comerciais_b6"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem",
-      "source": "database/migrations/2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem.sql",
-      "checksum": "4b56d6d862e403482d9473d75f1502abe730d613ac00f4635ec3158252210409",
-      "dependsOn": [
-        "2026_10_v2313_saas_planos_permite_relatorios_b6"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2315_saude360_b8_financeiro_canonico",
-      "source": "database/migrations/2026_10_v2315_saude360_b8_financeiro_canonico.sql",
-      "checksum": "dd5a5e4d32b8ab1d9b23b9b4845dfbfd1e0772f2e6634db433f118c0f1f155d2",
-      "dependsOn": [
-        "2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2316_saude360_b8_fila_atendimento_legado",
-      "source": "database/migrations/2026_10_v2316_saude360_b8_fila_atendimento_legado.sql",
-      "checksum": "cc22f08306c85a294395a021f31f1e26b9eae600b501b9eb7c8fe569a01d51e8",
-      "dependsOn": [
-        "2026_10_v2315_saude360_b8_financeiro_canonico"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2317_saude360_b9_contestacao_situacao_anterior",
-      "source": "database/migrations/2026_10_v2317_saude360_b9_contestacao_situacao_anterior.sql",
-      "checksum": "be46976f4bc70a02bc84b16cfeb4b457235cb36cade2d27403bdb16c21fd76aa",
-      "dependsOn": [
-        "2026_10_v2316_saude360_b8_fila_atendimento_legado"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2318_saude360_b9_plantao_historico_contrato",
-      "source": "database/migrations/2026_10_v2318_saude360_b9_plantao_historico_contrato.sql",
-      "checksum": "8a0f882bf14e8c6684805c1eaaac1840633a780a214729500e631c780ddd1074",
-      "dependsOn": [
-        "2026_10_v2317_saude360_b9_contestacao_situacao_anterior"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2319_saude360_b9_notificacoes_contrato",
-      "source": "database/migrations/2026_10_v2319_saude360_b9_notificacoes_contrato.sql",
-      "checksum": "baca5925613bcd26ac0568892c7e159492d542f4cd2000c8abc537f76db9706a",
-      "dependsOn": [
-        "2026_10_v2318_saude360_b9_plantao_historico_contrato"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2320_saude360_b9_plantoes_auditoria",
-      "source": "database/migrations/2026_10_v2320_saude360_b9_plantoes_auditoria.sql",
-      "checksum": "d9eec352ba21c23e6d76ded2718c70f52cf089ffa59405436d580692045503f7",
-      "dependsOn": [
-        "2026_10_v2319_saude360_b9_notificacoes_contrato"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2321_adm360_fiscal_parametros_pre_emitidas",
-      "source": "database/migrations/2026_10_v2321_adm360_fiscal_parametros_pre_emitidas.sql",
-      "checksum": "724de9952b3aff65d429d94b09673a318657970e76d3d66602a535fec13c3411",
-      "dependsOn": [
-        "2026_10_v2320_saude360_b9_plantoes_auditoria"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2338_p0_adm360_garantia_codigos_fiscais",
-      "source": "database/migrations/2026_10_v2338_p0_adm360_garantia_codigos_fiscais.sql",
-      "checksum": "1ef1dda3e29ba1e9bca510ac239de65055cd8389d10b61134a9e1ca5fef24427",
-      "dependsOn": [
-        "2026_10_v2321_adm360_fiscal_parametros_pre_emitidas"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2322_adm360_grants_adm_cliente_r5_a2",
-      "source": "database/migrations/2026_10_v2322_adm360_grants_adm_cliente_r5_a2.sql",
-      "checksum": "24bd46a22bfb711f96284c54c338ca6671fef24a01547f7ee7eebdba5f1bb132",
-      "dependsOn": [
-        "2026_10_v2338_p0_adm360_garantia_codigos_fiscais"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2323_b4_matriz_comercial_solicitacoes",
-      "source": "database/migrations/2026_10_v2323_b4_matriz_comercial_solicitacoes.sql",
-      "checksum": "f2f7346e2766eb244075bea44b57876b916e3d85d33ddee067b969822ed7a96f",
-      "dependsOn": [
-        "2026_10_v2322_adm360_grants_adm_cliente_r5_a2"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2324_b4_plano_modulos_canonicos",
-      "source": "database/migrations/2026_10_v2324_b4_plano_modulos_canonicos.sql",
-      "checksum": "73bfb9aa1bda0239e70b316ddefd863671f554650291abd26edd09bfe1c527d3",
-      "dependsOn": [
-        "2026_10_v2323_b4_matriz_comercial_solicitacoes"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2325_b4_plano_recursos_colunas",
-      "source": "database/migrations/2026_10_v2325_b4_plano_recursos_colunas.sql",
-      "checksum": "42e81c6e6e7ea89f78b8352562c1edc1c2f4942e6ecc08e135c0895723b9dcb9",
-      "dependsOn": [
-        "2026_10_v2324_b4_plano_modulos_canonicos"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2326_b4_assinatura_historico_colunas",
-      "source": "database/migrations/2026_10_v2326_b4_assinatura_historico_colunas.sql",
-      "checksum": "18a8637b0ca7e0e67f308964a7240862e60ab282cc35940eb430b562a8e2ebcc",
-      "dependsOn": [
-        "2026_10_v2325_b4_plano_recursos_colunas"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2327_b4_historico_reg_status",
-      "source": "database/migrations/2026_10_v2327_b4_historico_reg_status.sql",
-      "checksum": "0e3bd84fc28080996cf3af631e812991a9039a04ee1b19e0943638c2ea184ef4",
-      "dependsOn": [
-        "2026_10_v2326_b4_assinatura_historico_colunas"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2328_b5_provisionamento_convites",
-      "source": "database/migrations/2026_10_v2328_b5_provisionamento_convites.sql",
-      "checksum": "32a46221d4139203cb0f2ab23a59b2983c08c1dce1ec8d047d0ee9ae939a5683",
-      "dependsOn": [
-        "2026_10_v2327_b4_historico_reg_status"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2329_b5_grants_usuarios_adm_cliente",
-      "source": "database/migrations/2026_10_v2329_b5_grants_usuarios_adm_cliente.sql",
-      "checksum": "85707ffaa4437bfc95c79be0bd1d2a1fe5522ab39c575943253e523fb561f042",
-      "dependsOn": [
-        "2026_10_v2328_b5_provisionamento_convites"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2330_b5_onboarding_whitelabel_colunas",
-      "source": "database/migrations/2026_10_v2330_b5_onboarding_whitelabel_colunas.sql",
-      "checksum": "ae4f30d745c0c74fa34689c75669ed52512bd799957f1fbc0d156c5762c20410",
-      "dependsOn": [
-        "2026_10_v2329_b5_grants_usuarios_adm_cliente"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2331_b5_lgpd_consentimentos_colunas",
-      "source": "database/migrations/2026_10_v2331_b5_lgpd_consentimentos_colunas.sql",
-      "checksum": "92afe1faaa7a8a035e5b9b93e625b546541518c6f94ef62d35cf300dc11a232d",
-      "dependsOn": [
-        "2026_10_v2330_b5_onboarding_whitelabel_colunas"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2332_b6_cobranca_saas",
-      "source": "database/migrations/2026_10_v2332_b6_cobranca_saas.sql",
-      "checksum": "b6aee89b3a44863c0a4399aac0f971065e46d6fd555d5baf16415b13120b74ab",
-      "dependsOn": [
-        "2026_10_v2331_b5_lgpd_consentimentos_colunas"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2333_c7_onboarding_contrato",
-      "source": "database/migrations/2026_10_v2333_c7_onboarding_contrato.sql",
-      "checksum": "8057680ca36bcba306753c6f89c58a4ab1d27761e0fa3dd9bb7fb146a4c2f5d7",
-      "dependsOn": [
-        "2026_10_v2332_b6_cobranca_saas"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2334_d9_perfil_admin_modulos_jornada",
-      "source": "database/migrations/2026_10_v2334_d9_perfil_admin_modulos_jornada.sql",
-      "checksum": "69f87da1d81ffb94de63f153b2952c21c958fc22f65acc2f103b3e0ae112c87f",
-      "dependsOn": [
-        "2026_10_v2333_c7_onboarding_contrato"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2335_d11_perfil_admin_modulos_finos_saude",
-      "source": "database/migrations/2026_10_v2335_d11_perfil_admin_modulos_finos_saude.sql",
-      "checksum": "2a551c70881105e5f7527b33c2f61e2126e8d722eeb19c307af47b89de1fcc0d",
-      "dependsOn": [
-        "2026_10_v2334_d9_perfil_admin_modulos_jornada"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico",
-      "source": "database/migrations/2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico.sql",
-      "checksum": "72651255f8ebe56ae8b2f5037d313055ea7ae38c6c09c7b2d24509cfb8af621f",
-      "dependsOn": [
-        "2026_10_v2335_d11_perfil_admin_modulos_finos_saude"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades",
-      "source": "database/migrations/2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades.sql",
-      "checksum": "f29fa8e6f083d1035352827a9184ef2a1771a2029759d224eef13bd9a306e038",
-      "dependsOn": [
-        "2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico",
-        "2026_10_v2338_p0_adm360_garantia_codigos_fiscais"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade",
-      "source": "database/migrations/2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade.sql",
-      "checksum": "e8715962ccc1376740f6db90021a49c55725253c9ede0acc6d6c26cf3c5337b3",
-      "dependsOn": [
-        "2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2341_r7a1_conflitos_unificados_profissional",
-      "source": "database/migrations/2026_10_v2341_r7a1_conflitos_unificados_profissional.sql",
-      "checksum": "b2c44ea9be12e49029afbabf1bae25182e0b00ce5e1dee9306a957551d5c819f",
-      "dependsOn": [
-        "2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2342_r7a1_historico_escala_colunas",
-      "source": "database/migrations/2026_10_v2342_r7a1_historico_escala_colunas.sql",
-      "checksum": "2c5800b64701f8a27feaf6878720419de0582543c92f8445858b313f769a5f47",
-      "dependsOn": [
-        "2026_10_v2341_r7a1_conflitos_unificados_profissional"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2343_r7a1_convite_ciclo_vida",
-      "source": "database/migrations/2026_10_v2343_r7a1_convite_ciclo_vida.sql",
-      "checksum": "d3c57ceda6a8fafc585f77c101b77b5e78c98911dff3311254eb1486d879eb8e",
-      "dependsOn": [
-        "2026_10_v2342_r7a1_historico_escala_colunas"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2344_r7e1_usuario_idioma_preferido",
-      "source": "database/migrations/2026_10_v2344_r7e1_usuario_idioma_preferido.sql",
-      "checksum": "623f6f52c4f1ee4ad0ba1e850094b5cdd4100c03023698da12671ae170302226",
-      "dependsOn": [
-        "2026_10_v2343_r7a1_convite_ciclo_vida"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2345_r7ob_onboarding_preferencias_idioma",
-      "source": "database/migrations/2026_10_v2345_r7ob_onboarding_preferencias_idioma.sql",
-      "checksum": "15d6bdb179322525d976bc5a039cd6b707d288cc6aacf59fcd5b601628314029",
-      "dependsOn": [
-        "2026_10_v2344_r7e1_usuario_idioma_preferido"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2346_r8b2_notificacoes_legado_dedupe",
-      "source": "database/migrations/2026_10_v2346_r8b2_notificacoes_legado_dedupe.sql",
-      "checksum": "97f2f638e79d002022a7528a0b810b0a48db9a4dce268b57986aa1701400ee65",
-      "dependsOn": [
-        "2026_10_v2345_r7ob_onboarding_preferencias_idioma"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2347_r8b4_cancelamento_compras",
-      "source": "database/migrations/2026_10_v2347_r8b4_cancelamento_compras.sql",
-      "checksum": "2e8ba13f929badb6c3a51961e0557611cec8532b319f58e7a383067094a6da8c",
-      "dependsOn": [
-        "2026_10_v2346_r8b2_notificacoes_legado_dedupe"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2348_r8b5_backfill_medico_especialidades",
-      "source": "database/migrations/2026_10_v2348_r8b5_backfill_medico_especialidades.sql",
-      "checksum": "5317df66afb7a42f141e1846d230a8caa584cc5cce92c5a133e9c7e57c40ee64",
-      "dependsOn": [
-        "2026_10_v2347_r8b4_cancelamento_compras"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2349_r8b6_mesclagem_pacientes",
-      "source": "database/migrations/2026_10_v2349_r8b6_mesclagem_pacientes.sql",
-      "checksum": "0b226ee6cb5d739ae84ba9aab3c68cde1c7f229cb00c624df2febb84e3fae1cd",
-      "dependsOn": [
-        "2026_10_v2348_r8b5_backfill_medico_especialidades"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2350_r8b7_glosa_item_recurso_documentos",
-      "source": "database/migrations/2026_10_v2350_r8b7_glosa_item_recurso_documentos.sql",
-      "checksum": "f363c5d37285179edfa51a9ce8c36d0095cd57b2d0e16296a384b303289beef6",
-      "dependsOn": [
-        "2026_10_v2349_r8b6_mesclagem_pacientes"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2351_r8b10_cid_tabela_unicao_versionada",
-      "source": "database/migrations/2026_10_v2351_r8b10_cid_tabela_unicao_versionada.sql",
-      "checksum": "25a9c25f89b1e6aeefee695a4080df3be259386e6f78faed6bac3f29c793cb19",
-      "dependsOn": [
-        "2026_10_v2350_r8b7_glosa_item_recurso_documentos"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2352_r9c_cadastro_anvisa_produtos",
-      "source": "database/migrations/2026_10_v2352_r9c_cadastro_anvisa_produtos.sql",
-      "checksum": "455574771556eff4a86cd33522e56e1acbf9e4470c62f2e1461412a8a7d027eb",
-      "dependsOn": [
-        "2026_10_v2351_r8b10_cid_tabela_unicao_versionada"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2353_r9d_precificacao_preco_venda",
-      "source": "database/migrations/2026_10_v2353_r9d_precificacao_preco_venda.sql",
-      "checksum": "4580ee72997a604d765b78cdefd05d40e268679c738275e0ca0786c802be7283",
-      "dependsOn": [
-        "2026_10_v2352_r9c_cadastro_anvisa_produtos"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2354_r55_indice_reservas_saldo",
-      "source": "database/migrations/2026_10_v2354_r55_indice_reservas_saldo.sql",
-      "checksum": "31ab4e426a5f88fe7d249c1ee4ed59f627e894e7b795cca8907a486e37259ea5",
-      "dependsOn": [
-        "2026_10_v2353_r9d_precificacao_preco_venda"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2355_r56_nome_modulo_painel",
-      "source": "database/migrations/2026_10_v2355_r56_nome_modulo_painel.sql",
-      "checksum": "43a6f366353e6fda2a53e4222ba6c8aa8cf15b118c81ba25a68b8904681715b7",
-      "dependsOn": [
-        "2026_10_v2354_r55_indice_reservas_saldo"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    },
-    {
-      "version": "2026_10_v2356_r62_ai_provedor_drael",
-      "source": "database/migrations/2026_10_v2356_r62_ai_provedor_drael.sql",
-      "checksum": "48ef520853cf068dbf52dcc28d4355874193b45f164356a4a00dc2298eb2003f",
-      "dependsOn": [
-        "2026_10_v2355_r56_nome_modulo_painel"
-      ],
-      "status": "active",
-      "transactional": true,
-      "installRequired": false
-    }
-  ]
+    "schemaVersion":  "v2.16.7",
+    "generatedAt":  "2026-10-14",
+    "migrations":  [
+                       {
+                           "version":  "20260607_saas_lgpd_jornada_comercial_ajuda",
+                           "source":  "database/migrations/20260607_saas_lgpd_jornada_comercial_ajuda.sql",
+                           "checksum":  "344b376b176e2843c2ee5b3e409794331cd1d879fbdb433f3190211c7ee245db",
+                           "dependsOn":  [
+
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_fix_api_error_logs_defaults",
+                           "source":  "database/migrations/2026_fix_api_error_logs_defaults.sql",
+                           "checksum":  "192db90a8714e71a41887a647273f53aa416effb84459d6938fa6b9348241052",
+                           "dependsOn":  [
+                                             "20260607_saas_lgpd_jornada_comercial_ajuda"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_fix_api_error_logs_not_null",
+                           "source":  "database/migrations/2026_fix_api_error_logs_not_null.sql",
+                           "checksum":  "98804b1ff25f0229e85516bc7fc3c1c9418e1583ef36150d14cd32c86b6bc8b5",
+                           "dependsOn":  [
+                                             "2026_fix_api_error_logs_defaults"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_fix_cid_tabela_schema",
+                           "source":  "database/migrations/2026_fix_cid_tabela_schema.sql",
+                           "checksum":  "0c73d860469067652e8a634815b095d743c199253d29ab219001bfae05d94f91",
+                           "dependsOn":  [
+                                             "2026_fix_api_error_logs_not_null"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_fix_clinica_financeiro_minimo",
+                           "source":  "database/migrations/2026_fix_clinica_financeiro_minimo.sql",
+                           "checksum":  "cd6316fae3f95616752694d095564011e14f71ab8367d0e5347c006d05861f94",
+                           "dependsOn":  [
+                                             "2026_fix_cid_tabela_schema"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_plantao_pro_automacao_operacional_fase4",
+                           "source":  "database/migrations/2026_plantao_pro_automacao_operacional_fase4.sql",
+                           "checksum":  "8f9f0c01a26cc85dd1ecba10d7dd253adf967c8a4d153104ff9c2f77b54e2ddd",
+                           "dependsOn":  [
+                                             "2026_fix_clinica_financeiro_minimo"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_plantao_pro_piloto_comercial_operacao_b2b",
+                           "source":  "database/migrations/2026_plantao_pro_piloto_comercial_operacao_b2b.sql",
+                           "checksum":  "7eaf99a4f89ad9ec7ace746b0541e537c2f71f8a3f46da1dcfaafffbbed74635",
+                           "dependsOn":  [
+                                             "2026_plantao_pro_automacao_operacional_fase4"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_plantao_pro_saas_comercial_lgpd_jornada",
+                           "source":  "database/migrations/2026_plantao_pro_saas_comercial_lgpd_jornada.sql",
+                           "checksum":  "a9c5b9c9631cfd2c724f4afa03cf25f1dd2a5ed821cc31c45d45e55576c91665",
+                           "dependsOn":  [
+                                             "2026_plantao_pro_piloto_comercial_operacao_b2b"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_plantao_pro_saas_inteligente",
+                           "source":  "database/migrations/2026_plantao_pro_saas_inteligente.sql",
+                           "checksum":  "0a84413356137cf461bf59b37531f8de237c439671e49a2e5e6fd95019ece231",
+                           "dependsOn":  [
+                                             "2026_plantao_pro_saas_comercial_lgpd_jornada"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_plantao_pro_saas_inteligente_auditavel",
+                           "source":  "database/migrations/2026_plantao_pro_saas_inteligente_auditavel.sql",
+                           "checksum":  "a9c5b9c9631cfd2c724f4afa03cf25f1dd2a5ed821cc31c45d45e55576c91665",
+                           "dependsOn":  [
+                                             "2026_plantao_pro_saas_inteligente"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_plantao_pro_saas_inteligente_funcional",
+                           "source":  "database/migrations/2026_plantao_pro_saas_inteligente_funcional.sql",
+                           "checksum":  "4b0e2f0774e1f8e1a4cb6cf38c6171bb3130c6fff666ce25199fa4ad8484c471",
+                           "dependsOn":  [
+                                             "2026_plantao_pro_saas_inteligente_auditavel"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_plantao_pro_saas_jornada_lgpd_inteligencia",
+                           "source":  "database/migrations/2026_plantao_pro_saas_jornada_lgpd_inteligencia.sql",
+                           "checksum":  "e7c34907da664d81c6ffcced76776b2af708316d15c95435fa2f5d6e01a647ab",
+                           "dependsOn":  [
+                                             "2026_plantao_pro_saas_inteligente_funcional"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_plantao_pro_saas_lgpd_jornada_inteligente",
+                           "source":  "database/migrations/2026_plantao_pro_saas_lgpd_jornada_inteligente.sql",
+                           "checksum":  "9c22fc55fed0fc481f7db0c2f1b7a5390b68887f62ce178fb8a71de83413eb5d",
+                           "dependsOn":  [
+                                             "2026_plantao_pro_saas_jornada_lgpd_inteligencia"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_plantao_pro_saude360_base_clinica",
+                           "source":  "database/migrations/2026_plantao_pro_saude360_base_clinica.sql",
+                           "checksum":  "8e4456bae3d834c609d183ccfa3de3b75df7b5a2acc8b91d40ea44532d564984",
+                           "dependsOn":  [
+                                             "2026_plantao_pro_saas_lgpd_jornada_inteligente"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_plantao_pro_saude360_modulos_clinicos",
+                           "source":  "database/migrations/2026_plantao_pro_saude360_modulos_clinicos.sql",
+                           "checksum":  "a6c3f3c923a5f2a340ba9ce5e3ec3b3c05deec84998969c8a0eb02eff9889a9b",
+                           "dependsOn":  [
+                                             "2026_plantao_pro_saude360_base_clinica"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_10_v2337_p0_convergencia_tenant_modulos_reg_status",
+                           "source":  "database/migrations/2026_10_v2337_p0_convergencia_tenant_modulos_reg_status.sql",
+                           "checksum":  "464e02c21b47f3e8fc129c0ad6db3e76b3deef4326beab6023f96a6a74c1bc2a",
+                           "dependsOn":  [
+                                             "2026_plantao_pro_saude360_modulos_clinicos"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_plantao_pro_self_service_white_label",
+                           "source":  "database/migrations/2026_plantao_pro_self_service_white_label.sql",
+                           "checksum":  "bf5caefd0b2d92920074868daa8968ea7908b893a8dc2402bd430afafe9c31f1",
+                           "dependsOn":  [
+                                             "2026_plantao_pro_saude360_modulos_clinicos",
+                                             "2026_10_v2337_p0_convergencia_tenant_modulos_reg_status"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_plantao_pro_versao_comercial_demo",
+                           "source":  "database/migrations/2026_plantao_pro_versao_comercial_demo.sql",
+                           "checksum":  "718af6f67e9800a9a11b1cba6009fb220a37a813032f5852f7792b2216c4e51e",
+                           "dependsOn":  [
+                                             "2026_plantao_pro_self_service_white_label"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_plantao_pro_white_label_b2b_launch",
+                           "source":  "database/migrations/2026_plantao_pro_white_label_b2b_launch.sql",
+                           "checksum":  "86647d73b462b2209736509cf5ae3236401facf6417fc238de12fee13eeea4c3",
+                           "dependsOn":  [
+                                             "2026_plantao_pro_versao_comercial_demo"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_plantao_pro_white_label_self_service",
+                           "source":  "database/migrations/2026_plantao_pro_white_label_self_service.sql",
+                           "checksum":  "db66645c110d72987fd990d24c64cc0698be4f5f9708931b2af3c43607990a17",
+                           "dependsOn":  [
+                                             "2026_plantao_pro_white_label_b2b_launch"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_saas_comercial_core",
+                           "source":  "database/migrations/2026_saas_comercial_core.sql",
+                           "checksum":  "50d463de359adb68f3b093aac0b0e3e60e65a4f3595c6991ed8d5a7d6cd4d02f",
+                           "dependsOn":  [
+                                             "2026_plantao_pro_white_label_self_service"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_saude360_base_clinica_minima",
+                           "source":  "database/migrations/2026_saude360_base_clinica_minima.sql",
+                           "checksum":  "eb838fa1f939d47a43d3c30af69c014419c88c40ad4f781a7a905d9a5d5cf9d0",
+                           "dependsOn":  [
+                                             "2026_saas_comercial_core"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_saude360_bi_integracoes_mobile",
+                           "source":  "database/migrations/2026_saude360_bi_integracoes_mobile.sql",
+                           "checksum":  "5983ff5599b05351d150a0cdd8787bf5d80d2170551d4dbeea3bc827c2497a64",
+                           "dependsOn":  [
+                                             "2026_saude360_base_clinica_minima"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_saude360_cid_oficial",
+                           "source":  "database/migrations/2026_saude360_cid_oficial.sql",
+                           "checksum":  "4a49f8318e59133f0edec23de47c897bc2d67219cdc3c6bee2223288f908c860",
+                           "dependsOn":  [
+                                             "2026_saude360_bi_integracoes_mobile"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_saude360_cid_prescricao",
+                           "source":  "database/migrations/2026_saude360_cid_prescricao.sql",
+                           "checksum":  "2dfc294adb8feb3741dd180e6a1d1f21717edc0c16139d210c0ee01da825a5b8",
+                           "dependsOn":  [
+                                             "2026_saude360_cid_oficial"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_saude360_consultas_base",
+                           "source":  "database/migrations/2026_saude360_consultas_base.sql",
+                           "checksum":  "f82fdbd61ccf29ab94773f99058d9c93b66e7f307935aca095950527dad88a0f",
+                           "dependsOn":  [
+                                             "2026_saude360_cid_prescricao"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_saude360_convenios_planos_saude",
+                           "source":  "database/migrations/2026_saude360_convenios_planos_saude.sql",
+                           "checksum":  "91ceb6024f16972c22e95ec489d1db137b636ee01bec74877e1939ba0cc702c5",
+                           "dependsOn":  [
+                                             "2026_saude360_consultas_base"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_saude360_financeiro_clinica",
+                           "source":  "database/migrations/2026_saude360_financeiro_clinica.sql",
+                           "checksum":  "556d85fbabede82ed9b60470fa9e89d3cbba8352299a925939d04b1f952afb2a",
+                           "dependsOn":  [
+                                             "2026_saude360_convenios_planos_saude"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_saude360_indices_performance",
+                           "source":  "database/migrations/2026_saude360_indices_performance.sql",
+                           "checksum":  "0c10e72d65f058c4c39803e95732894da0623dc45b8f6b450955a5b0fef26977",
+                           "dependsOn":  [
+                                             "2026_saude360_financeiro_clinica"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_v113_operacional_real",
+                           "source":  "database/migrations/2026_v113_operacional_real.sql",
+                           "checksum":  "5a3ecb94d9cdad2e508dc8c3183a0d2c3ff2f7bc9f67c6247cbd226c0fc68599",
+                           "dependsOn":  [
+                                             "2026_saude360_indices_performance"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v114_consolidacao_produto",
+                           "source":  "database/migrations/2026_v114_consolidacao_produto.sql",
+                           "checksum":  "a120e44846606bb5a714f36c0c3064e985df2231b5768821f09e7a594fdda337",
+                           "dependsOn":  [
+                                             "2026_v113_operacional_real"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v115_regras_faturamento_repasses",
+                           "source":  "database/migrations/2026_v115_regras_faturamento_repasses.sql",
+                           "checksum":  "a2830c43932f4f5c64bdc8835076d18d97f76b6a3312b0b1d2e4b10b60670cb8",
+                           "dependsOn":  [
+                                             "2026_v114_consolidacao_produto"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v116_consolidacao_operacional_final",
+                           "source":  "database/migrations/2026_v116_consolidacao_operacional_final.sql",
+                           "checksum":  "1904a36e67fb82235ae70ed2ff9b35246694a5d7867260c97c408b5f7045ea2a",
+                           "dependsOn":  [
+                                             "2026_v115_regras_faturamento_repasses"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_v117_hardening_v116_runtime",
+                           "source":  "database/migrations/2026_v117_hardening_v116_runtime.sql",
+                           "checksum":  "0de388697683e3748ebc1d2f7a0f348bec0ccfb051ad587c0170286bf88b47a3",
+                           "dependsOn":  [
+                                             "2026_v116_consolidacao_operacional_final"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_v1186_schema_permissoes_compatibilidade",
+                           "source":  "database/migrations/2026_v1186_schema_permissoes_compatibilidade.sql",
+                           "checksum":  "7a64ca1e899ba4d0aaf99dbc0e128a4f21c8128ec2526bda50a45cd3f4f4f7d7",
+                           "dependsOn":  [
+                                             "2026_v117_hardening_v116_runtime"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_v1187_central_seguranca_acessos",
+                           "source":  "database/migrations/2026_v1187_central_seguranca_acessos.sql",
+                           "checksum":  "3d0f4ba172c1e9aa3b3f8d691c8cc58728d620c4856742add952ea8ab0bcabcf",
+                           "dependsOn":  [
+                                             "2026_v1186_schema_permissoes_compatibilidade"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_v1188_implantacao_go_live",
+                           "source":  "database/migrations/2026_v1188_implantacao_go_live.sql",
+                           "checksum":  "219c010bc98a32552392603bd63578dab21132b30366a58dc11acd6599b99d6c",
+                           "dependsOn":  [
+                                             "2026_v1187_central_seguranca_acessos"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_v1189_operacoes_continuidade",
+                           "source":  "database/migrations/2026_v1189_operacoes_continuidade.sql",
+                           "checksum":  "01909376c31af7016d3cddc4ba045523febc132dc9333c8e98befcf31ec4eb8e",
+                           "dependsOn":  [
+                                             "2026_v1188_implantacao_go_live"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_v1189_identity_schema_login",
+                           "source":  "database/migrations/2026_v1189_identity_schema_login.sql",
+                           "checksum":  "9c907952163462e2b63841a52aaed77cfcb34151898e076432c8784af803d6c5",
+                           "transactional":  true,
+                           "dependsOn":  [
+                                             "2026_v1189_operacoes_continuidade"
+                                         ]
+                       },
+                       {
+                           "version":  "2026_v1201_experiencia_premium_meu_dia",
+                           "source":  "database/migrations/2026_v1201_experiencia_premium_meu_dia.sql",
+                           "checksum":  "c64c5c9f4865eb89e2243bd2c4f033e2eb7a144abf87fb7c8fe31296fdd66178",
+                           "dependsOn":  [
+                                             "2026_v1189_identity_schema_login"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_v1250_jornada_clinica_operacional",
+                           "source":  "database/migrations/2026_v1250_jornada_clinica_operacional.sql",
+                           "checksum":  "2695c0500536102d0948e19512264529471dd219bff8fcc4d1310b3a4d14a8e5",
+                           "dependsOn":  [
+                                             "2026_v1201_experiencia_premium_meu_dia"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       },
+                       {
+                           "version":  "2026_v1410_cobertura_escalas_fechamento_financeiro",
+                           "source":  "database/schema/270_v1410_cobertura_escalas_fechamento_financeiro.sql",
+                           "checksum":  "bfc383c6236d37f7863246636f12d111a57a67b8d168ed9b00beacaaa554c721",
+                           "dependsOn":  [
+                                             "2026_v1250_jornada_clinica_operacional"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v1951_pagamentos_plantoes",
+                           "source":  "database/schema/305_v1951_pagamentos_plantoes.sql",
+                           "checksum":  "fcfb9d72d6f208a95433e9357a772aadcd2aa802dd5c1cb1bb69395aaa773da0",
+                           "dependsOn":  [
+                                             "2026_v1410_cobertura_escalas_fechamento_financeiro"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v187_fechamento_operacional_financeiro",
+                           "source":  "database/schema/320_v187_fechamento_operacional_financeiro.sql",
+                           "checksum":  "5f64684c9f494a9023d31df3334adba89652ef8138edaa0e6ba7a015525a2f13",
+                           "dependsOn":  [
+                                             "2026_v1951_pagamentos_plantoes"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v188_prontuario_longitudinal",
+                           "source":  "database/schema/330_v188_prontuario_longitudinal.sql",
+                           "checksum":  "a6d32c3f466bca2dd209dc9b91163700755da2e721aa57079c8e86d223de9e66",
+                           "dependsOn":  [
+                                             "2026_v187_fechamento_operacional_financeiro"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v189_clinical_operational_hardening",
+                           "source":  "database/schema/340_v189_clinical_operational_hardening.sql",
+                           "checksum":  "abfa8ca830797ca5589a55292307a021d4741179c0baa552521fd390642941a5",
+                           "dependsOn":  [
+                                             "2026_v188_prontuario_longitudinal"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v192_saved_views",
+                           "source":  "database/migrations/2026_v192_saved_views.sql",
+                           "checksum":  "df55fc3e7c192bc4d6d7d6c8064d38638980e782215fea5a33e5c2ace2bef7b6",
+                           "dependsOn":  [
+                                             "2026_v189_clinical_operational_hardening"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_08_v195_financeiro_revenue_cycle",
+                           "source":  "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql",
+                           "checksum":  "2fc8ef99593ac024377f398873b0bdaefbffe9bb9a139812479f7de87aaecd72",
+                           "dependsOn":  [
+                                             "2026_v192_saved_views"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v2069_reparar_base_notificacoes",
+                           "source":  "database/schema/345_v2069_reparar_base_notificacoes.sql",
+                           "checksum":  "f0fdf1e80d44c76e160e87707631f2fda7420833d7a691d2e77f4e2c533be304",
+                           "dependsOn":  [
+                                             "2026_08_v195_financeiro_revenue_cycle"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v2070_notificacoes_alertas_operacionais",
+                           "source":  "database/schema/350_v2070_notificacoes_alertas_operacionais.sql",
+                           "checksum":  "e7b73da88edb97aa0a99c07edf360a8dd2177603d79642168a39e8766076bac2",
+                           "dependsOn":  [
+                                             "2026_v2069_reparar_base_notificacoes"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v2158_financeiro_medico_conferencia",
+                           "source":  "database/schema/360_v2158_financeiro_medico_conferencia.sql",
+                           "checksum":  "d9df5b1c3e0113e1fdc7e172a7f46d449d2391eefde3ab819edafe2e2509b057",
+                           "dependsOn":  [
+                                             "2026_v2070_notificacoes_alertas_operacionais"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v2159_saude360_agenda_recepcao",
+                           "source":  "database/schema/370_v2159_saude360_agenda_recepcao.sql",
+                           "checksum":  "cec52f65dc1477179d1e90453c2262e7d4a4b9d5fcc8e250fbafd922145b0211",
+                           "dependsOn":  [
+                                             "2026_v2158_financeiro_medico_conferencia"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v2160_triagem_consulta_jornada",
+                           "source":  "database/schema/380_v2160_triagem_consulta_jornada.sql",
+                           "checksum":  "313d92fe8c3319ad979d9e1af2808ac748e932110204d0b321cddaed62141403",
+                           "dependsOn":  [
+                                             "2026_v2159_saude360_agenda_recepcao"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v2163_portal_cliente_modulos",
+                           "source":  "database/schema/390_v2163_portal_cliente_modulos.sql",
+                           "checksum":  "496b631938ba68ac14d8b582644a985eb3d5535337d020f10c313a74b2eeaab7",
+                           "dependsOn":  [
+                                             "2026_v2160_triagem_consulta_jornada"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v2167_execucao_conferencia",
+                           "source":  "database/migrations/2026_v2167_execucao_conferencia.sql",
+                           "checksum":  "1d1107426a2b42690017aba350eb8365e7f0a3c33d2d441f92c9800eb86b916e",
+                           "dependsOn":  [
+                                             "2026_v2163_portal_cliente_modulos"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_v2168_conferencia_integridade",
+                           "source":  "database/schema/410_v2168_conferencia_integridade.sql",
+                           "checksum":  "4d4087ec92c261b8331729416e6cd3ea9620fb33d33b49992cda1e5462669138",
+                           "dependsOn":  [
+                                             "2026_v2167_execucao_conferencia"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v2170_cobertura_substituicoes",
+                           "source":  "database/schema/420_v2170_cobertura_substituicoes.sql",
+                           "checksum":  "7c7fd13bb91f61ad13f1c1da01903d7af52208aef5dc01345888bc15f591d30b",
+                           "dependsOn":  [
+                                             "2026_v2168_conferencia_integridade"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v2171_ocorrencias_operacionais",
+                           "source":  "database/schema/430_ocorrencias_operacionais.sql",
+                           "checksum":  "2689f6f0dcb0529fed9def6b88cca53417e305a12e28e06fa4d64bb618bd8850",
+                           "dependsOn":  [
+                                             "2026_v2170_cobertura_substituicoes"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2190_administrativo360_base",
+                           "source":  "database/migrations/2026_09_v2190_administrativo360_base.sql",
+                           "checksum":  "49da91626a61ed59b8566c0a4c504ccc11d7b0b4b9d438adfb1a913c3a632fb6",
+                           "dependsOn":  [
+                                             "2026_v2171_ocorrencias_operacionais"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2191_administrativo360_suprimentos",
+                           "source":  "database/migrations/2026_09_v2191_administrativo360_suprimentos.sql",
+                           "checksum":  "60f41199b8720064c7c6f08bb4a1ebba851b063fa50d12d31a528f4e77babc1e",
+                           "dependsOn":  [
+                                             "2026_09_v2190_administrativo360_base"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2192_administrativo360_regras_estoque_orcamentos",
+                           "source":  "database/migrations/2026_09_v2192_administrativo360_regras_estoque_orcamentos.sql",
+                           "checksum":  "b5cc310b22733357834e1c566fe61425f7007d74a9a542749aaaaa4e1fc2f612",
+                           "dependsOn":  [
+                                             "2026_09_v2191_administrativo360_suprimentos"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2193_administrativo360_cirurgia_vales_reconciliacao",
+                           "source":  "database/migrations/2026_09_v2193_administrativo360_cirurgia_vales_reconciliacao.sql",
+                           "checksum":  "6442e40d9cf12b1bd48a6c0d75a48da889a688d424a3fac328e4c7c50abd695e",
+                           "dependsOn":  [
+                                             "2026_09_v2192_administrativo360_regras_estoque_orcamentos"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2194_administrativo360_valorizacao_vendas_financeiro",
+                           "source":  "database/migrations/2026_09_v2194_administrativo360_valorizacao_vendas_financeiro.sql",
+                           "checksum":  "26243e62271f5b1ecab4d9fc1b95e80224d2149d70c029272cfbfc2b088b6d2d",
+                           "dependsOn":  [
+                                             "2026_09_v2193_administrativo360_cirurgia_vales_reconciliacao"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2195_administrativo360_contas_pagar_fechamento",
+                           "source":  "database/migrations/2026_09_v2195_administrativo360_contas_pagar_fechamento.sql",
+                           "checksum":  "008797d3f103fe9b2cf867e89ff6c2fd01ba22665b73df953c9a65543455d81e",
+                           "dependsOn":  [
+                                             "2026_09_v2194_administrativo360_valorizacao_vendas_financeiro"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2196_administrativo360_cotacoes_xml_dashboard",
+                           "source":  "database/migrations/2026_09_v2196_administrativo360_cotacoes_xml_dashboard.sql",
+                           "checksum":  "1a61b839c29de84ccfbf0db263698a668eaee55033d8929f4d4eaaa3f6744885",
+                           "dependsOn":  [
+                                             "2026_09_v2195_administrativo360_contas_pagar_fechamento"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2197_reconciliar_contratos_modulos",
+                           "source":  "database/migrations/2026_09_v2197_reconciliar_contratos_modulos.sql",
+                           "checksum":  "71eb03eda2961fbaa29d80df37c0f6c7f846bd3472d7002684e894493aceb2a4",
+                           "dependsOn":  [
+                                             "2026_09_v2196_administrativo360_cotacoes_xml_dashboard"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2198_reconciliar_duplicidades_contratos_modulos",
+                           "source":  "database/migrations/2026_09_v2198_reconciliar_duplicidades_contratos_modulos.sql",
+                           "checksum":  "0d4b352f984115ab6a956b72fc2c1f5b3a398ad2aa5b02a3d3e083229b931cf5",
+                           "dependsOn":  [
+                                             "2026_09_v2197_reconciliar_contratos_modulos"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2199_corrigir_trigger_adm360_validar_tenant",
+                           "source":  "database/migrations/2026_09_v2199_corrigir_trigger_adm360_validar_tenant.sql",
+                           "checksum":  "06c4dc1ea9c82cc242357bd6a11d5d691dc768f8b114ecdbcae7892c1df73a65",
+                           "dependsOn":  [
+                                             "2026_09_v2198_reconciliar_duplicidades_contratos_modulos"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2200_reconciliar_colunas_medicos_compatibilidade",
+                           "source":  "database/migrations/2026_09_v2200_reconciliar_colunas_medicos_compatibilidade.sql",
+                           "checksum":  "926b11c2d6da671365a22e590491196857f2d6cc1a4edc3b8dd59fa5c0261ae6",
+                           "dependsOn":  [
+                                             "2026_09_v2199_corrigir_trigger_adm360_validar_tenant"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial",
+                           "source":  "database/migrations/2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial.sql",
+                           "checksum":  "8a24bfa9b0b5209748b201f60080ad57bcc705b06cd395ed23439aec689fa4ff",
+                           "dependsOn":  [
+                                             "2026_09_v2200_reconciliar_colunas_medicos_compatibilidade"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2200_administrativo360_exportacao_proposta_imutavel",
+                           "source":  "database/migrations/2026_09_v2200_administrativo360_exportacao_proposta_imutavel.sql",
+                           "checksum":  "56aa38e963c82fded0e437e0f2ee1e2777a61feb7468e8cc6a2d31e5216ea727",
+                           "dependsOn":  [
+                                             "2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2202_reconciliar_auditoria_observabilidade",
+                           "source":  "database/migrations/2026_09_v2202_reconciliar_auditoria_observabilidade.sql",
+                           "checksum":  "6a564a4d23efcbfcc05f84066ed55672163c1f3ae2ca6296f374480c22181d23",
+                           "dependsOn":  [
+                                             "2026_09_v2200_administrativo360_exportacao_proposta_imutavel"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2300_administrativo360_status_transmissao_exportacao",
+                           "source":  "database/migrations/2026_09_v2300_administrativo360_status_transmissao_exportacao.sql",
+                           "checksum":  "e220614f3a1161b38ccd84cad2d27211e5cf9e6f2c2dc4bf64887452296c4d41",
+                           "dependsOn":  [
+                                             "2026_09_v2200_administrativo360_exportacao_proposta_imutavel"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2301_administrativo360_eventos_imutabilidade",
+                           "source":  "database/migrations/2026_09_v2301_administrativo360_eventos_imutabilidade.sql",
+                           "checksum":  "77e3d861188b1984a8637940af7b73e8b00cea7ae86b189a9cd1c62e1d673f4d",
+                           "dependsOn":  [
+                                             "2026_09_v2300_administrativo360_status_transmissao_exportacao"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant",
+                           "source":  "database/migrations/2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant.sql",
+                           "checksum":  "bc6baaff554451db2b2b50d37c432460ddee9b01d00d10cf18ebe0105670172a",
+                           "dependsOn":  [
+                                             "2026_09_v2301_administrativo360_eventos_imutabilidade"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_v1270_normalizar_permissoes_e_prontuario",
+                           "source":  "database/migrations/2026_v1270_normalizar_permissoes_e_prontuario.sql",
+                           "checksum":  "7cf9a32a19fefe763619fb5c949987151a534bfa107a15d454d364871a841e49",
+                           "dependsOn":  [
+                                             "2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2303_administrativo360_documentos_xml_b1",
+                           "source":  "database/migrations/2026_09_v2303_administrativo360_documentos_xml_b1.sql",
+                           "checksum":  "50f78ce6e574d3fc7bf3863dc1fbad702ec73e29e999ae6d710ccf4943e36e6c",
+                           "dependsOn":  [
+                                             "2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_09_v2304_administrativo360_transmissao_tentativas",
+                           "source":  "database/migrations/2026_09_v2304_administrativo360_transmissao_tentativas.sql",
+                           "checksum":  "37dcd938230badfecbd29f865fb56939966596a6d2f8d9f029bdef5f7c91729d",
+                           "dependsOn":  [
+                                             "2026_09_v2303_administrativo360_documentos_xml_b1"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_10_v2305_administrativo360_imutabilidade_por_papel",
+                           "source":  "database/migrations/2026_10_v2305_administrativo360_imutabilidade_por_papel.sql",
+                           "checksum":  "4b4e31a9a37edd2670d2cb566b39a49cb278ff721efc5b1d47616693cc017ee4",
+                           "dependsOn":  [
+                                             "2026_09_v2304_administrativo360_transmissao_tentativas"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_10_v2306_saude360_plano_principal_unico",
+                           "source":  "database/migrations/2026_10_v2306_saude360_plano_principal_unico.sql",
+                           "checksum":  "8efd39faf5a9b2eb8e7f2322e6eddf8010d909903ff7f190ee5e608acf783b73",
+                           "dependsOn":  [
+                                             "2026_10_v2305_administrativo360_imutabilidade_por_papel"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_10_v2307_ai_camada_canonica",
+                           "source":  "database/migrations/2026_10_v2307_ai_camada_canonica.sql",
+                           "checksum":  "47d5f9faaa95fa023673a5fe4484b8f874d44914ca9aed0bb12780f6e935eed0",
+                           "dependsOn":  [
+                                             "2026_10_v2306_saude360_plano_principal_unico"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_10_v2308_ai_governanca_modelos_orcamento",
+                           "source":  "database/migrations/2026_10_v2308_ai_governanca_modelos_orcamento.sql",
+                           "checksum":  "08c97f9e2d9957e0ead8055a4abcc5ce934fd76f5bf96d1c8d0570c818600554",
+                           "dependsOn":  [
+                                             "2026_10_v2307_ai_camada_canonica"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_10_v2309_administrativo360_documentos_xml_a3",
+                           "source":  "database/migrations/2026_10_v2309_administrativo360_documentos_xml_a3.sql",
+                           "checksum":  "9516a4d9446a930284d7284781a649cfbf6691b038aef4191f5d6f99b9e4d957",
+                           "dependsOn":  [
+                                             "2026_09_v2303_administrativo360_documentos_xml_b1"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_10_v2310_adm360_eventos_tipo_conferencia",
+                           "source":  "database/migrations/2026_10_v2310_adm360_eventos_tipo_conferencia.sql",
+                           "checksum":  "9177b33b502201c3f54c5d2483a354da5ce27f76c8da1a61407bfb8debd795f1",
+                           "dependsOn":  [
+                                             "2026_10_v2309_administrativo360_documentos_xml_a3"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_10_v2311_adm360_documentos_identidade_eventos",
+                           "source":  "database/migrations/2026_10_v2311_adm360_documentos_identidade_eventos.sql",
+                           "checksum":  "5075bfe673fcf1d093b36eda354eb5f93287e2675af402da23599c2c4b85b477",
+                           "dependsOn":  [
+                                             "2026_10_v2310_adm360_eventos_tipo_conferencia"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  true
+                       },
+                       {
+                           "version":  "2026_10_v2312_saas_assinaturas_colunas_comerciais_b6",
+                           "source":  "database/migrations/2026_10_v2312_saas_assinaturas_colunas_comerciais_b6.sql",
+                           "checksum":  "67149e1d4e2c6c3585da34c4cdef92a246c83354a6e258456b2d7db2f903ad11",
+                           "dependsOn":  [
+                                             "2026_10_v2311_adm360_documentos_identidade_eventos"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2313_saas_planos_permite_relatorios_b6",
+                           "source":  "database/migrations/2026_10_v2313_saas_planos_permite_relatorios_b6.sql",
+                           "checksum":  "fd2b80cd31711c5d727da1b76cb805de59c5deaa7baf9947f041608ff38478ea",
+                           "dependsOn":  [
+                                             "2026_10_v2312_saas_assinaturas_colunas_comerciais_b6"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem",
+                           "source":  "database/migrations/2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem.sql",
+                           "checksum":  "4b56d6d862e403482d9473d75f1502abe730d613ac00f4635ec3158252210409",
+                           "dependsOn":  [
+                                             "2026_10_v2313_saas_planos_permite_relatorios_b6"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2315_saude360_b8_financeiro_canonico",
+                           "source":  "database/migrations/2026_10_v2315_saude360_b8_financeiro_canonico.sql",
+                           "checksum":  "dd5a5e4d32b8ab1d9b23b9b4845dfbfd1e0772f2e6634db433f118c0f1f155d2",
+                           "dependsOn":  [
+                                             "2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2316_saude360_b8_fila_atendimento_legado",
+                           "source":  "database/migrations/2026_10_v2316_saude360_b8_fila_atendimento_legado.sql",
+                           "checksum":  "cc22f08306c85a294395a021f31f1e26b9eae600b501b9eb7c8fe569a01d51e8",
+                           "dependsOn":  [
+                                             "2026_10_v2315_saude360_b8_financeiro_canonico"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2317_saude360_b9_contestacao_situacao_anterior",
+                           "source":  "database/migrations/2026_10_v2317_saude360_b9_contestacao_situacao_anterior.sql",
+                           "checksum":  "be46976f4bc70a02bc84b16cfeb4b457235cb36cade2d27403bdb16c21fd76aa",
+                           "dependsOn":  [
+                                             "2026_10_v2316_saude360_b8_fila_atendimento_legado"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2318_saude360_b9_plantao_historico_contrato",
+                           "source":  "database/migrations/2026_10_v2318_saude360_b9_plantao_historico_contrato.sql",
+                           "checksum":  "8a0f882bf14e8c6684805c1eaaac1840633a780a214729500e631c780ddd1074",
+                           "dependsOn":  [
+                                             "2026_10_v2317_saude360_b9_contestacao_situacao_anterior"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2319_saude360_b9_notificacoes_contrato",
+                           "source":  "database/migrations/2026_10_v2319_saude360_b9_notificacoes_contrato.sql",
+                           "checksum":  "baca5925613bcd26ac0568892c7e159492d542f4cd2000c8abc537f76db9706a",
+                           "dependsOn":  [
+                                             "2026_10_v2318_saude360_b9_plantao_historico_contrato"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2320_saude360_b9_plantoes_auditoria",
+                           "source":  "database/migrations/2026_10_v2320_saude360_b9_plantoes_auditoria.sql",
+                           "checksum":  "d9eec352ba21c23e6d76ded2718c70f52cf089ffa59405436d580692045503f7",
+                           "dependsOn":  [
+                                             "2026_10_v2319_saude360_b9_notificacoes_contrato"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2321_adm360_fiscal_parametros_pre_emitidas",
+                           "source":  "database/migrations/2026_10_v2321_adm360_fiscal_parametros_pre_emitidas.sql",
+                           "checksum":  "724de9952b3aff65d429d94b09673a318657970e76d3d66602a535fec13c3411",
+                           "dependsOn":  [
+                                             "2026_10_v2320_saude360_b9_plantoes_auditoria"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2338_p0_adm360_garantia_codigos_fiscais",
+                           "source":  "database/migrations/2026_10_v2338_p0_adm360_garantia_codigos_fiscais.sql",
+                           "checksum":  "1ef1dda3e29ba1e9bca510ac239de65055cd8389d10b61134a9e1ca5fef24427",
+                           "dependsOn":  [
+                                             "2026_10_v2321_adm360_fiscal_parametros_pre_emitidas"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2322_adm360_grants_adm_cliente_r5_a2",
+                           "source":  "database/migrations/2026_10_v2322_adm360_grants_adm_cliente_r5_a2.sql",
+                           "checksum":  "24bd46a22bfb711f96284c54c338ca6671fef24a01547f7ee7eebdba5f1bb132",
+                           "dependsOn":  [
+                                             "2026_10_v2338_p0_adm360_garantia_codigos_fiscais"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2323_b4_matriz_comercial_solicitacoes",
+                           "source":  "database/migrations/2026_10_v2323_b4_matriz_comercial_solicitacoes.sql",
+                           "checksum":  "f2f7346e2766eb244075bea44b57876b916e3d85d33ddee067b969822ed7a96f",
+                           "dependsOn":  [
+                                             "2026_10_v2322_adm360_grants_adm_cliente_r5_a2"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2324_b4_plano_modulos_canonicos",
+                           "source":  "database/migrations/2026_10_v2324_b4_plano_modulos_canonicos.sql",
+                           "checksum":  "73bfb9aa1bda0239e70b316ddefd863671f554650291abd26edd09bfe1c527d3",
+                           "dependsOn":  [
+                                             "2026_10_v2323_b4_matriz_comercial_solicitacoes"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2325_b4_plano_recursos_colunas",
+                           "source":  "database/migrations/2026_10_v2325_b4_plano_recursos_colunas.sql",
+                           "checksum":  "42e81c6e6e7ea89f78b8352562c1edc1c2f4942e6ecc08e135c0895723b9dcb9",
+                           "dependsOn":  [
+                                             "2026_10_v2324_b4_plano_modulos_canonicos"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2326_b4_assinatura_historico_colunas",
+                           "source":  "database/migrations/2026_10_v2326_b4_assinatura_historico_colunas.sql",
+                           "checksum":  "18a8637b0ca7e0e67f308964a7240862e60ab282cc35940eb430b562a8e2ebcc",
+                           "dependsOn":  [
+                                             "2026_10_v2325_b4_plano_recursos_colunas"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2327_b4_historico_reg_status",
+                           "source":  "database/migrations/2026_10_v2327_b4_historico_reg_status.sql",
+                           "checksum":  "0e3bd84fc28080996cf3af631e812991a9039a04ee1b19e0943638c2ea184ef4",
+                           "dependsOn":  [
+                                             "2026_10_v2326_b4_assinatura_historico_colunas"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2328_b5_provisionamento_convites",
+                           "source":  "database/migrations/2026_10_v2328_b5_provisionamento_convites.sql",
+                           "checksum":  "32a46221d4139203cb0f2ab23a59b2983c08c1dce1ec8d047d0ee9ae939a5683",
+                           "dependsOn":  [
+                                             "2026_10_v2327_b4_historico_reg_status"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2329_b5_grants_usuarios_adm_cliente",
+                           "source":  "database/migrations/2026_10_v2329_b5_grants_usuarios_adm_cliente.sql",
+                           "checksum":  "85707ffaa4437bfc95c79be0bd1d2a1fe5522ab39c575943253e523fb561f042",
+                           "dependsOn":  [
+                                             "2026_10_v2328_b5_provisionamento_convites"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2330_b5_onboarding_whitelabel_colunas",
+                           "source":  "database/migrations/2026_10_v2330_b5_onboarding_whitelabel_colunas.sql",
+                           "checksum":  "ae4f30d745c0c74fa34689c75669ed52512bd799957f1fbc0d156c5762c20410",
+                           "dependsOn":  [
+                                             "2026_10_v2329_b5_grants_usuarios_adm_cliente"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2331_b5_lgpd_consentimentos_colunas",
+                           "source":  "database/migrations/2026_10_v2331_b5_lgpd_consentimentos_colunas.sql",
+                           "checksum":  "92afe1faaa7a8a035e5b9b93e625b546541518c6f94ef62d35cf300dc11a232d",
+                           "dependsOn":  [
+                                             "2026_10_v2330_b5_onboarding_whitelabel_colunas"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2332_b6_cobranca_saas",
+                           "source":  "database/migrations/2026_10_v2332_b6_cobranca_saas.sql",
+                           "checksum":  "b6aee89b3a44863c0a4399aac0f971065e46d6fd555d5baf16415b13120b74ab",
+                           "dependsOn":  [
+                                             "2026_10_v2331_b5_lgpd_consentimentos_colunas"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2333_c7_onboarding_contrato",
+                           "source":  "database/migrations/2026_10_v2333_c7_onboarding_contrato.sql",
+                           "checksum":  "8057680ca36bcba306753c6f89c58a4ab1d27761e0fa3dd9bb7fb146a4c2f5d7",
+                           "dependsOn":  [
+                                             "2026_10_v2332_b6_cobranca_saas"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2334_d9_perfil_admin_modulos_jornada",
+                           "source":  "database/migrations/2026_10_v2334_d9_perfil_admin_modulos_jornada.sql",
+                           "checksum":  "69f87da1d81ffb94de63f153b2952c21c958fc22f65acc2f103b3e0ae112c87f",
+                           "dependsOn":  [
+                                             "2026_10_v2333_c7_onboarding_contrato"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2335_d11_perfil_admin_modulos_finos_saude",
+                           "source":  "database/migrations/2026_10_v2335_d11_perfil_admin_modulos_finos_saude.sql",
+                           "checksum":  "2a551c70881105e5f7527b33c2f61e2126e8d722eeb19c307af47b89de1fcc0d",
+                           "dependsOn":  [
+                                             "2026_10_v2334_d9_perfil_admin_modulos_jornada"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico",
+                           "source":  "database/migrations/2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico.sql",
+                           "checksum":  "72651255f8ebe56ae8b2f5037d313055ea7ae38c6c09c7b2d24509cfb8af621f",
+                           "dependsOn":  [
+                                             "2026_10_v2335_d11_perfil_admin_modulos_finos_saude"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades",
+                           "source":  "database/migrations/2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades.sql",
+                           "checksum":  "f29fa8e6f083d1035352827a9184ef2a1771a2029759d224eef13bd9a306e038",
+                           "dependsOn":  [
+                                             "2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico",
+                                             "2026_10_v2338_p0_adm360_garantia_codigos_fiscais"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade",
+                           "source":  "database/migrations/2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade.sql",
+                           "checksum":  "e8715962ccc1376740f6db90021a49c55725253c9ede0acc6d6c26cf3c5337b3",
+                           "dependsOn":  [
+                                             "2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2341_r7a1_conflitos_unificados_profissional",
+                           "source":  "database/migrations/2026_10_v2341_r7a1_conflitos_unificados_profissional.sql",
+                           "checksum":  "b2c44ea9be12e49029afbabf1bae25182e0b00ce5e1dee9306a957551d5c819f",
+                           "dependsOn":  [
+                                             "2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2342_r7a1_historico_escala_colunas",
+                           "source":  "database/migrations/2026_10_v2342_r7a1_historico_escala_colunas.sql",
+                           "checksum":  "2c5800b64701f8a27feaf6878720419de0582543c92f8445858b313f769a5f47",
+                           "dependsOn":  [
+                                             "2026_10_v2341_r7a1_conflitos_unificados_profissional"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2343_r7a1_convite_ciclo_vida",
+                           "source":  "database/migrations/2026_10_v2343_r7a1_convite_ciclo_vida.sql",
+                           "checksum":  "d3c57ceda6a8fafc585f77c101b77b5e78c98911dff3311254eb1486d879eb8e",
+                           "dependsOn":  [
+                                             "2026_10_v2342_r7a1_historico_escala_colunas"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2344_r7e1_usuario_idioma_preferido",
+                           "source":  "database/migrations/2026_10_v2344_r7e1_usuario_idioma_preferido.sql",
+                           "checksum":  "623f6f52c4f1ee4ad0ba1e850094b5cdd4100c03023698da12671ae170302226",
+                           "dependsOn":  [
+                                             "2026_10_v2343_r7a1_convite_ciclo_vida"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2345_r7ob_onboarding_preferencias_idioma",
+                           "source":  "database/migrations/2026_10_v2345_r7ob_onboarding_preferencias_idioma.sql",
+                           "checksum":  "15d6bdb179322525d976bc5a039cd6b707d288cc6aacf59fcd5b601628314029",
+                           "dependsOn":  [
+                                             "2026_10_v2344_r7e1_usuario_idioma_preferido"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2346_r8b2_notificacoes_legado_dedupe",
+                           "source":  "database/migrations/2026_10_v2346_r8b2_notificacoes_legado_dedupe.sql",
+                           "checksum":  "97f2f638e79d002022a7528a0b810b0a48db9a4dce268b57986aa1701400ee65",
+                           "dependsOn":  [
+                                             "2026_10_v2345_r7ob_onboarding_preferencias_idioma"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2347_r8b4_cancelamento_compras",
+                           "source":  "database/migrations/2026_10_v2347_r8b4_cancelamento_compras.sql",
+                           "checksum":  "2e8ba13f929badb6c3a51961e0557611cec8532b319f58e7a383067094a6da8c",
+                           "dependsOn":  [
+                                             "2026_10_v2346_r8b2_notificacoes_legado_dedupe"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2348_r8b5_backfill_medico_especialidades",
+                           "source":  "database/migrations/2026_10_v2348_r8b5_backfill_medico_especialidades.sql",
+                           "checksum":  "5317df66afb7a42f141e1846d230a8caa584cc5cce92c5a133e9c7e57c40ee64",
+                           "dependsOn":  [
+                                             "2026_10_v2347_r8b4_cancelamento_compras"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2349_r8b6_mesclagem_pacientes",
+                           "source":  "database/migrations/2026_10_v2349_r8b6_mesclagem_pacientes.sql",
+                           "checksum":  "0b226ee6cb5d739ae84ba9aab3c68cde1c7f229cb00c624df2febb84e3fae1cd",
+                           "dependsOn":  [
+                                             "2026_10_v2348_r8b5_backfill_medico_especialidades"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2350_r8b7_glosa_item_recurso_documentos",
+                           "source":  "database/migrations/2026_10_v2350_r8b7_glosa_item_recurso_documentos.sql",
+                           "checksum":  "f363c5d37285179edfa51a9ce8c36d0095cd57b2d0e16296a384b303289beef6",
+                           "dependsOn":  [
+                                             "2026_10_v2349_r8b6_mesclagem_pacientes"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2351_r8b10_cid_tabela_unicao_versionada",
+                           "source":  "database/migrations/2026_10_v2351_r8b10_cid_tabela_unicao_versionada.sql",
+                           "checksum":  "25a9c25f89b1e6aeefee695a4080df3be259386e6f78faed6bac3f29c793cb19",
+                           "dependsOn":  [
+                                             "2026_10_v2350_r8b7_glosa_item_recurso_documentos"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2352_r9c_cadastro_anvisa_produtos",
+                           "source":  "database/migrations/2026_10_v2352_r9c_cadastro_anvisa_produtos.sql",
+                           "checksum":  "455574771556eff4a86cd33522e56e1acbf9e4470c62f2e1461412a8a7d027eb",
+                           "dependsOn":  [
+                                             "2026_10_v2351_r8b10_cid_tabela_unicao_versionada"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2353_r9d_precificacao_preco_venda",
+                           "source":  "database/migrations/2026_10_v2353_r9d_precificacao_preco_venda.sql",
+                           "checksum":  "4580ee72997a604d765b78cdefd05d40e268679c738275e0ca0786c802be7283",
+                           "dependsOn":  [
+                                             "2026_10_v2352_r9c_cadastro_anvisa_produtos"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2354_r55_indice_reservas_saldo",
+                           "source":  "database/migrations/2026_10_v2354_r55_indice_reservas_saldo.sql",
+                           "checksum":  "31ab4e426a5f88fe7d249c1ee4ed59f627e894e7b795cca8907a486e37259ea5",
+                           "dependsOn":  [
+                                             "2026_10_v2353_r9d_precificacao_preco_venda"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2355_r56_nome_modulo_painel",
+                           "source":  "database/migrations/2026_10_v2355_r56_nome_modulo_painel.sql",
+                           "checksum":  "43a6f366353e6fda2a53e4222ba6c8aa8cf15b118c81ba25a68b8904681715b7",
+                           "dependsOn":  [
+                                             "2026_10_v2354_r55_indice_reservas_saldo"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2356_r62_ai_provedor_drael",
+                           "source":  "database/migrations/2026_10_v2356_r62_ai_provedor_drael.sql",
+                           "checksum":  "48ef520853cf068dbf52dcc28d4355874193b45f164356a4a00dc2298eb2003f",
+                           "dependsOn":  [
+                                             "2026_10_v2355_r56_nome_modulo_painel"
+                                         ],
+                           "status":  "active",
+                           "transactional":  true,
+                           "installRequired":  false
+                       },
+                       {
+                           "version":  "2026_10_v2360_r66_gap_instalacao_convergencia",
+                           "source":  "database/migrations/2026_10_v2360_r66_gap_instalacao_convergencia.sql",
+                           "checksum":  "86b387c2bbcdc1b543a1e6bb07a38a79f1135f5bc76836485fdc89d69ab69fb9",
+                           "dependsOn":  [
+
+                                         ],
+                           "status":  "active",
+                           "transactional":  true
+                       }
+                   ]
 }

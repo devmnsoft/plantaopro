@@ -50,12 +50,22 @@ alter table plantaopro.auditoria add column if not exists cliente_id uuid;
 create index if not exists ix_clientes_status on plantaopro.clientes(status, reg_status);
 create index if not exists ix_hospitais_cliente_id on plantaopro.hospitais(cliente_id);
 
-insert into plantaopro.planos(nome,descricao,valor_mensal,limite_medicos,limite_hospitais,limite_plantoes_mes,permite_api,status)
-select 'Starter','Plano inicial para pequenas operações.',299,20,5,150,false,'ATIVO'
-where not exists(select 1 from plantaopro.planos where nome='Starter');
+do $$
+begin
+    insert into plantaopro.planos(nome,descricao,valor_mensal,limite_medicos,limite_hospitais,limite_plantoes_mes,permite_api,status)
+    select 'Starter','Plano inicial para pequenas operações.',299,20,5,150,false,'ATIVO'
+    where not exists(select 1 from plantaopro.planos where nome='Starter');
+exception when others then
+    raise notice '[legado R66] seed de plano ignorada (%): %', 'starter-multiempresa', sqlerrm;
+end $$;
 
-insert into plantaopro.clientes(razao_social,nome_fantasia,cnpj,email,telefone,cidade,estado,plano_id,status)
-select 'Cliente Demonstração PlantãoPro LTDA','Cliente Demonstração PlantãoPro','12.345.678/0001-90','demo@plantaopro.com','11999999999','São Paulo','SP',(select id from plantaopro.planos where nome='Starter' limit 1),'ATIVO'
-where not exists(select 1 from plantaopro.clientes where nome_fantasia='Cliente Demonstração PlantãoPro');
+do $$
+begin
+    insert into plantaopro.clientes(razao_social,nome_fantasia,cnpj,email,telefone,cidade,estado,plano_id,status)
+    select 'Cliente Demonstração PlantãoPro LTDA','Cliente Demonstração PlantãoPro','12.345.678/0001-90','demo@plantaopro.com','11999999999','São Paulo','SP',(select id from plantaopro.planos where nome='Starter' limit 1),'ATIVO'
+    where not exists(select 1 from plantaopro.clientes where nome_fantasia='Cliente Demonstração PlantãoPro');
+exception when others then
+    raise notice '[legado R66] seed de cliente demo ignorada (%): %', 'MULTIEMPRESA', sqlerrm;
+end $$;
 
 update plantaopro.usuarios set cliente_id=(select id from plantaopro.clientes where nome_fantasia='Cliente Demonstração PlantãoPro' limit 1) where cliente_id is null;

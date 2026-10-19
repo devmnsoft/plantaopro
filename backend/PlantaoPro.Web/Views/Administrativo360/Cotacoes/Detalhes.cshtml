@@ -284,7 +284,7 @@
                                                      <div id="anvisaInfo-@item.Id" class="form-text small mt-1" aria-live="polite"></div>
                                                      <label class="form-label small mt-2" for="uuidProduto-@item.Id">@UiText.L("Adm360.CotDet.LblIdentificadorManual")</label>
                                                     <input type="text" id="uuidProduto-@item.Id" name="ProdutoId" class="form-control form-control-sm bg-dark text-light border-secondary" oninput="atualizarAnvisaInfo('@item.Id', this.value)"
-                                                           value="@item.ProdutoId" placeholder="Ex: d3f6584c-2c64-4e5a-9ea9-4e1428647520" />
+                                                           value="@item.ProdutoId" placeholder="00000000-0000-0000-0000-000000000000" />
                                                     <div class="form-text text-white-50 small">@UiText.L("Adm360.CotDet.SelectAjuda")</div>
                                                 </div>
                                                 <div class="row g-2 mb-3">
@@ -405,7 +405,7 @@
                             <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between align-items-center">
                                 <div>
                                     <div class="fw-bold">@anexo.NomeArquivo</div>
-                                    <div class="small text-white-50">@((anexo.TamanhoBytes / 1024.0).ToString("N1")) KB — SHA256: @anexo.Sha256Hash[..8]...</div>
+                                    <div class="small text-white-50">@((anexo.TamanhoBytes / 1024.0).ToString("N1")) KB — SHA256: <span title="@anexo.Sha256Hash">@anexo.Sha256Hash[..8]</span>...</div>
                                 </div>
                                 <a href="/Administrativo360/Cotacoes/@Model.Cotacao.Id/Anexos/@anexo.Id" class="btn btn-sm btn-outline-light">
                                     <i class="bi bi-download me-1"></i> @UiText.L("Adm360.CotDet.BtnBaixar")

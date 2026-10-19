@@ -135,7 +135,7 @@
                                     <span class="badge bg-secondary">@nota.OrigemTipo</span>
                                     @if (nota.OrigemId is { } origemId)
                                     {
-                                        <span class="text-secondary font-monospace" title="@origemId">@origemId.ToString()[..8]…</span>
+                                        <span class="text-secondary font-monospace" title="Identificador do documento de origem">@origemId.ToString()</span>
                                     }
                                 </td>
                                 <td class="small">@nota.DestinatarioNome</td>

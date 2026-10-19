@@ -220,7 +220,7 @@
                             {
                                 <tr>
                                     <td class="text-nowrap">@uso.CriadoEmUtc.ToString("dd/MM/yyyy HH:mm")</td>
-                                    <td class="text-nowrap text-muted" title="@uso.TenantId">@uso.TenantId.ToString().Substring(0, 8)…</td>
+                                    <td class="text-nowrap font-monospace text-muted" title="Identificador do cliente dono do uso">@uso.TenantId.ToString()</td>
                                     <td>@NomeTarefa(uso.TaskCode)</td>
                                     <td class="text-nowrap">@uso.Provedor@(uso.Modelo is { Length: > 0 } ? $" / {uso.Modelo}" : string.Empty)</td>
                                     <td class="text-end text-nowrap">@(uso.CustoEstimado is { } ce ? $"{ce:N4} {uso.Moeda}" : "—")</td>

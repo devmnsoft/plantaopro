@@ -91,6 +91,9 @@ SELECT format('SET ROLE %I', :'database_owner') \gexec
 \endif
 \endif
 
+-- Normaliza propriedade/privilegios ANTES dos GRANTs: objetos criados fora do
+-- instalador (seeds demo, execucoes manuais) podem ter dono diferente da role owner.
+\ir bootstrap/normalize_owner_grants.sql
 SELECT format('REVOKE CREATE ON SCHEMA public FROM PUBLIC'); \gexec
 SELECT format('REVOKE ALL ON SCHEMA plantaopro FROM %I', :'application_role') \gexec
 SELECT format('GRANT CONNECT ON DATABASE %I TO %I', :'target_database', :'application_role') \gexec

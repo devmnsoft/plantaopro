@@ -64,7 +64,8 @@ if($falhas.Count -eq 0){
   # productivity_item_user_state_nao_existe: tabela propositalmente inexistente em teste.
   # install_manifest_runs/schema_migration_repairs: criadas pelo tooling em runtime
   # (PlantaoPro.Tools.Database usa CREATE TABLE IF NOT EXISTS quando executa).
-  $excl=@('com','css','sql','test','local','tmp','public','plantaopro','bootstrap','app_user','ocorrencias','presencas','usuario_perfis','productivity_item_user_state_nao_existe','install_manifest_runs','schema_migration_repairs')
+  # ps1/sh: extensoes de arquivo citadas em literais de string (contrato dos instaladores R68).
+  $excl=@('com','css','sql','test','local','tmp','public','plantaopro','bootstrap','app_user','ocorrencias','presencas','usuario_perfis','productivity_item_user_state_nao_existe','install_manifest_runs','schema_migration_repairs','ps1','sh')
   $obj=(Q $db "select c.relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='plantaopro'")
   $fn=(Q $db "select p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='plantaopro'")
   $univ=[System.Collections.Generic.HashSet[string]]::new()

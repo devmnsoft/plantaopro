@@ -22,6 +22,11 @@ alter table if exists plantaopro.pagamentos
     alter column status set default 'PENDENTE';
 
 -- Segurança de integridade para pagamentos
-alter table if exists plantaopro.pagamentos
-    add constraint ck_pagamentos_status
-    check (status in ('PENDENTE','DISPONIVEL','PAGO','ATRASADO','CANCELADO'));
+do $$
+begin
+    if not exists (select 1 from pg_constraint where conname = 'ck_pagamentos_status') then
+        alter table plantaopro.pagamentos
+            add constraint ck_pagamentos_status
+            check (status in ('PENDENTE','DISPONIVEL','PAGO','ATRASADO','CANCELADO'));
+    end if; 
+end $$;

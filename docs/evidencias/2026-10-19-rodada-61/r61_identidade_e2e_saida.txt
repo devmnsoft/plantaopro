@@ -1,0 +1,15 @@
+﻿LOGIN_OK
+IDENTIDADE_OK /Convenios/Index -> "Convênios"
+IDENTIDADE_OK /Agendamentos/AgendaDia -> "Agenda do dia"
+IDENTIDADE_OK /Agendamentos/Calendario -> "Calendário clínico"
+IDENTIDADE_OK /PainelChamada/Guiches -> "Guichês"
+IDENTIDADE_OK /PainelChamada/Tv -> "Tela TV"
+IDENTIDADE_OK /Parametrizacoes -> "Parâmetros do sistema"
+FORA_DO_PERFIL /Escalas/Details
+IDENTIDADE_OK /MinhaAssinatura/Faturas -> "Faturas da assinatura"
+IDENTIDADES_VERIFICADAS=7
+AUTH_ASSET_CANONICAL_OK
+LAYOUT_SEM_ASSET_HOMOLOGACAO_OK
+FATURAS_VAZIAS_REGISTRADO (nenhum detalhe para inspecionar)
+OCORRENCIAS_FORA_DO_PERFIL (pagina nao renderizada para o demo)
+R61_E2E_OK FALHAS=0

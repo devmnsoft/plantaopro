@@ -826,7 +826,7 @@
                        {
                            "version":  "2026_10_v2305_administrativo360_imutabilidade_por_papel",
                            "source":  "database/migrations/2026_10_v2305_administrativo360_imutabilidade_por_papel.sql",
-                           "checksum":  "4b4e31a9a37edd2670d2cb566b39a49cb278ff721efc5b1d47616693cc017ee4",
+                           "checksum":  "895433a7a17be830cb7a5af77065f133ae83c502b2ddaa8b66de10cdcc9228c8",
                            "dependsOn":  [
                                              "2026_09_v2304_administrativo360_transmissao_tentativas"
                                          ],

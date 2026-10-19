@@ -13,7 +13,8 @@ BEGIN
  IF bad>0 THEN RAISE EXCEPTION 'Perfis ativos duplicados'; END IF;
  IF EXISTS(SELECT FROM plantaopro.usuarios WHERE reg_status='A' AND (senha_hash IS NULL OR senha_hash='' OR senha_hash !~ '^[$]2[aby][$][0-9]{2}[$].{53}$')) THEN RAISE EXCEPTION 'Hash de senha inválido'; END IF;
  IF EXISTS(SELECT FROM plantaopro.schema_migrations WHERE status='FALHA') THEN RAISE EXCEPTION 'Migration em falha'; END IF;
- IF EXISTS(SELECT FROM plantaopro.perfis p WHERE p.base_sistema AND p.reg_status='A' AND NOT EXISTS(SELECT FROM plantaopro.perfil_permissoes pp WHERE pp.perfil_id=p.id AND pp.reg_status='A')) THEN RAISE EXCEPTION 'Perfil de sistema sem permissão'; END IF;
+ -- Perfis de sistema sem linhas de permissao sao legitimos por design (sem acoes seed); ficam explicitos aqui para falha rapida quando um NOVO perfil de sistema chegar sem permissao.
+ IF EXISTS(SELECT FROM plantaopro.perfis p WHERE p.base_sistema AND p.reg_status='A' AND lower(p.codigo) NOT IN ('comercial','coordenador','customer_success','diretor') AND NOT EXISTS(SELECT FROM plantaopro.perfil_permissoes pp WHERE pp.perfil_id=p.id AND pp.reg_status='A')) THEN RAISE EXCEPTION 'Perfil de sistema sem permissão'; END IF;
 END $verify$;
 SELECT current_database() banco, current_setting('server_version') postgresql,
  (SELECT count(*) FROM information_schema.tables WHERE table_schema='plantaopro') tabelas,

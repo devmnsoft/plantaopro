@@ -91,6 +91,30 @@
   <data name="Login.EmailHelp" xml:space="preserve">
     <value>Indique el identificador habilitado por su institución, sin compartir sus credenciales.</value>
   </data>
+  <data name="Login.IdGuideEmail" xml:space="preserve">
+    <value>Correo electrónico — cuenta individual del profesional o administrador.</value>
+  </data>
+  <data name="Login.IdGuideCpf" xml:space="preserve">
+    <value>CPF — inicio de sesión del profesional habilitado por la institución.</value>
+  </data>
+  <data name="Login.IdGuideCnpj" xml:space="preserve">
+    <value>CNPJ — inicio de sesión institucional de la organización.</value>
+  </data>
+  <data name="Login.IdIncompleteCpf" xml:space="preserve">
+    <value>Un CPF tiene 11 dígitos — siga digitando el número.</value>
+  </data>
+  <data name="Login.IdIncompleteCnpj" xml:space="preserve">
+    <value>Un CNPJ tiene 14 dígitos — siga digitando el número.</value>
+  </data>
+  <data name="Login.IdInvalidCpf" xml:space="preserve">
+    <value>El CPF informado no es válido. Revise los números e inténtelo de nuevo.</value>
+  </data>
+  <data name="Login.IdInvalidCnpj" xml:space="preserve">
+    <value>El CNPJ informado no es válido. Revise los números e inténtelo de nuevo.</value>
+  </data>
+  <data name="Login.IdInvalidLength" xml:space="preserve">
+    <value>El documento informado tiene más dígitos de los esperados. Un CPF tiene 11 y un CNPJ tiene 14.</value>
+  </data>
   <data name="Login.PasswordLabel" xml:space="preserve">
     <value>Contraseña</value>
   </data>

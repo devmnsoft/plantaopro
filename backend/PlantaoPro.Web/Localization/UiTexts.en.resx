@@ -91,6 +91,30 @@
   <data name="Login.EmailHelp" xml:space="preserve">
     <value>Enter the identifier enabled by your organization, without sharing your credentials.</value>
   </data>
+  <data name="Login.IdGuideEmail" xml:space="preserve">
+    <value>E-mail — individual account for a professional or administrator.</value>
+  </data>
+  <data name="Login.IdGuideCpf" xml:space="preserve">
+    <value>CPF — login for a professional enabled by your organization.</value>
+  </data>
+  <data name="Login.IdGuideCnpj" xml:space="preserve">
+    <value>CNPJ — institutional login for the organization.</value>
+  </data>
+  <data name="Login.IdIncompleteCpf" xml:space="preserve">
+    <value>A CPF number has 11 digits — keep typing the number.</value>
+  </data>
+  <data name="Login.IdIncompleteCnpj" xml:space="preserve">
+    <value>A CNPJ number has 14 digits — keep typing the number.</value>
+  </data>
+  <data name="Login.IdInvalidCpf" xml:space="preserve">
+    <value>The CPF entered is not valid. Check the numbers and try again.</value>
+  </data>
+  <data name="Login.IdInvalidCnpj" xml:space="preserve">
+    <value>The CNPJ entered is not valid. Check the numbers and try again.</value>
+  </data>
+  <data name="Login.IdInvalidLength" xml:space="preserve">
+    <value>The document entered has more digits than expected. A CPF has 11 and a CNPJ has 14.</value>
+  </data>
   <data name="Login.PasswordLabel" xml:space="preserve">
     <value>Password</value>
   </data>

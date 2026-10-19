@@ -12,6 +12,99 @@
     const progressTitle = progress?.querySelector("[data-login-progress-title]");
     const progressDetail = progress?.querySelector("[data-login-progress-detail]");
     const idleLabel = button?.dataset.idleLabel || "Entrar";
+
+    // R63 - login guiado: identifica em tempo real qual identificador esta sendo
+    // digitado (e-mail / CPF / CNPJ), aplica mascara progressiva, guia a quantidade
+    // de digitos e valida os digitos verificadores oficiais. Espelha a regra canonica
+    // do servidor (LoginIdentifierNormalizer/LoginIdentifierChecksums): "@" = e-mail,
+    // 11 digitos = CPF, 14 digitos = CNPJ. Documento com erro claro nao sai do
+    // navegador, protegendo o usuario de perder tentativas e alcancar o bloqueio.
+    const identifierField = form?.querySelector("[data-login-identifier]");
+    const identifierGuide = form?.querySelector("[data-identifier-guide]");
+
+    const onlyDigits = value => (value || "").replace(/\D/g, "");
+    const cpfDigitsValid = d => {
+        if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+        const dv = (base, firstWeight) => {
+            let sum = 0;
+            for (let i = 0; i < base.length; i++) sum += (base.charCodeAt(i) - 48) * (firstWeight - i);
+            const rest = (sum * 10) % 11;
+            return rest === 10 ? 0 : rest;
+        };
+        return dv(d.slice(0, 9), 10) === d.charCodeAt(9) - 48 && dv(d.slice(0, 10), 11) === d.charCodeAt(10) - 48;
+    };
+    const cnpjDigitsValid = d => {
+        if (d.length !== 14 || /^(\d)\1{13}$/.test(d)) return false;
+        const dv = (base, weights) => {
+            let sum = 0;
+            for (let i = 0; i < base.length; i++) sum += (base.charCodeAt(i) - 48) * weights[i];
+            const rest = sum % 11;
+            return rest < 2 ? 0 : 11 - rest;
+        };
+        const w1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+        const w2 = [6].concat(w1);
+        return dv(d.slice(0, 12), w1) === d.charCodeAt(12) - 48 && dv(d.slice(0, 13), w2) === d.charCodeAt(13) - 48;
+    };
+    const formatDigits = (kind, digits) => {
+        let out;
+        if (kind === "cpf") {
+            out = digits.slice(0, 3);
+            if (digits.length > 3) out += "." + digits.slice(3, 6);
+            if (digits.length > 6) out += "." + digits.slice(6, 9);
+            if (digits.length > 9) out += "-" + digits.slice(9, 11);
+        } else {
+            out = digits.slice(0, 2);
+            if (digits.length > 2) out += "." + digits.slice(2, 5);
+            if (digits.length > 5) out += "." + digits.slice(5, 8);
+            if (digits.length > 8) out += "/" + digits.slice(8, 12);
+            if (digits.length > 12) out += "-" + digits.slice(12, 14);
+        }
+        return out;
+    };
+    const identifierState = raw => {
+        const value = (raw || "").trim();
+        if (!value) return "empty";
+        if (value.includes("@")) return "email";
+        const digits = onlyDigits(value);
+        if (!digits) return "typing";
+        if (digits.length > 14) return "invalid-length";
+        if (value.replace(/[.\-/ ]/g, "") !== digits) return "typing";
+        if (digits.length === 11) return cpfDigitsValid(digits) ? "cpf" : "invalid-cpf";
+        if (digits.length === 14) return cnpjDigitsValid(digits) ? "cnpj" : "invalid-cnpj";
+        if (digits.length >= 12) return "incomplete-cnpj";
+        return "incomplete-cpf";
+    };
+    const updateIdentifierGuide = () => {
+        if (!identifierField || !identifierGuide) return;
+        const t = identifierGuide.dataset;
+        if (identifierField.value.trim() && onlyDigits(identifierField.value).length >= 2
+            && /^[0-9.\-/ ]+$/.test(identifierField.value.trim())
+            && onlyDigits(identifierField.value).length <= 14) {
+            const digits = onlyDigits(identifierField.value);
+            const masked = formatDigits(digits.length >= 12 ? "cnpj" : "cpf", digits);
+            if (masked !== identifierField.value) identifierField.value = masked;
+        }
+        const show = text => { identifierGuide.textContent = text; identifierGuide.hidden = false; };
+        const setBlocked = message => {
+            identifierField.setCustomValidity(message);
+            identifierField.setAttribute("aria-invalid", message ? "true" : "false");
+        };
+        switch (identifierState(identifierField.value)) {
+            case "empty": identifierGuide.hidden = true; setBlocked(""); break;
+            case "email": show(t.textEmail); setBlocked(""); break;
+            case "typing": identifierGuide.hidden = true; setBlocked(""); break;
+            case "cpf": show(t.textCpf); setBlocked(""); break;
+            case "cnpj": show(t.textCnpj); setBlocked(""); break;
+            case "incomplete-cpf": show(t.textIncompleteCpf); setBlocked(""); break;
+            case "incomplete-cnpj": show(t.textIncompleteCnpj); setBlocked(""); break;
+            case "invalid-cpf": show(t.textInvalidCpf); setBlocked(t.textInvalidCpf); break;
+            case "invalid-cnpj": show(t.textInvalidCnpj); setBlocked(t.textInvalidCnpj); break;
+            case "invalid-length": show(t.textInvalidLength); setBlocked(t.textInvalidLength); break;
+        }
+    };
+    identifierField?.addEventListener("input", updateIdentifierGuide);
+    updateIdentifierGuide();
+
     const resetSubmission = () => {
         if (form) delete form.dataset.requestStarted;
         button?.removeAttribute("disabled");

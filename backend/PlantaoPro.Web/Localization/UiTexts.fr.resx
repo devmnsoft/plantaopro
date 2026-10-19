@@ -91,6 +91,30 @@
   <data name="Login.EmailHelp" xml:space="preserve">
     <value>Indiquez l'identifiant activé par votre établissement, sans partager vos identifiants.</value>
   </data>
+  <data name="Login.IdGuideEmail" xml:space="preserve">
+    <value>E-mail — compte individuel du professionnel ou administrateur.</value>
+  </data>
+  <data name="Login.IdGuideCpf" xml:space="preserve">
+    <value>CPF — connexion du professionnel habilité par l'institution.</value>
+  </data>
+  <data name="Login.IdGuideCnpj" xml:space="preserve">
+    <value>CNPJ — connexion institutionnelle de l'organisation.</value>
+  </data>
+  <data name="Login.IdIncompleteCpf" xml:space="preserve">
+    <value>Un numéro CPF comporte 11 chiffres — continuez à saisir le numéro.</value>
+  </data>
+  <data name="Login.IdIncompleteCnpj" xml:space="preserve">
+    <value>Un numéro CNPJ comporte 14 chiffres — continuez à saisir le numéro.</value>
+  </data>
+  <data name="Login.IdInvalidCpf" xml:space="preserve">
+    <value>Le CPF saisi n'est pas valide. Vérifiez les chiffres et réessayez.</value>
+  </data>
+  <data name="Login.IdInvalidCnpj" xml:space="preserve">
+    <value>Le CNPJ saisi n'est pas valide. Vérifiez les chiffres et réessayez.</value>
+  </data>
+  <data name="Login.IdInvalidLength" xml:space="preserve">
+    <value>Le document saisi comporte plus de chiffres que prévu. Un CPF en comporte 11 et un CNPJ 14.</value>
+  </data>
   <data name="Login.PasswordLabel" xml:space="preserve">
     <value>Mot de passe</value>
   </data>

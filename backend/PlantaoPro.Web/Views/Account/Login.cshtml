@@ -60,8 +60,18 @@
                 </div>
                 <div class="pp-form-field">
                     <label asp-for="Email" class="pp-form-label form-required">@UiText.L("Login.EmailLabel")</label>
-                    <input asp-for="Email" class="pp-form-control" autocomplete="username" inputmode="text" maxlength="254" aria-describedby="emailHelp Email-error" required data-login-identifier />
+                    <input asp-for="Email" class="pp-form-control" autocomplete="username" inputmode="text" maxlength="254" aria-describedby="emailHelp identifierGuide Email-error" required data-login-identifier />
                     <small id="emailHelp" class="form-help">@UiText.L("Login.EmailHelp")</small>
+                    <!-- R63: guia em tempo real do identificador (e-mail/CPF/CNPJ) — espelha as regras canônicas do servidor (LoginIdentifierNormalizer). -->
+                    <small id="identifierGuide" class="form-help" role="status" aria-live="polite" data-identifier-guide hidden
+                           data-text-email="@UiText.L("Login.IdGuideEmail")"
+                           data-text-cpf="@UiText.L("Login.IdGuideCpf")"
+                           data-text-cnpj="@UiText.L("Login.IdGuideCnpj")"
+                           data-text-incomplete-cpf="@UiText.L("Login.IdIncompleteCpf")"
+                           data-text-incomplete-cnpj="@UiText.L("Login.IdIncompleteCnpj")"
+                           data-text-invalid-cpf="@UiText.L("Login.IdInvalidCpf")"
+                           data-text-invalid-cnpj="@UiText.L("Login.IdInvalidCnpj")"
+                           data-text-invalid-length="@UiText.L("Login.IdInvalidLength")"></small>
                     <span asp-validation-for="Email" class="pp-form-error" data-valmsg-for="Email" id="Email-error"></span>
                 </div>
                 <div class="pp-form-field">

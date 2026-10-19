@@ -61,7 +61,10 @@ public sealed class AiGateway : IAiGateway
     {
         [AiProviderCodes.Groq] = "openai/gpt-oss-20b",
         [AiProviderCodes.Gemini] = "gemini-flash-latest",
-        [AiProviderCodes.DeepSeek] = "deepseek-flash"
+        [AiProviderCodes.DeepSeek] = "deepseek-flash",
+        // Drael (IA da casa): único modelo vigente exposto em https://drael.sh/v1
+        // (docs/quickstart consultadas em 2026-10-19).
+        [AiProviderCodes.Drael] = "drael-v1"
     };
 
     // Fuso oficial da plataforma para contadores mensais: America/Sao_Paulo
@@ -547,7 +550,7 @@ public sealed class AiGateway : IAiGateway
 
         var provedor = u.Provedor?.Trim().ToLowerInvariant() ?? string.Empty;
         if (!AiProviderCodes.All.Contains(provedor))
-            throw new AiConfigException($"Provedor '{u.Provedor}' não suportado (groq, gemini ou deepseek).");
+            throw new AiConfigException($"Provedor '{u.Provedor}' não suportado (groq, gemini, deepseek ou drael).");
 
         var modelo = u.Modelo?.Trim() ?? string.Empty;
         if (string.IsNullOrEmpty(modelo) || modelo.Length > 64)

@@ -1371,6 +1371,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2356_r62_ai_provedor_drael",
+      "source": "database/migrations/2026_10_v2356_r62_ai_provedor_drael.sql",
+      "checksum": "48ef520853cf068dbf52dcc28d4355874193b45f164356a4a00dc2298eb2003f",
+      "dependsOn": [
+        "2026_10_v2355_r56_nome_modulo_painel"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

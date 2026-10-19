@@ -6,7 +6,7 @@ using Microsoft.Extensions.Configuration;
 namespace PlantaoPro.Api.Ai;
 
 /// <summary>
-/// Adapter de um provedor de IA concreto (Groq / Gemini / DeepSeek).
+/// Adapter de um provedor de IA concreto (Groq / Gemini / DeepSeek / Drael).
 /// Cada adapter:
 ///   - conhece a chave global opcional do servidor (fallback do tenant);
 ///   - recebe a chave a usar do gateway (chave do tenant tem prioridade);
@@ -160,6 +160,23 @@ public sealed class DeepSeekAdapter : OpenAiCompatibleAdapter
         : base(clients, configuration, "AiDeepSeek", "Ai:Providers:DeepSeek:ApiKey") { }
 
     public override string Provider => AiProviderCodes.DeepSeek;
+
+    public override Task<AiCompletionResult> CompleteAsync(AiCompletionRequest request, string apiKey, CancellationToken ct)
+        => CompleteOpenAiAsync(request, apiKey, ct);
+}
+
+/// <summary>
+/// Drael (drael.sh) — a IA da casa, provider dedicado. Wire format compatível com
+/// OpenAI (POST v1/chat/completions na base https://drael.sh/v1/, Bearer dk-…);
+/// o modelo exposto é drael-v1. Segue o mesmo contrato dos demais adaptadores
+/// (chave do tenant prioritária; nunca propaga segredos para fora).
+/// </summary>
+public sealed class DraelAdapter : OpenAiCompatibleAdapter
+{
+    public DraelAdapter(IHttpClientFactory clients, IConfiguration configuration)
+        : base(clients, configuration, "AiDrael", "Ai:Providers:Drael:ApiKey") { }
+
+    public override string Provider => AiProviderCodes.Drael;
 
     public override Task<AiCompletionResult> CompleteAsync(AiCompletionRequest request, string apiKey, CancellationToken ct)
         => CompleteOpenAiAsync(request, apiKey, ct);

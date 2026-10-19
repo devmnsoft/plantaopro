@@ -32,8 +32,11 @@ public static class AiProviderCodes
     public const string Groq = "groq";
     public const string Gemini = "gemini";
     public const string DeepSeek = "deepseek";
+    /// <summary>Drael (drael.sh) — a IA da casa; wire format compatível com OpenAI
+    /// (POST v1/chat/completions, Bearer, chaves dk-…), modelo vigente drael-v1.</summary>
+    public const string Drael = "drael";
 
-    public static readonly HashSet<string> All = new(StringComparer.OrdinalIgnoreCase) { Groq, Gemini, DeepSeek };
+    public static readonly HashSet<string> All = new(StringComparer.OrdinalIgnoreCase) { Groq, Gemini, DeepSeek, Drael };
 }
 
 /// <summary>

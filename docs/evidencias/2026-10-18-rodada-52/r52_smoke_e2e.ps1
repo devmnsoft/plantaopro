@@ -1,4 +1,4 @@
-# R52 - smoke e2e completa (API+Web) + performance percebida (linha de base)
+﻿# R52 - smoke e2e completa (API+Web) + performance percebida (linha de base)
 # Pre-requisito (padrao de casa): API em http://localhost:51976 e Web em http://localhost:51977,
 # ambos Release --no-build contra plantaopro_test (env ConnectionStrings__Default).
 # Uso: powershell -ExecutionPolicy Bypass -File r52_smoke_e2e.ps1

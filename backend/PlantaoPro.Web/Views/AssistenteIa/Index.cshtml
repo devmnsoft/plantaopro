@@ -2,7 +2,16 @@
 @using PlantaoPro.Web.Models
 @{
     ViewData["Title"] = "Assistente IA";
-    string[] provedores = new[] { "groq", "gemini", "deepseek" };
+    // R62: Drael é a IA da casa e lidera a lista; os demais seguem o mesmo contrato de adapter.
+    string[] provedores = new[] { "drael", "groq", "gemini", "deepseek" };
+    string NomeProvedor(string p) => p switch
+    {
+        "drael" => "Drael — IA da casa",
+        "groq" => "Groq",
+        "gemini" => "Gemini",
+        "deepseek" => "DeepSeek",
+        _ => p
+    };
     string NomeTarefa(string task) => task switch
     {
         "MEU_DIA_RESUMO" => "Resumo das pendências — Meu Dia",
@@ -83,7 +92,7 @@
                             <select class="form-select" id="provedor_@cfg.TaskCode" name="Provedor">
                                 @foreach (var p in provedores)
                                 {
-                                    <option value="@p" selected="@(cfg.Provedor.Equals(p, System.StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@p</option>
+                                    <option value="@p" selected="@(cfg.Provedor.Equals(p, System.StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@NomeProvedor(p)</option>
                                 }
                             </select>
                         </div>
@@ -93,7 +102,7 @@
                                 <option value="">nenhum</option>
                                 @foreach (var p in provedores)
                                 {
-                                    <option value="@p" selected="@(cfg.FallbackProvedor is { Length: > 0 } && cfg.FallbackProvedor.Equals(p, System.StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@p</option>
+                                    <option value="@p" selected="@(cfg.FallbackProvedor is { Length: > 0 } && cfg.FallbackProvedor.Equals(p, System.StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@NomeProvedor(p)</option>
                                 }
                             </select>
                             <div class="form-text">Usado somente se a chave global do servidor estiver configurada.</div>

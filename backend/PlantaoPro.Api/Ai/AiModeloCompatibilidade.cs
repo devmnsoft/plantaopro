@@ -9,7 +9,8 @@ namespace PlantaoPro.Api.Ai;
 ///   - groq: rejeita prefixos de outros provedores (gemini-, deepseek-);
 ///   - gemini: exige prefixo gemini-;
 ///   - deepseek: exige prefixo deepseek- e rejeita os aposentados
-///     deepseek-chat / deepseek-reasoner (aposentados em 2026-07-24).
+///     deepseek-chat / deepseek-reasoner (aposentados em 2026-07-24);
+///   - drael: exige prefixo drael- (catálogo drael.sh: drael-v1).
 ///
 /// <see cref="Aviso"/> NÃO bloqueia: modelo com prefixo correto mas fora do
 /// catálogo documentado (novidades de plano/enterprise entram aqui).
@@ -25,6 +26,8 @@ public static class AiModeloCompatibilidade
     /// <summary>Modelos vigentes do DeepSeek (deepseek-chat/-reasoner foram aposentados em 2026-07-24).</summary>
     private static readonly string[] DeepSeekCatalogo = { "deepseek-flash", "deepseek-v4-pro" };
     private static readonly string[] DeepSeekAposentados = { "deepseek-chat", "deepseek-reasoner" };
+    /// <summary>Catálogo self-service vigente da Drael (drael.sh; docs consultadas em 2026-10-19).</summary>
+    private static readonly string[] DraelCatalogo = { "drael-v1" };
 
     public static string? Validar(string provedor, string modelo)
     {
@@ -46,6 +49,9 @@ public static class AiModeloCompatibilidade
             AiProviderCodes.DeepSeek
                 when Array.IndexOf(DeepSeekAposentados, m) >= 0 =>
                 $"O modelo '{m}' foi aposentado pelo DeepSeek em 24/07/2026; use deepseek-flash ou deepseek-v4-pro.",
+
+            AiProviderCodes.Drael when !m.StartsWith("drael-", StringComparison.OrdinalIgnoreCase) =>
+                $"No provedor Drael, use um modelo do catálogo Drael (prefixo 'drael-'); '{m}' não se aplica.",
 
             _ => null
         };
@@ -76,6 +82,13 @@ public static class AiModeloCompatibilidade
                     ? null
                     : $"O modelo '{m}' não consta do catálogo DeepSeek documentado "
                       + "(deepseek-flash, deepseek-v4-pro). Confirme a disponibilidade antes de habilitar.";
+
+            case AiProviderCodes.Drael:
+                if (Validar(provedor, m) is not null) return null;
+                return DraelCatalogo.Contains(m, StringComparer.OrdinalIgnoreCase)
+                    ? null
+                    : $"O modelo '{m}' não consta do catálogo Drael documentado (drael-v1). "
+                      + "Confirme a disponibilidade antes de habilitar.";
 
             default:
                 return null;

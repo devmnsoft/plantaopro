@@ -1,0 +1,4 @@
+﻿PT_LEN=12881
+PT_GUIA_OK cpf=1 cnpj=1
+FR_GUIA_OK=True
+FALHAS=0

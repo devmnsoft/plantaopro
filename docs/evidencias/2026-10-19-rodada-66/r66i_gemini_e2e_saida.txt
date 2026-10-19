@@ -1,0 +1,8 @@
+﻿API_OK 13:26:28
+LOGIN_OK tenantRequired=False roles=ADMINISTRADOR_CLIENTE
+CFG MEU_DIA_RESUMO prov=gemini hab=True chaveTenant=False chaveGlobal=True
+CFG COTACAO_ANALISE prov=gemini hab=True chaveTenant=False chaveGlobal=True
+CHAVE_MESTRA_SERVIDOR=False
+TEST_CONEXAO_STATUS=200
+TEST_BODY {"success":false,"statusKind":"TRANSPORTE","mensagem":"Falha no teste de conexão: gemini: o provedor respondeu HTTP 403.","texto":null,"provedor":null,"modelo":null,"tokensIn":null,"tokensOut":null,"duracaoMs":null,"fallbackUsado":false,"escopo":null}
+API_PARADA

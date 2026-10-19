@@ -1,0 +1,3 @@
+﻿LOGIN_OK
+ASSISTENTE_IA_OK drael_selects=5 drael_label=4 pos_drael=29434 pos_groq=29528
+FALHAS=0

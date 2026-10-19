@@ -310,7 +310,7 @@ namespace PlantaoPro.Api.Data
                         DataCriacaoAssinatura: DateTime.UtcNow
                     );
 
-                    return ApiResponse<OnboardingResumoDto>.Ok(resumo, "Cliente criado com sucesso!");
+                    return ApiResponse<OnboardingResumoDto>.Ok(resumo, "Cliente criado com sucesso.");
                 }
                 catch (Exception ex)
                 {

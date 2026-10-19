@@ -310,7 +310,7 @@ public sealed class R7DF6Admin360I18nContratoTests
         Assert.Contains("<value>Pronta p/ Envio</value>", master);
         Assert.Contains("<value>Não foi possível concluir a operação. Tente novamente.</value>", master);
         Assert.Contains("<value>cadastrados · estrutura organizacional</value>", master);
-        Assert.Contains("<value>Vale valorizado com sucesso e venda interna gerada!</value>", master);
+        Assert.Contains("<value>Vale valorizado com sucesso e venda interna gerada.</value>", master); // R57 (D-R57-1): tom declarativo
         // r9h
         Assert.Contains("<value>DRE Gerencial por Cliente — competência (NÃO é fluxo de caixa)</value>", master);
         Assert.Contains("<value>Vencimentos por Parcela</value>", master);

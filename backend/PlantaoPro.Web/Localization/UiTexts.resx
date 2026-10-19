@@ -2324,10 +2324,10 @@
     <value>Separação de materiais concluída. Vale pronto para expedição.</value>
   </data>
   <data name="Adm360.Vales.OkDispatched" xml:space="preserve">
-    <value>Vale expedido com sucesso! Materiais transferidos para custódia externa no hospital.</value>
+    <value>Vale expedido com sucesso. Materiais transferidos para custódia externa no hospital.</value>
   </data>
   <data name="Adm360.Vales.OkReconciled" xml:space="preserve">
-    <value>Vale reconciliado com sucesso! Pronto para valorização no próximo incremento.</value>
+    <value>Vale reconciliado com sucesso. Pronto para valorização no próximo incremento.</value>
   </data>
   <data name="Adm360.Vales.OkCancelled" xml:space="preserve">
     <value>Vale cancelado com sucesso.</value>
@@ -2483,7 +2483,7 @@
     <value>Orçamento cirúrgico atualizado com sucesso.</value>
   </data>
   <data name="Adm360.Orcamentos.OkApproved" xml:space="preserve">
-    <value>Orçamento aprovado com sucesso! A versão comercial está congelada e apta para reserva de materiais.</value>
+    <value>Orçamento aprovado com sucesso. A versão comercial está congelada e apta para reserva de materiais.</value>
   </data>
   <data name="Adm360.Orcamentos.OkRejected" xml:space="preserve">
     <value>Orçamento rejeitado.</value>
@@ -2558,7 +2558,7 @@
     <value>Leitura de código de barras registrada com sucesso na tarefa.</value>
   </data>
   <data name="Adm360.Estoque.OkVoucherValued" xml:space="preserve">
-    <value>Vale valorizado com sucesso e venda interna gerada!</value>
+    <value>Vale valorizado com sucesso e venda interna gerada.</value>
   </data>
   <data name="Adm360.Estoque.FallbackTransfer" xml:space="preserve">
     <value>Falha ao transferir estoque.</value>

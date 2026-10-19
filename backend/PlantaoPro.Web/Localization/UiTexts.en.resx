@@ -2324,10 +2324,10 @@
     <value>Material separation completed. Voucher ready for dispatch.</value>
   </data>
   <data name="Adm360.Vales.OkDispatched" xml:space="preserve">
-    <value>Voucher dispatched successfully! Materials transferred to external custody at the hospital.</value>
+    <value>Voucher dispatched successfully. Materials transferred to external custody at the hospital.</value>
   </data>
   <data name="Adm360.Vales.OkReconciled" xml:space="preserve">
-    <value>Voucher reconciled successfully! Ready for valuation on the next increment.</value>
+    <value>Voucher reconciled successfully. Ready for valuation on the next increment.</value>
   </data>
   <data name="Adm360.Vales.OkCancelled" xml:space="preserve">
     <value>Voucher cancelled successfully.</value>
@@ -2483,7 +2483,7 @@
     <value>Surgical quote updated successfully.</value>
   </data>
   <data name="Adm360.Orcamentos.OkApproved" xml:space="preserve">
-    <value>Quote approved successfully! The commercial version is frozen and eligible for material reservation.</value>
+    <value>Quote approved successfully. The commercial version is frozen and eligible for material reservation.</value>
   </data>
   <data name="Adm360.Orcamentos.OkRejected" xml:space="preserve">
     <value>Quote rejected.</value>
@@ -2558,7 +2558,7 @@
     <value>Barcode read successfully registered in the task.</value>
   </data>
   <data name="Adm360.Estoque.OkVoucherValued" xml:space="preserve">
-    <value>Voucher valued successfully and internal sale generated!</value>
+    <value>Voucher valued successfully and internal sale generated.</value>
   </data>
   <data name="Adm360.Estoque.FallbackTransfer" xml:space="preserve">
     <value>Failed to transfer stock.</value>

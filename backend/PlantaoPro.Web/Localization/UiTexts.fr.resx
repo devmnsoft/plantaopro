@@ -2324,10 +2324,10 @@
     <value>Séparation des matériaux terminée. Bon prêt pour expédition.</value>
   </data>
   <data name="Adm360.Vales.OkDispatched" xml:space="preserve">
-    <value>Bon expédié avec succès ! Matériaux transférés sous garde externe à l'hôpital.</value>
+    <value>Bon expédié avec succès. Matériaux transférés sous garde externe à l'hôpital.</value>
   </data>
   <data name="Adm360.Vales.OkReconciled" xml:space="preserve">
-    <value>Bon rapproché avec succès ! Prêt pour valorisation au prochain incrément.</value>
+    <value>Bon rapproché avec succès. Prêt pour valorisation au prochain incrément.</value>
   </data>
   <data name="Adm360.Vales.OkCancelled" xml:space="preserve">
     <value>Bon annulé avec succès.</value>
@@ -2483,7 +2483,7 @@
     <value>Devis chirurgical mis à jour avec succès.</value>
   </data>
   <data name="Adm360.Orcamentos.OkApproved" xml:space="preserve">
-    <value>Devis approuvé avec succès ! La version commerciale est figée et éligible à la réservation de matériaux.</value>
+    <value>Devis approuvé avec succès. La version commerciale est figée et éligible à la réservation de matériaux.</value>
   </data>
   <data name="Adm360.Orcamentos.OkRejected" xml:space="preserve">
     <value>Devis rejeté.</value>
@@ -2558,7 +2558,7 @@
     <value>Lecture de code-barres enregistrée avec succès dans la tâche.</value>
   </data>
   <data name="Adm360.Estoque.OkVoucherValued" xml:space="preserve">
-    <value>Bon valorisé avec succès et vente interne générée !</value>
+    <value>Bon valorisé avec succès et vente interne générée.</value>
   </data>
   <data name="Adm360.Estoque.FallbackTransfer" xml:space="preserve">
     <value>Échec du transfert de stock.</value>

@@ -1,0 +1,5 @@
+== r57a0-passada-de-tom-plano.md
+CANAL_OK | ACENTO_c_OK | ACENTO_o_OK
+== r57z-relatorio-final-consolidado.md
+CANAL_OK | ACENTO_c_OK | ACENTO_o_OK
+DOCSCAN_BAD=0

@@ -1,0 +1,6 @@
+﻿LOGIN_OK -> http://localhost:51977/ClientePortal/Index
+ESTOQUE_TOOLDIP_ANTIGO_AUSENTE_OK (Lote vencido! nao aparece)
+ESTOQUE_TOOLDIP_NOVO_VISIVEL_OK (ocorrencias=100)
+TOM_OK /Administrativo360/Estoque (copy=0 glifos=0)
+TOM_OK /Administrativo360/Orcamentos (copy=0 glifos=0)
+R57_E2E_OK FALHAS=0

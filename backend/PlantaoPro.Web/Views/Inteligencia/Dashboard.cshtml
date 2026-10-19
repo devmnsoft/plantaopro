@@ -38,7 +38,7 @@ else
         <h5>Ranking de prioridade de médicos (menor carga recente)</h5>
         <div class="table-responsive">
             <table class="table table-modern mb-0">
-                <thead><tr><th>Médico</th><th>Escalas (7d)</th><th>Horas (7d)</th><th>Score</th></tr></thead>
+                <thead><tr><th scope="col">Médico</th><th scope="col">Escalas (7d)</th><th scope="col">Horas (7d)</th><th scope="col">Score</th></tr></thead>
                 <tbody>
                 @{ var posicaoMedico = 1; }
                 @foreach (var item in Model.Executivo.RankingPrioridade)
@@ -63,7 +63,7 @@ else
                 <h5>Sugestões inteligentes de plantão</h5>
                 <div class="table-responsive">
                     <table class="table table-modern mb-0">
-                        <thead><tr><th>Médico</th><th>Hospital</th><th>Janela</th><th>Score</th></tr></thead>
+                        <thead><tr><th scope="col">Médico</th><th scope="col">Hospital</th><th scope="col">Janela</th><th scope="col">Score</th></tr></thead>
                         <tbody>
                         @foreach (var sugestao in Model.Executivo.SugestoesPlantoes.Take(5))
                         {

@@ -63,7 +63,9 @@ public class R28LinguagemSimplesAdm360ContratoTests
         var vale = ReadRelative("backend", "PlantaoPro.Web", "Views", "Administrativo360", "ValeNovo.cshtml");
         // Nota R33: o placeholder "Código da reserva ativa (opcional)" deixou de existir quando o campo
         // virou select de reservas ativas (R33E6LookupsReservaEPedidoContratoTests cobre a estrutura nova).
-        Assert.Contains("<th>Reserva vinculada</th>", vale, StringComparison.Ordinal);
+        // R59 (D-R59-1): a varredura de th scope inseriu scope="col" no cabeçalho; o literal travado
+        // acompanhou a mudança (mesmo tratamento dado pelo contrato R57 em copy tratada).
+        Assert.Contains("<th scope=\"col\">Reserva vinculada</th>", vale, StringComparison.Ordinal);
 
         var monitor = ReadRelative("backend", "PlantaoPro.Web", "Views", "Administrativo360", "Gestao", "Monitor.cshtml");
         Assert.Contains("Envios para os fornecedores (@Model.RespostasRecentes.Count)", monitor, StringComparison.Ordinal);

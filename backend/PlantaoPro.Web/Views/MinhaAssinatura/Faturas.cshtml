@@ -22,7 +22,7 @@
     }
     else
     {
-        <div class="card"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Vencimento</th><th>Status</th><th>Valor</th><th class="text-end">Ação</th></tr></thead><tbody>
+        <div class="card"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th scope="col">Vencimento</th><th scope="col">Status</th><th scope="col">Valor</th><th class="text-end" scope="col">Ação</th></tr></thead><tbody>
         @foreach (var f in Model.Faturas)
         {
             <tr>

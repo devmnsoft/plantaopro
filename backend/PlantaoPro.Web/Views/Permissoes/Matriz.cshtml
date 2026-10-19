@@ -24,7 +24,7 @@
 </div>
 <div class="data-table table-responsive">
     <table class="table table-hover align-middle mb-0 permission-matrix">
-        <thead><tr><th>Módulo</th><th>Ações</th>@foreach (var perfil in Model.Perfis){<th>@perfil</th>}</tr></thead>
+        <thead><tr><th scope="col">Módulo</th><th scope="col">Ações</th>@foreach (var perfil in Model.Perfis){<th scope="col">@perfil</th>}</tr></thead>
         <tbody>
         @foreach (var modulo in Model.Modulos)
         {

@@ -30,7 +30,7 @@
         }
         else
         {
-            <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Módulo</th><th>Categoria</th><th>Preço base</th><th>Adoção</th><th>Status</th><th class="text-end">Ações</th></tr></thead><tbody>
+            <div class="table-responsive"><table class="table align-middle"><thead><tr><th scope="col">Módulo</th><th scope="col">Categoria</th><th scope="col">Preço base</th><th scope="col">Adoção</th><th scope="col">Status</th><th class="text-end" scope="col">Ações</th></tr></thead><tbody>
             @foreach (var item in modules)
             {
                 <tr><td><strong>@item.Nome</strong><div class="text-muted small">@item.Descricao</div>@if (item.Essencial) { <span class="badge text-bg-info">Essencial</span> }</td><td>@item.Categoria.Replace('_', ' ')</td><td>@item.PrecoBase.ToString("C")</td><td>@item.ClientesAtivos cliente(s)</td><td><span class="badge @(item.Status == "ATIVO" ? "text-bg-success" : "text-bg-secondary")">@item.Status</span></td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@item.Id">Detalhes</a>@if (isGlobal) { <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-id="@item.Id">Editar</a> }</td></tr>

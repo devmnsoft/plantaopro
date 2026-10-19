@@ -26,7 +26,7 @@
         <div class="alert alert-danger" role="alert">@ViewBag.ErrorMessage</div>
     }
     <section class="pp-card">
-        <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Usuário</th><th>Cliente</th><th>Perfis</th><th>Último acesso</th><th>Identidade</th><th>Vínculo</th><th class="text-end">Ações</th></tr></thead><tbody>
+        <div class="table-responsive"><table class="table align-middle"><thead><tr><th scope="col">Usuário</th><th scope="col">Cliente</th><th scope="col">Perfis</th><th scope="col">Último acesso</th><th scope="col">Identidade</th><th scope="col">Vínculo</th><th class="text-end" scope="col">Ações</th></tr></thead><tbody>
         @if (users.Length == 0) { <tr><td colspan="7"><div class="pp-empty-state"><h3>Nenhum usuário encontrado</h3><p>Revise a busca ou o cliente selecionado.</p></div></td></tr> }
         @foreach (var user in users)
         {

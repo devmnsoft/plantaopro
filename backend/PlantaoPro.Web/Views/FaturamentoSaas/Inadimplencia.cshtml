@@ -14,7 +14,7 @@
     }
     else
     {
-        <div class="table-responsive card"><table class="table table-hover mb-0"><thead><tr><th>Cliente</th><th>Faturas vencidas</th><th>Vencimento mais antigo</th><th class="text-end">Valor vencido</th></tr></thead><tbody>
+        <div class="table-responsive card"><table class="table table-hover mb-0"><thead><tr><th scope="col">Cliente</th><th scope="col">Faturas vencidas</th><th scope="col">Vencimento mais antigo</th><th class="text-end" scope="col">Valor vencido</th></tr></thead><tbody>
         @foreach (var item in items)
         {
             <tr><td>@item.ClienteNome</td><td>@item.FaturasVencidas</td><td>@item.VencimentoMaisAntigo.ToString("dd/MM/yyyy")</td><td class="text-end">@item.ValorVencido.ToString("C")</td></tr>

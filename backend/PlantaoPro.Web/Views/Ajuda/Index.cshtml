@@ -28,6 +28,6 @@
 </div></section>
 
 <section class="mt-4" aria-labelledby="recommendedTitle"><div class="pp-section-heading"><div><h2 id="recommendedTitle">Recomendados para você</h2><p>Ações iniciais de acordo com seu perfil.</p></div></div>
-@if (Model.Artigos.Any()) { <div class="pp-help-articles">@foreach (var artigo in Model.Artigos) { <a asp-action="Artigo" asp-route-id="@artigo.Id"><span class="pp-help-articles__number">@artigo.Ordem</span><span><strong>@artigo.Titulo</strong><small>@artigo.Resumo</small></span><span class="pp-badge">@artigo.Perfil</span></a> }</div> }
+@if (Model.Artigos.Any()) { <div class="pp-help-articles">@foreach (var artigo in Model.Artigos) { <a asp-action="Artigo" asp-route-id="@artigo.Id" data-tour-step="@artigo.Titulo|@artigo.Resumo"><span class="pp-help-articles__number">@artigo.Ordem</span><span><strong>@artigo.Titulo</strong><small>@artigo.Resumo</small></span><span class="pp-badge">@artigo.Perfil</span></a> }</div> }
 else { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-search", "Nenhum artigo encontrado", "Tente outro termo. A Central exibe somente conteúdos disponíveis para seu perfil.")' /> }
 </section>

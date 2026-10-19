@@ -10,12 +10,12 @@
     <form asp-action="RegistrarTreinamento" method="post" class="row g-2" data-ajax-form="true" data-confirm="true" data-confirm-title="Registrar treinamento" data-confirm-message="Confirma registrar este treinamento na operação assistida do cliente?" data-confirm-type="success">
         @Html.AntiForgeryToken()
         <input type="hidden" name="ClienteId" value="@(Model?.ClienteId ?? Guid.Empty)" />
-        <div class="col-md-3"><input name="Tema" class="form-control" placeholder="Tema" required /></div>
-        <div class="col-md-2"><input name="Perfil" class="form-control" placeholder="Perfil" /></div>
-        <div class="col-md-2"><input name="Responsavel" class="form-control" placeholder="Responsável" /></div>
-        <div class="col-md-3"><input name="Participantes" class="form-control" placeholder="Participantes" /></div>
+        <div class="col-md-3"><input aria-label="Tema"  name="Tema" class="form-control" placeholder="Tema" required /></div>
+        <div class="col-md-2"><input aria-label="Perfil"  name="Perfil" class="form-control" placeholder="Perfil" /></div>
+        <div class="col-md-2"><input aria-label="Responsável"  name="Responsavel" class="form-control" placeholder="Responsável" /></div>
+        <div class="col-md-3"><input aria-label="Participantes"  name="Participantes" class="form-control" placeholder="Participantes" /></div>
         <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Registrar</button></div>
-        <div class="col-12"><input name="Observacoes" class="form-control" placeholder="Observações" /></div>
+        <div class="col-12"><input aria-label="Observações"  name="Observacoes" class="form-control" placeholder="Observações" /></div>
     </form>
 </div></div>
 

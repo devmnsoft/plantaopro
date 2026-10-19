@@ -1,4 +1,7 @@
 @model PlantaoPro.Web.Models.FaturasAssinaturaWebViewModel
+@{
+    ViewData["Title"] = "Faturas da assinatura";
+}
 <section class="container py-4">
     <h1>Faturas</h1>
     @if (!string.IsNullOrWhiteSpace(Model.PagamentoUrl))

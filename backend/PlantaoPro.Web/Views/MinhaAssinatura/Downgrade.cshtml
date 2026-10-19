@@ -1,4 +1,7 @@
 @model PlantaoPro.Web.Models.UpgradeDowngradeWebViewModel
+@{
+    ViewData["Title"] = "Reduzir plano";
+}
 <section class="container py-4">
     <h1>Solicitar downgrade</h1>
     <p class="text-muted">A solicitação passa por avaliação comercial e <strong>validação do uso atual contra os limites do plano destino</strong>. Nada muda no seu plano até a aprovação.</p>
@@ -25,7 +28,7 @@
                     <form asp-action="SolicitarDowngrade" method="post" class="d-flex gap-2">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="planoDestinoId" value="@plano.Id" />
-                        <input type="text" name="motivo" maxlength="500" placeholder="Motivo (opcional)" class="form-control form-control-sm" />
+                        <input aria-label="Motivo (opcional)"  type="text" name="motivo" maxlength="500" placeholder="Motivo (opcional)" class="form-control form-control-sm" />
                         <button type="submit" class="btn btn-outline-primary btn-sm">Solicitar</button>
                     </form>
                 }

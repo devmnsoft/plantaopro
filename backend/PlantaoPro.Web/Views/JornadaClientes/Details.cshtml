@@ -50,7 +50,7 @@
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="ClienteId" value="@jornada.ClienteId" />
                 <div class="mb-2"><label class="form-label">Título</label><input name="Titulo" class="form-control" required maxlength="180" aria-label="Titulo"></div>
-                <div class="mb-2"><label class="form-label">Responsável</label><input name="Responsavel" class="form-control" maxlength="160" placeholder="Customer Success" /></div>
+                <div class="mb-2"><label class="form-label">Responsável</label><input aria-label="Responsável"  name="Responsavel" class="form-control" maxlength="160" placeholder="Customer Success" /></div>
                 <div class="mb-2"><label class="form-label">Vencimento</label><input name="Vencimento" class="form-control" type="datetime-local" aria-label="Vencimento"></div>
                 <button type="submit" class="btn btn-outline-primary"><i class="bi bi-check2-square"></i> Criar tarefa</button>
             </form>

@@ -121,7 +121,7 @@ public sealed class R49AcessibilidadeContratoTests
             Assert.Contains("class=\"skip-link\"", t);
             Assert.Contains("id=\"mainContent\"", t);
             // Azul AA (v2151) precisa vencer a cascata: carregado depois do último bloco global anterior (v2148).
-            var iV2151 = t.IndexOf("v2151-wp-c-homologacao.css", StringComparison.Ordinal);
+            var iV2151 = t.IndexOf("v2151-wp-c-ajuste-canonical.css", StringComparison.Ordinal);
             var iV2148 = t.IndexOf("v2148-operational-premium.css", StringComparison.Ordinal);
             Assert.True(iV2151 > 0 && iV2148 > 0 && iV2151 > iV2148, layout + ": v2151 (azul AA) ausente ou não carrega por último");
             // R49: a fundação de acessibilidade (skip-link css, :focus-visible, reduced-motion) precisa carregar em ambos os layouts.
@@ -130,14 +130,14 @@ public sealed class R49AcessibilidadeContratoTests
         }
         var tLayout = Ler("backend/PlantaoPro.Web/Views/Shared/_Layout.cshtml".Replace('/', Path.DirectorySeparatorChar));
         var iV2150 = tLayout.IndexOf("v2150-bloco-c-canonical.css", StringComparison.Ordinal);
-        Assert.True(iV2150 > 0 && iV2150 < tLayout.IndexOf("v2151-wp-c-homologacao.css", StringComparison.Ordinal), "_Layout: v2150 deve carregar antes do v2151");
+        Assert.True(iV2150 > 0 && iV2150 < tLayout.IndexOf("v2151-wp-c-ajuste-canonical.css", StringComparison.Ordinal), "_Layout: v2150 deve carregar antes do v2151");
     }
 
     [Fact]
     public void Contraste_ParesCriticosMedemQuatroCincoOuMais()
     {
         var tokens = Ler("backend/PlantaoPro.Web/wwwroot/css/design-system/tokens.css".Replace('/', Path.DirectorySeparatorChar));
-        var homolog = Ler("backend/PlantaoPro.Web/wwwroot/css/design-system/v2151-wp-c-homologacao.css".Replace('/', Path.DirectorySeparatorChar));
+        var homolog = Ler("backend/PlantaoPro.Web/wwwroot/css/design-system/v2151-wp-c-ajuste-canonical.css".Replace('/', Path.DirectorySeparatorChar));
 
         string Token(string css, string nome)
         {

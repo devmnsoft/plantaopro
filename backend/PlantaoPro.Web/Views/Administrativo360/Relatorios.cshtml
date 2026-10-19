@@ -269,7 +269,7 @@
             <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <form method="get" asp-action="Relatorios" class="d-flex gap-2">
                     <input type="hidden" name="aba" value="rastreabilidade" />
-                    <input type="text" name="busca" value="@Model.Busca" class="form-control form-control-sm bg-dark text-light border-secondary"
+                    <input aria-label="Buscar relatórios"  type="text" name="busca" value="@Model.Busca" class="form-control form-control-sm bg-dark text-light border-secondary"
                            placeholder="Buscar por Produto ou Lote..." />
                     <button type="submit" class="btn btn-sm btn-outline-info"> aria-label="Buscar"                        <i class="bi bi-search"></i>
                     </button>

@@ -1,5 +1,6 @@
 @model PlantaoPro.Web.Models.ProntuarioViewModel
 @{ Layout="_Layout"; var page=(int)(ViewBag.Page??1); var tipos=new[]{"","CONSULTA","TRIAGEM","ALERGIA","MEDICAMENTO","EXAME_SOLICITADO","EXAME_RESULTADO","ENCAMINHAMENTO","DOCUMENTO"}; }
+    ViewData["Title"] = "Prontuário do paciente";
 <main class="container-fluid py-4 clinical-record">
 @if(!string.IsNullOrWhiteSpace(Model.Erro)){<div class="alert alert-warning" role="alert">@Model.Erro</div>}
 <header class="patient-context rounded-4 p-4 mb-4 shadow-sm" aria-labelledby="patient-name">

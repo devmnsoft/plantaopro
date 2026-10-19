@@ -105,7 +105,7 @@ $sw.Stop()
 # Verificacoes transversais na ultima pagina (layout autenticado)
 $last=Invoke-WebRequest -Uri ($web+'/Ajuda/Index') -WebSession $s -UseBasicParsing -MaximumRedirection 10
 $cAria=CountOf $last.Content 'aria-label='
-$cV=CountOf $last.Content 'v2151-wp-c-homologacao.css'
+$cV=CountOf $last.Content 'v2151-wp-c-ajuste-canonical.css'
 $cAcc=CountOf $last.Content 'accessibility.css'
 $cSkip=CountOf $last.Content 'class="skip-link"'
 $out+="AJUDA_ARIA=$cAria V2151=$cV ACCESSIBILITY_CSS=$cAcc SKIP_LINK=$cSkip"

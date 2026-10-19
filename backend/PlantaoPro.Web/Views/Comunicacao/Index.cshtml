@@ -16,9 +16,9 @@
 <div class="card mb-3">
     <div class="card-body">
         <form method="get" class="row g-2">
-            <div class="col-12 col-md-4"><input class="form-control" name="search" value="@Model?.Search" placeholder="Buscar por título" /></div>
-            <div class="col-6 col-md-3"><input class="form-control" name="tipo" value="@Model?.Tipo" placeholder="Tipo" /></div>
-            <div class="col-6 col-md-3"><input class="form-control" name="status" value="@Model?.Status" placeholder="Status" /></div>
+            <div class="col-12 col-md-4"><input aria-label="Buscar por tarefa"  class="form-control" name="search" value="@Model?.Search" placeholder="Buscar por título" /></div>
+            <div class="col-6 col-md-3"><input aria-label="Tipo"  class="form-control" name="tipo" value="@Model?.Tipo" placeholder="Tipo" /></div>
+            <div class="col-6 col-md-3"><input aria-label="Status"  class="form-control" name="status" value="@Model?.Status" placeholder="Status" /></div>
             <div class="col-12 col-md-2 d-grid"><button class="btn btn-outline-primary" type="submit">Filtrar</button></div>
         </form>
     </div>

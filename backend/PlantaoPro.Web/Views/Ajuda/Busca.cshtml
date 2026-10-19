@@ -5,8 +5,8 @@
 <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Buscar no manual", "Encontre artigos por termo, perfil e etapa da jornada.", "bi-search")' />
 <form asp-action="Busca" method="get" class="card card-body mb-3">
     <div class="row g-2">
-        <div class="col-md-8"><input name="termo" class="form-control" value="@Model.Busca" placeholder="Digite o que deseja encontrar" /></div>
-        <div class="col-md-3"><input name="perfil" class="form-control" value="@Model.Perfil" placeholder="Perfil" /></div>
+        <div class="col-md-8"><input aria-label="Termo de busca"  name="termo" class="form-control" value="@Model.Busca" placeholder="Digite o que deseja encontrar" /></div>
+        <div class="col-md-3"><input aria-label="Perfil"  name="perfil" class="form-control" value="@Model.Perfil" placeholder="Perfil" /></div>
         <div class="col-md-1"><button class="btn btn-primary w-100" type="submit" aria-label="Buscar"><i class="bi bi-search"></i></button></div>
     </div>
 </form>

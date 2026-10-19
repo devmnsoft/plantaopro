@@ -36,7 +36,7 @@ else
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@item.Id" />
                             <input type="hidden" name="clienteId" value="@item.ClienteId" />
-                            <input type="text" name="justificativa" class="form-control form-control-sm mb-1" placeholder="Justificativa" required />
+                            <input aria-label="Justificativa"  type="text" name="justificativa" class="form-control form-control-sm mb-1" placeholder="Justificativa" required />
                             <button type="submit" class="btn btn-sm btn-outline-warning">Reabrir</button>
                         </form>
                     }
@@ -46,7 +46,7 @@ else
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@item.Id" />
                             <input type="hidden" name="clienteId" value="@item.ClienteId" />
-                            <input type="text" name="observacao" class="form-control form-control-sm mb-1" placeholder="Observação" />
+                            <input aria-label="Observação"  type="text" name="observacao" class="form-control form-control-sm mb-1" placeholder="Observação" />
                             <button type="submit" class="btn btn-sm btn-outline-success">Concluir</button>
                         </form>
                     }

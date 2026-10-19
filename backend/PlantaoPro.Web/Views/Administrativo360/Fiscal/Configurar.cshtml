@@ -105,11 +105,11 @@
             <div class="row g-2 mb-3">
                 <div class="col-md-2">
                     <label class="form-label text-light small">UF de emissão</label>
-                    <input type="text" name="uf" maxlength="2" value="@Model.Uf" placeholder="SP" class="form-control form-control-sm bg-black text-light border-secondary text-uppercase" />
+                    <input aria-label="UF"  type="text" name="uf" maxlength="2" value="@Model.Uf" placeholder="SP" class="form-control form-control-sm bg-black text-light border-secondary text-uppercase" />
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-light small">Município</label>
-                    <input type="text" name="municipio" maxlength="80" value="@Model.Municipio" placeholder="São Paulo" class="form-control form-control-sm bg-black text-light border-secondary" />
+                    <input aria-label="Município"  type="text" name="municipio" maxlength="80" value="@Model.Municipio" placeholder="São Paulo" class="form-control form-control-sm bg-black text-light border-secondary" />
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-light small">Regime fiscal</label>
@@ -153,7 +153,7 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-light small">Credencial de emissão (nome do segredo)</label>
-                    <input type="text" name="certificadoReferencia" maxlength="120" value="@Model.CertificadoReferencia"
+                    <input aria-label="Referência do certificado"  type="text" name="certificadoReferencia" maxlength="120" value="@Model.CertificadoReferencia"
                            placeholder="CNPJ do emitente" class="form-control form-control-sm bg-black text-light border-secondary font-monospace" />
                     <div class="form-text text-secondary">Só o nome da referência. O valor do certificado fica em configuração separada, nunca no banco de dados nem nas telas.</div>
                 </div>
@@ -169,26 +169,26 @@
             <div class="row g-2 mb-3">
                 <div class="col-md-4">
                     <label class="form-label text-light small">CFOP — Venda</label>
-                    <input type="text" name="cfopVenda" maxlength="4" inputmode="numeric" pattern="[0-9]*" value="@Model.CfopVenda" placeholder="5101" class="form-control form-control-sm bg-black text-light border-secondary font-monospace" />
+                    <input aria-label="CFOP de venda"  type="text" name="cfopVenda" maxlength="4" inputmode="numeric" pattern="[0-9]*" value="@Model.CfopVenda" placeholder="5101" class="form-control form-control-sm bg-black text-light border-secondary font-monospace" />
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-light small">CFOP — Remessa</label>
-                    <input type="text" name="cfopRemessa" maxlength="4" inputmode="numeric" pattern="[0-9]*" value="@Model.CfopRemessa" placeholder="6001" class="form-control form-control-sm bg-black text-light border-secondary font-monospace" />
+                    <input aria-label="CFOP de remessa"  type="text" name="cfopRemessa" maxlength="4" inputmode="numeric" pattern="[0-9]*" value="@Model.CfopRemessa" placeholder="6001" class="form-control form-control-sm bg-black text-light border-secondary font-monospace" />
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-light small">CFOP — Retorno</label>
-                    <input type="text" name="cfopRetorno" maxlength="4" inputmode="numeric" pattern="[0-9]*" value="@Model.CfopRetorno" placeholder="6101" class="form-control form-control-sm bg-black text-light border-secondary font-monospace" />
+                    <input aria-label="CFOP de retorno"  type="text" name="cfopRetorno" maxlength="4" inputmode="numeric" pattern="[0-9]*" value="@Model.CfopRetorno" placeholder="6101" class="form-control form-control-sm bg-black text-light border-secondary font-monospace" />
                 </div>
             </div>
 
             <div class="row g-2">
                 <div class="col-md-4">
                     <label class="form-label text-light small">Responsável pela emissão (nome)</label>
-                    <input type="text" name="responsavelNome" maxlength="120" value="@Model.ResponsavelNome" placeholder="Nome do responsável" class="form-control form-control-sm bg-black text-light border-secondary" />
+                    <input aria-label="Nome do responsável"  type="text" name="responsavelNome" maxlength="120" value="@Model.ResponsavelNome" placeholder="Nome do responsável" class="form-control form-control-sm bg-black text-light border-secondary" />
                 </div>
                 <div class="col-md-8">
                     <label class="form-label text-light small">Observação</label>
-                    <input type="text" name="observacao" maxlength="200" value="@Model.Observacao" placeholder="Contexto da pendência / bloqueio (ex.: aguardando contrato com provedor)" class="form-control form-control-sm bg-black text-light border-secondary" />
+                    <input aria-label="Observação"  type="text" name="observacao" maxlength="200" value="@Model.Observacao" placeholder="Contexto da pendência / bloqueio (ex.: aguardando contrato com provedor)" class="form-control form-control-sm bg-black text-light border-secondary" />
                 </div>
             </div>
         </div>

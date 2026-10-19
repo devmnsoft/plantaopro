@@ -68,7 +68,7 @@
                 </div>
                 <div class="col-md-8">
                     <label class="form-label text-light small">Código do documento de origem</label>
-                    <input type="text" name="OrigemId" maxlength="36" value="@Model.OrigemId"
+                    <input aria-label="Código do documento de origem"  type="text" name="OrigemId" maxlength="36" value="@Model.OrigemId"
                            placeholder="00000000-0000-0000-0000-000000000000" class="form-control form-control-sm bg-black text-light border-secondary font-monospace" />
                     <div class="form-text text-secondary">Obrigatório quando a origem não for MANUAL — o sistema confere antes de criar.</div>
                 </div>
@@ -78,12 +78,12 @@
             <div class="row g-2 mb-3">
                 <div class="col-md-6">
                     <label class="form-label text-light small">Nome / Razão Social *</label>
-                    <input type="text" name="DestinatarioNome" maxlength="200" value="@Model.DestinatarioNome" required
+                    <input aria-label="Nome do destinatário"  type="text" name="DestinatarioNome" maxlength="200" value="@Model.DestinatarioNome" required
                            placeholder="Hospital São Lucas Ltda" class="form-control form-control-sm bg-black text-light border-secondary" />
                 </div>
                 <div class="col-md-6">
                     <label class="form-label text-light small">CPF/CNPJ do destinatário</label>
-                    <input type="text" name="DestinatarioDocumento" maxlength="18" value="@Model.DestinatarioDocumento"
+                    <input aria-label="Documento do destinatário"  type="text" name="DestinatarioDocumento" maxlength="18" value="@Model.DestinatarioDocumento"
                            placeholder="Somente dígitos (opcional)" class="form-control form-control-sm bg-black text-light border-secondary font-monospace" />
                 </div>
             </div>
@@ -102,7 +102,7 @@
                 var indice = i;
                 <div class="row g-2 mb-1">
                     <div class="col">
-                        <input type="text" name="Itens[@indice].Descricao" maxlength="200" value="@Model.Itens[indice].Descricao"
+                        <input aria-label="Descrição do item"  type="text" name="Itens[@indice].Descricao" maxlength="200" value="@Model.Itens[indice].Descricao"
                                class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Item @(indice + 1)" />
                     </div>
                     <div class="col-2">

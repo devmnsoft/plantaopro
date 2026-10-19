@@ -1,0 +1,8 @@
+﻿LOGIN_OK -> http://localhost:51977/ClientePortal/Index
+IA_SEM_FRAGMENTO_OK
+IA_SEM_ARTIFACT_OK
+IA_SEM_USOS_REGISTRADO (nenhum id na pagina)
+NOTAS_SEM_FRAGMENTO_OK
+NOTAS_SEM_ARTIFACT_OK
+MEUSPAGAMENTOS_FORA_DO_PERFIL (pagina diferente ou vazia para o demo)
+R60_E2E_OK FALHAS=0

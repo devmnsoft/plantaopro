@@ -1,0 +1,10 @@
+﻿LOGIN_OK -> http://localhost:51977/ClientePortal/Index
+TOUR_BTN_OK
+PASSO_FIXO_OK "Busca rápid...
+PASSO_FIXO_OK "Atalhos pri...
+PASSO_FIXO_OK "Manuais cur...
+ARTIGOS_RENDERIZADOS_OK (n=8)
+ROTEIRO_CONSOME_ARTIGOS_OK (passos de artigo = 8)
+TOTAL_PASSOS_TOUR_OK (total=11 = 3 fixos + 8 artigos)
+PASSO_EXEMPLO_OK (Como criar orçamento)
+R58_E2E_OK FALHAS=0

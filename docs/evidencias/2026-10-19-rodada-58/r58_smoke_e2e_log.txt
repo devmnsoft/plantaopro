@@ -1,0 +1,19 @@
+﻿R52 SMOKE E2E 2026-10-18 23:51:24
+LOGIN_OK -> http://localhost:51977/ClientePortal/Index
+WARMUP_OK aps 1 tentativa(s)
+PAGE_OK[1] /MinhaCentral Minha Central[0] 454ms len=41832
+PAGE_OK[2] /Administrativo360/Vendas Vendas[0] 847ms len=59810
+PAGE_OK[3] /Administrativo360/Orcamentos Orcamento[0] 792ms len=260132
+PAGE_OK[4] /Administrativo360/PedidosCompra Pedido[0] 593ms len=152986
+PAGE_OK[5] /Administrativo360/Estoque Estoque[0] 847ms len=181796
+PAGE_OK[6] /Administrativo360/TitulosReceber Titulo[0] 267ms len=61598
+PAGE_OK[7] /Administrativo360/RelatoriosFinanceiros Relatorio[0] 814ms len=71402
+PAGE_OK[8] /Notificacoes/Preferencias Notifica[0] 134ms len=42320
+PAGE_OK[9] /Ajuda/Index Operação da instituição[0] 105ms len=46098
+PAGE_OK[10] /Ajuda/Index Manuais por rotina[0] 100ms len=46098
+PAGE_OK[11] /Ajuda/Artigo?id=adm-orcamento Como criar orçamento[0] 101ms len=40447
+PAGE_OK[12] /Ajuda/Artigo?id=central-fatura Como resolver fatura vencida[0] 71ms len=40402
+PAGE_OK[13] /Ajuda/Modulo?id=instituicao Abrir tela relacionada[0] 73ms len=40447
+AJUDA_ARIA=26 V2151=1 ACCESSIBILITY_CSS=1 SKIP_LINK=1
+PERF /MinhaCentral=111ms /Administrativo360/Vendas=158ms /Administrativo360/Orcamentos=481ms /Ajuda/Index=98ms /Notificacoes/Preferencias=71ms MEDIA_PADRAO=184ms (n=5)
+FALHAS=0

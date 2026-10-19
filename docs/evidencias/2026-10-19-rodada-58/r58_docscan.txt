@@ -1,0 +1,5 @@
+== r58a0-ajuda-perfis-e-tour-plano.md
+CANAL_OK | ACENTO_c_OK | ACENTO_a_OK
+== r58z-relatorio-final-consolidado.md
+CANAL_OK | ACENTO_c_OK | ACENTO_a_OK
+DOCSCAN_BAD=0

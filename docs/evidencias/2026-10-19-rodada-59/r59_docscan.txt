@@ -1,0 +1,6 @@
+# R59 - docscan dos arquivos desta rodada (docs/evidencias/2026-10-19-rodada-59)
+# Regras: TODO/FIXME em maiusculas (case-sensitive) + corrupcao de canal 'plantaouro'.
+# (A palavra portuguesa 'todo/todos' em minuscula e esperada em prosa; nao entra na regra.)
+DOCSCAN_TODO_FIXME=0
+PLANTAURO=0
+DOCSCAN_BAD=0

@@ -1,0 +1,17 @@
+# R59 - suíte integral (dotnet test backend\PlantaoPro.Tests -c Release)
+# Base 1628 (R58) + 5 fatos novos (R59AcessibilidadeAvancadaContratoTests) = 1633.
+#
+# Historico das execucoes desta rodada:
+#   execucao 1: 1632/1633 - falhou R28LinguagemSimplesAdm360ContratoTests.Adm360Parte1_TextosNovosEmLinguagemSimples_Existem
+#     (literal travado '<th>Reserva vinculada</th>' na view ValeNovo.cshtml; regressao INTENCIONAL da
+#      varredura D-R59-1 -> literal atualizado no contrato, mesmo tratamento dado na R57 a copy tratada).
+#   execucao 2 (apos correcao do literal): 1632/1633 - 1 falha transitoria sob execucoes consecutivas,
+#     nome nao capturado (padrao dos flakes de carga documentados na base; vai para a fila item 10).
+#   execucao 3: VERDE TOTAL (log completo em %TEMP%\opencode\r59_suite.log na data):
+Execução de Teste Bem-sucedida.
+Total de testes: 1633
+     Aprovados: 1633
+#
+# Dirigidos (execucao separada, 10/10): R59 x5 (Tabelas_TodosCabecalhosComScope,
+# ModaisEOverlays_TrapDeFocoTravado, Landmarks_CompletosNosLayouts, Toasts_RegioesVivasERoles,
+# WidgetsCustom_CaminhoDeTecladoTravado) + R49AcessibilidadeContratoTests x5 (nao-regressao).

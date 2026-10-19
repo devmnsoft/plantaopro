@@ -1,0 +1,11 @@
+# R59 - smoke canonica R52 (r52_smoke_e2e.ps1) contra binario final desta rodada
+# Apps: API :51976 + Web :51977 (Release --no-incremental, plantaopro_test)
+# Registro da execuacao (saida final do script):
+PAGE_OK[10] /Ajuda/Index Manuais por rotina[0] 48ms len=46098
+PAGE_OK[11] /Ajuda/Artigo?id=adm-orcamento Como criar orçamento[0] 54ms len=40447
+PAGE_OK[12] /Ajuda/Artigo?id=central-fatura Como resolver fatura vencida[0] 40ms len=40402
+PAGE_OK[13] /Ajuda/Modulo?id=instituicao Abrir tela relacionada[0] 41ms len=40447
+AJUDA_ARIA=26 V2151=1 ACCESSIBILITY_CSS=1 SKIP_LINK=1
+PERF /MinhaCentral=65ms /Administrativo360/Vendas=108ms /Administrativo360/Orcamentos=368ms /Ajuda/Index=72ms /Notificacoes/Preferencias=61ms MEDIA_PADRAO=135ms (n=5)
+FALHAS=0
+R52_E2E_OK

@@ -31,6 +31,7 @@ que faltou — nada é instalado pela metade sem você ver.
 | `-AdminEmail` | e-mail da conta de superadministrador inicial | `admin.global@plantaopro.local` |
 | `-AppPassword` | senha do papel da aplicação (evita o pedido interativo) | vazio (pergunta na tela) |
 | `-AdminPassword` | senha inicial do superadministrador (troca obrigatória no 1º acesso) | vazio (pergunta na tela) |
+| `-Profile` | `base`: instala apenas o sistema (padrão, correto para produção); `demo`: aplica também as contas e os dados de demonstração (somente em `Development`) | `base` |
 
 Passando `-AppPassword` e `-AdminPassword`, o comando roda **sem nenhuma pergunta** —
 é esse o modo 1-comando.
@@ -52,9 +53,36 @@ export PGUSER=postgres PGPASSWORD=SUA_SENHA_LOCAL
 PLANTAOPRO_INSTALL_MODE=CLEAN PLANTAOPRO_DATABASE=plantaopro PLANTAOPRO_ADMIN_EMAIL=voce@empresa.com.br PLANTAOPRO_APP_PASSWORD=SENHA_DA_ROLE_APP PLANTAOPRO_BOOTSTRAP_PASSWORD=SENHA_DO_SUPERADMIN scripts/database/install-plantaopro.sh
 ```
 
-Tudo pronto quando aparecer `status=APROVADO` no fim. Para rodar com dados de exemplo
-(demonstração): inicie a API e o portal normalmente em ambiente `Development` — os dados
-de demonstração entram sozinhos no primeiro início, sem nenhum comando extra.
+Tudo pronto quando aparecer `status=APROVADO` no fim.
+
+## Perfis de instalação (`-Profile`)
+
+O instalador tem dois perfis, escolhidos com `-Profile` (Windows) ou
+`PLANTAOPRO_PROFILE` (Linux/macOS):
+
+- **`base`** (padrão) — instala só o sistema: papéis, banco, esquema, dados de sistema
+  (perfis e permissões) e a conta de superadministrador. É o perfil correto para produção:
+  nenhuma conta de demonstração é criada.
+- **`demo`** — aplica tudo do perfil `base` **e**, logo em seguida, os dados de
+  demonstração (contas de gestor e médica fictícias, agenda e documentos de exemplo).
+  Só é permitido em ambiente `Development`. As contas ficam em
+  `database/seeds/development/README.md`.
+
+Instalar já com a demonstração (Windows, PowerShell):
+
+```powershell
+.\scripts\database\install-plantaopro.ps1 -Mode CLEAN -HostName localhost -Database plantaopro -OwnerRole plantaopro_owner -ApplicationRole plantaopro_app -AdminEmail 'voce@empresa.com.br' -AppPassword 'SENHA_DA_ROLE_APP' -AdminPassword 'SENHA_DO_SUPERADMIN' -Profile demo
+```
+
+Instalar já com a demonstração (Linux ou macOS, Bash):
+
+```bash
+PLANTAOPRO_PROFILE=demo scripts/database/install-plantaopro.sh
+```
+
+Alternativa ao perfil `demo`: iniciar a API e o portal normalmente em ambiente
+`Development` — nesse caso as contas de demonstração entram sozinhas no primeiro
+início, sem nenhum comando extra. O perfil `demo` só deixa isso pronto desde o banco.
 
 ## 2) Servidor de produção (local ou nuvem)
 

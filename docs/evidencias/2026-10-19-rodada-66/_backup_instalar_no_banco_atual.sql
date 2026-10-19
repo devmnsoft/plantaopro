@@ -6302,7 +6302,7 @@ COMMENT ON COLUMN plantaopro.adm360_cotacao_envios.status_transmissao IS
 -- ============================================================
 
 -- SOURCE: database/migrations/2026_10_v2305_administrativo360_imutabilidade_por_papel.sql
--- SOURCE-SHA256: 4b4e31a9a37edd2670d2cb566b39a49cb278ff721efc5b1d47616693cc017ee4
+-- SOURCE-SHA256: 895433a7a17be830cb7a5af77065f133ae83c502b2ddaa8b66de10cdcc9228c8
 -- ============================================================================
 -- PlantaoPro | Migration: 2026_10_v2305_administrativo360_imutabilidade_por_papel
 -- P0 Segurança: papel restrito para o bypass da imutabilidade do Administrativo 360.
@@ -6330,17 +6330,30 @@ COMMENT ON COLUMN plantaopro.adm360_cotacao_envios.status_transmissao IS
 -- Idempotência: DO bloqueando a criação do papel + CREATE OR REPLACE das funções.
 -- ============================================================================
 
+-- R67 (rodada 67): criacao/ajuste do papel tolerante a instalacao por usuario restrito (sem CREATEROLE).
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'plantaopro_maintenance') THEN
-        CREATE ROLE plantaopro_maintenance NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+        BEGIN
+            CREATE ROLE plantaopro_maintenance NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+        EXCEPTION WHEN insufficient_privilege THEN
+            RAISE WARNING 'PlantaoPro: instalacao sem privilegio para criar o papel plantaopro_maintenance (use um superuser ou conceda CREATEROLE a quem instala).';
+        END;
     ELSE
-        ALTER ROLE plantaopro_maintenance WITH NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE;
+        BEGIN
+            ALTER ROLE plantaopro_maintenance WITH NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE;
+        EXCEPTION WHEN insufficient_privilege THEN
+            RAISE WARNING 'PlantaoPro: instalacao sem privilegio para ajustar o papel plantaopro_maintenance; mantendo os atributos atuais.';
+        END;
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'plantaopro_maintenance') THEN
+        BEGIN
+            COMMENT ON ROLE plantaopro_maintenance IS 'PlantaoPro: papel restrito do bypass de imutabilidade do Administrativo 360 (GUC plantao.bypass_imutabilidade_adm360). Marcador: não concede privilégios em tabelas.';
+        EXCEPTION WHEN insufficient_privilege THEN
+            RAISE WARNING 'PlantaoPro: instalacao sem privilegio para comentar o papel plantaopro_maintenance.';
+        END;
     END IF;
 END $$;
-
-COMMENT ON ROLE plantaopro_maintenance IS 'PlantaoPro: papel restrito do bypass de imutabilidade do Administrativo 360 (GUC plantao.bypass_imutabilidade_adm360). Marcador: não concede privilégios em tabelas.';
-
 -- Bypass habilitado = GUC 'on' E session_user privilegiado (superuser ou membro do papel restrito).
 CREATE OR REPLACE FUNCTION plantaopro.fn_adm360_bypass_habilitado()
 RETURNS boolean

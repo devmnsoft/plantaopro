@@ -1,6 +1,6 @@
-﻿R66 IMPORT UNICO 2026-10-19 13:29:35 script=C:\MNSOFT\plantaopro\database\scrpt_completo.sql
+﻿R66 IMPORT UNICO 2026-10-19 15:00:41 script=C:\MNSOFT\plantaopro\database\scrpt_completo.sql
 MARCADORES_GAP_R66=79
-IMPORT_EXIT=0 ERROS_LOG=0 LINHAS=19065
+IMPORT_EXIT=0 ERROS_LOG=0 LINHAS=19064
 GAPS_OBJETO=0 (codigo referencia 357 nomes)
 SEEDS_SISTEMA modulos_sistema=1399 perfis=19 permissoes=1850
 SECAO_R62_DRAEL_OK

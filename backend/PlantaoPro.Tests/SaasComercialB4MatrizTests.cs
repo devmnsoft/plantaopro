@@ -407,7 +407,7 @@ insert into plantaopro.downgrade_solicitacoes (id, tenant_id, cliente_id, assina
 
     private static async Task SementarAsync()
     {
-        await ExecutarComRetryImpasseAsync(async () =>
+        await TestInfraRetry.ExecutarComRetryImpasseAsync(async () =>
         {
             await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
             await cn.OpenAsync();
@@ -426,30 +426,12 @@ insert into plantaopro.downgrade_solicitacoes (id, tenant_id, cliente_id, assina
 
     private static async Task PurgarAsync()
     {
-        await ExecutarComRetryImpasseAsync(async () =>
+        await TestInfraRetry.ExecutarComRetryImpasseAsync(async () =>
         {
             await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
             await cn.OpenAsync();
             await cn.ExecuteAsync(PurgeSql, SeedParams());
         });
-    }
-
-    /// <summary>
-    /// r9m-P2: reexecuta uma vez em impasse transitório (40P01 deadlock detectado /
-    /// 40001 falha de serialização) — purgas concorrentes sob RAM baixa; o retry
-    /// isolado da classe é sempre verde (ver r9k §4 e §6).
-    /// </summary>
-    private static async Task ExecutarComRetryImpasseAsync(Func<Task> acao)
-    {
-        try
-        {
-            await acao();
-        }
-        catch (PostgresException ex) when (ex.SqlState is "40P01" or "40001")
-        {
-            await Task.Delay(250);
-            await acao();
-        }
     }
 
     private sealed class B4FakeCurrentUser : ICurrentUserService

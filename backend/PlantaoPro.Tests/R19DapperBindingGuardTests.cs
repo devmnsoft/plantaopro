@@ -13,7 +13,7 @@ namespace PlantaoPro.Tests;
 /// R19 — auditoria da família F7b (rodada 18: WorkItemDto) + guarda global SRF-em-WHERE (F7c).
 ///
 /// Mecanismo (probe versionado neste arquivo, executado com as mesmas versões de Dapper/Npgsql do
-/// app): para uma coluna timestamptz o reader devolve System.DateTime e o Dapper NÃO converte:
+/// app): para uma coluna timestamptz o reader devolve System.DateTime e o Dapper não converte:
 ///   - RECORD com parâmetro DateTimeOffset  → InvalidOperationException na construção do
 ///     deserializer ("A parameterless default constructor or one matching signature (System.DateTime
 ///     X) is required for &lt;tipo&gt; materialization") no momento em que a linha materializa;
@@ -283,7 +283,12 @@ public sealed class R19DapperBindingGuardTests
         Assert.Contains("::bigint as \"Pendencias\"", sql);
 
         await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
-        using var multi = await cn.QueryMultipleAsync(sql, new { search = (string?)null, status = (string?)null, take = 100, skip = 0 });
+        // R65 (catálogo de flakes família ② — corrida de snapshot): as duas
+        // statements rodam num mesmo snapshot REPEATABLE READ; um purge concorrente
+        // entre itens e totais podia deixar o somatório menor que a página lida.
+        await cn.OpenAsync();
+        await using var tx = await cn.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
+        using var multi = await cn.QueryMultipleAsync(sql, new { search = (string?)null, status = (string?)null, take = 100, skip = 0 }, tx);
         var itensLidos = (await multi.ReadAsync<PlantaoPro.Api.Models.ClienteCentralDto>()).AsList();
         var totaisLidos = await multi.ReadSingleAsync<PlantaoPro.Api.Models.ClienteCentralTotais>();
 

@@ -476,9 +476,12 @@ insert into plantaopro.assinaturas (id, tenant_id, cliente_id, plano_id, data_in
 
     private static async Task PurgarAsync()
     {
-        await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
-        await cn.OpenAsync();
-        await cn.ExecuteAsync(PurgeSql, SeedParams());
+        await TestInfraRetry.ExecutarComRetryImpasseAsync(async () =>
+        {
+            await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
+            await cn.OpenAsync();
+            await cn.ExecuteAsync(PurgeSql, SeedParams());
+        });
     }
 
     private sealed class B6FakeCurrentUser : ICurrentUserService

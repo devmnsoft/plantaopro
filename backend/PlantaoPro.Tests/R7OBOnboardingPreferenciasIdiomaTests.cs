@@ -251,8 +251,11 @@ insert into plantaopro.usuarios (id, tenant_id, cliente_id, nome, email, email_n
 
     private static async Task PurgarAsync()
     {
-        await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
-        await cn.OpenAsync();
-        await cn.ExecuteAsync(PurgeSql, SeedParams());
+        await TestInfraRetry.ExecutarComRetryImpasseAsync(async () =>
+        {
+            await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
+            await cn.OpenAsync();
+            await cn.ExecuteAsync(PurgeSql, SeedParams());
+        });
     }
 }

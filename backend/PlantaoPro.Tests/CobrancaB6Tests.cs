@@ -449,9 +449,12 @@ insert into plantaopro.faturas_saas (id, cliente_id, competencia, vencimento, va
 
     private static async Task PurgarAsync()
     {
-        await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
-        await cn.OpenAsync();
-        await cn.ExecuteAsync(PurgeSql, SeedParams());
+        await TestInfraRetry.ExecutarComRetryImpasseAsync(async () =>
+        {
+            await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
+            await cn.OpenAsync();
+            await cn.ExecuteAsync(PurgeSql, SeedParams());
+        });
     }
 
     private sealed class B6FakeAuditService : IAuditService

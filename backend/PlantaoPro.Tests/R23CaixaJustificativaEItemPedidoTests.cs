@@ -183,6 +183,8 @@ public sealed class R23CaixaJustificativaEItemPedidoTests
     // Purge escopado (ordem de dependência idêntica ao padrão R8-B4).
     private static async Task PurgarAsync(string cs, Guid parceiro, Guid produto, Guid local, Guid pedido)
     {
+        await TestInfraRetry.ExecutarComRetryImpasseAsync(async () =>
+        {
         await using var cn = new NpgsqlConnection(cs);
         await cn.OpenAsync();
         await cn.ExecuteAsync("delete from plantaopro.adm360_documento_eventos where tenant_id=@t and documento_id in (select id from plantaopro.adm360_documentos_recebidos where tenant_id=@t and recebimento_id in (select id from plantaopro.adm360_recebimentos where pedido_id=@p))", new { t = Tenant, p = pedido });
@@ -198,5 +200,6 @@ public sealed class R23CaixaJustificativaEItemPedidoTests
         await cn.ExecuteAsync("delete from plantaopro.adm360_produtos where id=@prod and tenant_id=@t", new { t = Tenant, prod = produto });
         await cn.ExecuteAsync("delete from plantaopro.adm360_locais where id=@loc and tenant_id=@t", new { t = Tenant, loc = local });
         await cn.ExecuteAsync("delete from plantaopro.adm360_parceiros where id=@par and tenant_id=@t", new { t = Tenant, par = parceiro });
+        });
     }
 }

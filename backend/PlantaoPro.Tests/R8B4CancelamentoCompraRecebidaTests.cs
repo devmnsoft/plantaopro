@@ -125,6 +125,8 @@ public sealed class R8B4CancelamentoCompraRecebidaTests
     private static async Task PurgarAsync(string cs, Fixture f)
     {
         if (f.Parceiro == Guid.Empty) return;
+        await TestInfraRetry.ExecutarComRetryImpasseAsync(async () =>
+        {
         await using var cn = new NpgsqlConnection(cs);
         await cn.OpenAsync();
         await cn.ExecuteAsync("delete from plantaopro.adm360_documento_eventos where tenant_id=@t and documento_id in (select id from plantaopro.adm360_documentos_recebidos where tenant_id=@t and recebimento_id in (select id from plantaopro.adm360_recebimentos where pedido_id=@p))", new { t = Tenant, p = f.Pedido });
@@ -140,6 +142,7 @@ public sealed class R8B4CancelamentoCompraRecebidaTests
         await cn.ExecuteAsync("delete from plantaopro.adm360_produtos where id=@prod and tenant_id=@t", new { t = Tenant, prod = f.Produto });
         await cn.ExecuteAsync("delete from plantaopro.adm360_locais where id=@loc and tenant_id=@t", new { t = Tenant, loc = f.Local });
         await cn.ExecuteAsync("delete from plantaopro.adm360_parceiros where id=@par and tenant_id=@t", new { t = Tenant, par = f.Parceiro });
+        });
     }
 
     [Fact(DisplayName = "R8-B4: pedido recebido sem consumo cancela — reverte estoque, zera título e é idempotente")]

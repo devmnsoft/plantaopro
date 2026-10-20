@@ -208,3 +208,23 @@ body.pp-a360 main .dropdown-item:focus-visible {
     outline-offset: 2px;
     border-radius: .375rem;
 }
+
+/* ---- R72: menu do módulo fixo ao rolar -------------------------------------------------
+   Causa raiz: .adm360-nav-wrapper nao tinha posicao nem stacking proprio; ao
+   rolar, os cards das areas seguintes (em ordem DOM posterior) cobriam o menu
+   e os dropdowns abertos desapareciam por tras delas.
+   Correcao: fixar sob o topbar com os tokens z-index canonicos (--pp-z-*) e
+   criar contexto de empilhamento proprio (isolation) para que as areas nunca
+   voltem a cobrir o menu; o fundo opaco fica no card interno ja remapeado
+   pelo tema claro deste arquivo.                                              */
+
+body.pp-a360 .adm360-nav-wrapper {
+    position: sticky;
+    top: calc(var(--pp-topbar-height, 5.25rem) + .5rem);
+    z-index: var(--pp-z-sticky, 1010);
+    isolation: isolate;
+}
+
+body.pp-a360 .adm360-nav-wrapper .dropdown-menu {
+    z-index: var(--pp-z-dropdown, 1030);
+}

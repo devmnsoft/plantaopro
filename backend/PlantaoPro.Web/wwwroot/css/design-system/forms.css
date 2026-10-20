@@ -58,6 +58,50 @@
 .pp-toast-warning { border-left-color: var(--pp-amber-500); }
 .pp-toast-info { border-left-color: var(--pp-blue-600); }
 
+/* ---- R72: polimento canonico de formularios ------------------------------------------
+   Pedido da rodada: os formularios precisavam de consistencia visual sem tocar
+   nos ~180 arquivos do modulo. O que se aplica aqui vale em todo o sistema
+   (este arquivo entra via @import do design system):
+   1. estrela automatica no label de campo obrigatorio — escopada aos marcadores
+      premium (.pp-form-field/.pp-form-label) para NAO duplicar as estrelas
+      manuais ("Nome *") usadas nos modulos legados;
+   2. input de arquivo (upload) com altura, borda e hover consistentes — antes
+      ficava como controle nativo solto, destoando do restante do formulario;
+   3. label vira vermelha quando o campo do grupo tem erro de validacao ou
+      aria-invalid=true (cor + texto: o canal de erro nunca e so a cor);
+   4. checkbox/radio com foco visivel padronizado.                          */
+
+.pp-form-field:has(> :where(input, select, textarea)[required]) > label::after,
+.pp-form-label:has(+ [required])::after {
+    content: " *";
+    color: var(--pp-red-600, #dc3545);
+}
+
+.pp-form-control[type="file"],
+.pp-form-field > input[type="file"] {
+    min-height: 2.875rem;
+    padding: .45rem .75rem;
+    border: 1px dashed var(--pp-border);
+    border-radius: var(--pp-radius-sm);
+    background: var(--pp-surface);
+}
+
+.pp-form-control[type="file"]:hover,
+.pp-form-field > input[type="file"]:hover {
+    border-color: var(--pp-blue-600, #2563eb);
+}
+
+.pp-form-field:has([class*="validation-error"]) label,
+.pp-form-field:has(:where(input, select, textarea)[aria-invalid="true"]) label {
+    color: var(--pp-red-600, #dc3545);
+}
+
+.pp-form-field :where(input[type="checkbox"], input[type="radio"]):focus-visible,
+.pp-form-controls :where(input[type="checkbox"], input[type="radio"]):focus-visible {
+    outline: 2px solid var(--pp-blue-600, #2563eb);
+    outline-offset: 2px;
+}
+
 @media (max-width: 767px) {
     .pp-form-grid { grid-template-columns: 1fr; }
     .pp-form-grid > * { grid-column: 1; }

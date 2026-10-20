@@ -1,0 +1,7 @@
+HEALTH=200
+LOGIN_OK tenantRequired=False roles=ADMINISTRADOR_CLIENTE
+CFG MEU_DIA_RESUMO prov=gemini hab=True chaveTenant=False chaveGlobal=True
+CFG COTACAO_ANALISE prov=gemini hab=True chaveTenant=False chaveGlobal=True
+TEST_DRAEL_STATUS=200
+TEST_DRAEL success=True kind=OK provedor= modelo=
+MSG Conexão confirmada com o provedor drael. Usando a chave do servidor.

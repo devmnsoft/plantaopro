@@ -1,0 +1,9 @@
+﻿API_OK 10:57:10 chave=dk-Rl...pRds
+LOGIN_OK tenantRequired=False roles=ADMINISTRADOR_CLIENTE
+CFG MEU_DIA_RESUMO prov=gemini hab=True chaveTenant=False chaveGlobal=False
+CFG COTACAO_ANALISE prov=gemini hab=True chaveTenant=False chaveGlobal=False
+CHAVE_MESTRA_SERVIDOR=False
+TEST_CONEXAO_STATUS=200
+TEST_RESULTADO success=True kind=OK provedor= modelo= duracaoMs=
+TEST_MENSAGEM Conexão confirmada com o provedor drael. Usando a chave do servidor.
+API_PARADA

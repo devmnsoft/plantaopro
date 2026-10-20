@@ -187,6 +187,19 @@ $cs = (Get-SecretValue $apiSecretId 'ConnectionStrings:Default')
 $m = [regex]::Match($cs, '(?i)Password=([^;]+)')
 if ($m.Success) { $secretRedact += $m.Groups[1].Value }
 
+# .env do repo (git-ignorado): segredos locais da casa (ex.: chaves globais de
+# provedores de IA, Ai__Providers__*). Convencao: nao sobrescreve variavel ja
+# definida no ambiente do terminal; valores entram na lista de redacao.
+$envFile = Join-Path $Root '.env'
+if (Test-Path $envFile) {
+  foreach ($l in (Get-Content $envFile)) {
+    if ($l -match '^([A-Za-z][A-Za-z0-9_]+)=(.*)$' -and -not [Environment]::GetEnvironmentVariable($Matches[1])) {
+      [Environment]::SetEnvironmentVariable($Matches[1], $Matches[2])
+      if ($Matches[2].Length -ge 4) { $secretRedact += $Matches[2] }
+    }
+  }
+}
+
 # --- 5) inicia a tentativa ------------------------------------------------------
 $stamp = Get-Date -Format yyyyMMdd-HHmmss
 $apiOut = Join-Path $logDir ('api-' + $stamp + '.out.log')

@@ -1,0 +1,29 @@
+A|custom.css|L48|.status-aberto,.status-pendente,.status-rascunho,.status-solicitado
+A|custom.css|L49|.status-confirmado,.status-realizado,.status-pago,.status-ativo
+A|custom.css|L50|.status-cancelado,.status-recusado,.status-inativo
+A|custom.css|L116|.status-publicado,.status-disponivel,.status-em-andamento
+A|custom.css|L117|.status-preenchido,.status-concluido,.status-resolvido,.status-confirmada,.statu
+A|custom.css|L118|.status-suspenso,.status-atrasado,.status-contestado,.status-vencido
+A|custom.css|L119|.status-cancelada,.status-expirado,.status-bloqueado
+A|custom.css|L120|.status-indefinido
+A|financial.css|L28|.status-conferido,.status-aprovado,.status-pago,.status-concluido
+A|financial.css|L28|.status-divergente,.status-com-divergencia
+A|financial.css|L28|.status-rejeitado,.status-cancelado
+A|financial.css|L28|.status-pendente,.status-aguardando-aprovacao
+A|saas.css|L40|.pp-status-badge--source
+A|saas.css|L40|.pp-status-badge--unknown
+A|saas.css|L40|.pp-status-badge--unavailable
+A|v2000-premium.css|L100|.status-ativo, .status-concluido, .status-confirmado, .badge-success
+A|v2000-premium.css|L101|.status-pendente, .status-aguardando, .badge-warning
+A|v2000-premium.css|L102|.status-cancelado, .status-inativo, .badge-danger
+A|v2070-notifications.css|L1|.priority-badge,.status-badge
+A|v2070-notifications.css|L1|.status-badge
+A|v2145-onboarding-help.css|L8|.pp-status-pill
+A|v2145-onboarding-help.css|L8|.is-next .pp-status-pill
+A|v2148-operational-premium.css|L179|.pp-status-badge.is-success
+A|v2148-operational-premium.css|L180|.pp-status-badge.is-warning
+A|v2148-operational-premium.css|L181|.pp-status-badge.is-danger
+A|v2148-operational-premium.css|L182|.pp-status-badge.is-muted
+A|minha-central.css|L8|.status-with-icon span
+A|professional-portal.css|L1|.status-badge
+R71_MAP_AUDIT FALHAS=28 FALHAS_MAPA=28 FALHAS_COR_SOLA=0 CSS=92 VIEWS=484

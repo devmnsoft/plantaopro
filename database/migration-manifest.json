@@ -1394,6 +1394,16 @@
                                          ],
                            "status":  "active",
                            "transactional":  true
-                       }
+                       },
+                        {
+                            "version":  "2026_10_v2361_r71c_ai_provedor_mistral",
+                            "source":  "database/migrations/2026_10_v2361_r71c_ai_provedor_mistral.sql",
+                            "checksum":  "0f3f15038bfde6d08b2f1619c431f0ca81f542a383e79ee8a4fb7fff8b408bd7",
+                            "dependsOn":  [
+                                              "2026_10_v2360_r66_gap_instalacao_convergencia"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
+                        }
                    ]
 }

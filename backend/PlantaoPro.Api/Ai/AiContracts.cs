@@ -35,8 +35,12 @@ public static class AiProviderCodes
     /// <summary>Drael (drael.sh) — a IA da casa; wire format compatível com OpenAI
     /// (POST v1/chat/completions, Bearer, chaves dk-…), modelo vigente drael-v1.</summary>
     public const string Drael = "drael";
+    /// <summary>Mistral (api.mistral.ai) — provedor com plano gratuito na La Plateforme
+    /// (chave gratuita sem cartão; console.mistral.ai); wire format compatível com OpenAI,
+    /// famílias vigentes do catálogo mistral-/ministral-/codestral-.</summary>
+    public const string Mistral = "mistral";
 
-    public static readonly HashSet<string> All = new(StringComparer.OrdinalIgnoreCase) { Groq, Gemini, DeepSeek, Drael };
+    public static readonly HashSet<string> All = new(StringComparer.OrdinalIgnoreCase) { Groq, Gemini, DeepSeek, Drael, Mistral };
 }
 
 /// <summary>

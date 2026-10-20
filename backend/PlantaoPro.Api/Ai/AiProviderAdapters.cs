@@ -6,7 +6,7 @@ using Microsoft.Extensions.Configuration;
 namespace PlantaoPro.Api.Ai;
 
 /// <summary>
-/// Adapter de um provedor de IA concreto (Groq / Gemini / DeepSeek / Drael).
+/// Adapter de um provedor de IA concreto (Groq / Gemini / DeepSeek / Drael / Mistral).
 /// Cada adapter:
 ///   - conhece a chave global opcional do servidor (fallback do tenant);
 ///   - recebe a chave a usar do gateway (chave do tenant tem prioridade);
@@ -24,7 +24,7 @@ public interface IAiProviderAdapter
 /// <summary>
 /// Helper de transporte compartilhado pelos adaptadores.
 /// Padrão da homologação P0 (WP-S2): envio e leitura integral do corpo num único try —
-/// com handler primário customizado o HttpClient.Timeout NÃO cobre a leitura do corpo
+/// com handler primário customizado o HttpClient.Timeout não cobre a leitura do corpo
 /// isolada; aqui o cancelamento do timeout chega como OperationCanceledException dentro
 /// do mesmo escopo e vira TIMEOUT (nunca hang, nunca 500).
 /// </summary>
@@ -177,6 +177,25 @@ public sealed class DraelAdapter : OpenAiCompatibleAdapter
         : base(clients, configuration, "AiDrael", "Ai:Providers:Drael:ApiKey") { }
 
     public override string Provider => AiProviderCodes.Drael;
+
+    public override Task<AiCompletionResult> CompleteAsync(AiCompletionRequest request, string apiKey, CancellationToken ct)
+        => CompleteOpenAiAsync(request, apiKey, ct);
+}
+
+/// <summary>
+/// Mistral (api.mistral.ai) — provedor comercial com plano gratuito na La Plateforme
+/// (chave gratuita, sem cartão de crédito; console.mistral.ai). Wire format compatível
+/// com OpenAI (POST v1/chat/completions na base https://api.mistral.ai/v1/, Bearer);
+/// modelo pequeno vigente mistral-small-2603 (docs/changelog oficiais consultados em
+/// 2026-10-20). Segue o mesmo contrato dos demais adaptadores (chave do tenant
+/// prioritária; nunca propaga segredos para fora).
+/// </summary>
+public sealed class MistralAdapter : OpenAiCompatibleAdapter
+{
+    public MistralAdapter(IHttpClientFactory clients, IConfiguration configuration)
+        : base(clients, configuration, "AiMistral", "Ai:Providers:Mistral:ApiKey") { }
+
+    public override string Provider => AiProviderCodes.Mistral;
 
     public override Task<AiCompletionResult> CompleteAsync(AiCompletionRequest request, string apiKey, CancellationToken ct)
         => CompleteOpenAiAsync(request, apiKey, ct);

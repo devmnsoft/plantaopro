@@ -64,7 +64,10 @@ public sealed class AiGateway : IAiGateway
         [AiProviderCodes.DeepSeek] = "deepseek-flash",
         // Drael (IA da casa): único modelo vigente exposto em https://drael.sh/v1
         // (docs/quickstart consultadas em 2026-10-19).
-        [AiProviderCodes.Drael] = "drael-v1"
+        [AiProviderCodes.Drael] = "drael-v1",
+        // Mistral (La Plateforme, plano gratuito): modelo híbrido que unifica
+        // instruções, raciocínio e código (changelog oficial, consultado em 2026-10-20).
+        [AiProviderCodes.Mistral] = "mistral-small-2603"
     };
 
     // Fuso oficial da plataforma para contadores mensais: America/Sao_Paulo

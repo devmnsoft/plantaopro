@@ -3,13 +3,15 @@
 @{
     ViewData["Title"] = "Assistente IA";
     // R62: Drael é a IA da casa e lidera a lista; os demais seguem o mesmo contrato de adapter.
-    string[] provedores = new[] { "drael", "groq", "gemini", "deepseek" };
+    // R71C: Mistral entra como provedor com plano gratuito (La Plateforme, sem cartão).
+    string[] provedores = new[] { "drael", "groq", "gemini", "deepseek", "mistral" };
     string NomeProvedor(string p) => p switch
     {
         "drael" => "Drael — IA da casa",
         "groq" => "Groq",
         "gemini" => "Gemini",
         "deepseek" => "DeepSeek",
+        "mistral" => "Mistral",
         _ => p
     };
     string NomeTarefa(string task) => task switch
@@ -62,6 +64,7 @@
         <div>
             <p><strong>Habilitar.</strong> A tarefa só executa com o checkbox ligado e um provedor escolhido. Sem chave (do cliente ou global do servidor), o ponto de IA mostra “não configurado”.</p>
             <p><strong>Chave do provedor.</strong> Deixe em branco para manter a atual ou usar a chave global do servidor. A chave fica cifrada no banco e nunca volta inteira para esta tela.</p>
+            <p><strong>Provedores gratuitos.</strong> Groq (console.groq.com), Mistral (console.mistral.ai) e Google Gemini (aistudio.google.com) oferecem planos gratuitos, sem cartão de crédito. Basta criar a conta, copiar a chave gratuita, colar aqui e clicar em “Testar conexão”.</p>
             <p><strong>Testar conexão.</strong> Valida a configuração junto ao provedor antes de considerar configurado. Falhas retornam um estado explicável — nunca “sucesso” fictício.</p>
             <p><strong>Limites e cota.</strong> Tokens, timeout e cota mensal por tarefa são aplicados no servidor; apenas usos bem-sucedidos consomem a cota. O orçamento mensal é bloqueio adicional por valor (moeda USD ou BRL).</p>
             <p><strong>Modelo de reserva.</strong> Deixe em branco para usar o modelo padrão do provedor escolhido. Avisos ao lado do campo não impedem o salvamento; apenas chamam atenção para modelos fora do catálogo documentado.</p>

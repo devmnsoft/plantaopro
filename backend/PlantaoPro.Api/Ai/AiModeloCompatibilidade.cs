@@ -10,9 +10,12 @@ namespace PlantaoPro.Api.Ai;
 ///   - gemini: exige prefixo gemini-;
 ///   - deepseek: exige prefixo deepseek- e rejeita os aposentados
 ///     deepseek-chat / deepseek-reasoner (aposentados em 2026-07-24);
-///   - drael: exige prefixo drael- (catálogo drael.sh: drael-v1).
+///   - drael: exige prefixo drael- (catálogo drael.sh: drael-v1);
+///   - mistral: rejeita modelos de outros provedores e as famílias aposentadas
+///     do catálogo (magistral/devstral/pixtral/open-mistral/openmixtral/mathstral);
+///     o resto do nome livre é aceito (catálogo versionado: nomes com yy-mm mudam).
 ///
-/// <see cref="Aviso"/> NÃO bloqueia: modelo com prefixo correto mas fora do
+/// <see cref="Aviso"/> não bloqueia: modelo com prefixo correto mas fora do
 /// catálogo documentado (novidades de plano/enterprise entram aqui).
 /// Referências consultadas em 2026-10-04: docs oficiais Groq, Google AI e DeepSeek.
 /// </summary>
@@ -28,6 +31,11 @@ public static class AiModeloCompatibilidade
     private static readonly string[] DeepSeekAposentados = { "deepseek-chat", "deepseek-reasoner" };
     /// <summary>Catálogo self-service vigente da Drael (drael.sh; docs consultadas em 2026-10-19).</summary>
     private static readonly string[] DraelCatalogo = { "drael-v1" };
+    /// <summary>Famílias vigentes do catálogo Mistral (docs oficiais consultadas em 2026-10-20).</summary>
+    private static readonly string[] MistralFamíliasVigentes = { "mistral-", "ministral-", "codestral-" };
+    /// <summary>Famílias aposentadas do catálogo Mistral até 2026-10 (docs oficiais):
+    /// magistral/devstral/pixtral migram para mistral-medium/ministral; open-mistral/openmixtral/mathstral foram aposentados.</summary>
+    private static readonly string[] MistralAposentados = { "magistral-", "devstral-", "pixtral-", "open-mistral-", "openmixtral-", "mathstral-" };
 
     public static string? Validar(string provedor, string modelo)
     {
@@ -52,6 +60,18 @@ public static class AiModeloCompatibilidade
 
             AiProviderCodes.Drael when !m.StartsWith("drael-", StringComparison.OrdinalIgnoreCase) =>
                 $"No provedor Drael, use um modelo do catálogo Drael (prefixo 'drael-'); '{m}' não se aplica.",
+
+            AiProviderCodes.Mistral
+                when m.StartsWith("gemini-", StringComparison.OrdinalIgnoreCase) ||
+                     m.StartsWith("deepseek-", StringComparison.OrdinalIgnoreCase) ||
+                     m.StartsWith("drael-", StringComparison.OrdinalIgnoreCase) ||
+                     m.StartsWith("gpt-oss-", StringComparison.OrdinalIgnoreCase) ||
+                     m.StartsWith("llama-", StringComparison.OrdinalIgnoreCase) =>
+                $"O modelo '{m}' pertence ao catálogo de outro provedor e não pode ser usado no provedor Mistral.",
+
+            AiProviderCodes.Mistral
+                when MistralAposentados.Any(p => m.StartsWith(p, StringComparison.OrdinalIgnoreCase)) =>
+                $"O modelo '{m}' foi aposentado do catálogo Mistral (docs de 2026-10); use uma família vigente (mistral-*, ministral-* ou codestral-*).",
 
             _ => null
         };
@@ -89,6 +109,13 @@ public static class AiModeloCompatibilidade
                     ? null
                     : $"O modelo '{m}' não consta do catálogo Drael documentado (drael-v1). "
                       + "Confirme a disponibilidade antes de habilitar.";
+
+            case AiProviderCodes.Mistral:
+                if (Validar(provedor, m) is not null) return null;
+                return MistralFamíliasVigentes.Any(p => m.StartsWith(p, StringComparison.OrdinalIgnoreCase))
+                    ? null
+                    : $"O modelo '{m}' não consta das famílias Mistral documentadas "
+                      + "(mistral-*, ministral-*, codestral-*). Confirme a disponibilidade antes de habilitar.";
 
             default:
                 return null;

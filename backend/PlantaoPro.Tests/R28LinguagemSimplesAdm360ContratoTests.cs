@@ -75,7 +75,9 @@ public class R28LinguagemSimplesAdm360ContratoTests
         Assert.Contains("Sem confirmação automática com o banco.", titulo, StringComparison.Ordinal);
 
         var fiscalConfigurar = ReadRelative("backend", "PlantaoPro.Web", "Views", "Administrativo360", "Fiscal", "Configurar.cshtml");
-        Assert.Contains("nunca no banco de dados nem nas telas.", fiscalConfigurar, StringComparison.Ordinal);
+        // R73 (linguagem simples v2): "banco de dados" virou "registros do sistema"; o literal travado
+        // acompanhou a mudança (mesmo tratamento dado pelo contrato R57 em copy tratada).
+        Assert.Contains("nunca nos registros do sistema nem nas telas.", fiscalConfigurar, StringComparison.Ordinal);
 
         var importar = ReadRelative("backend", "PlantaoPro.Web", "Views", "Administrativo360", "DocumentosXml", "Importar.cshtml");
         Assert.Contains("com integridade verificada (SHA-256)", importar, StringComparison.Ordinal);

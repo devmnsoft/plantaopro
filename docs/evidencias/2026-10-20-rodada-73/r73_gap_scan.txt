@@ -1,0 +1,168 @@
+RESX|UiTexts.resx|Nav.LogsESaude|i:Logs|Logs e saúde
+RESX|UiTexts.resx|Clinical.PhTipSensitive|i:logs|Dados sensíveis não aparecem em logs técnicos.
+RESX|UiTexts.resx|Clinical.FormHiddenHint|i:antiforgery|Formulário Saúde 360 com validação, antiforgery e preservação dos dados em caso de erro.
+RESX|UiTexts.resx|Implantacao.Loading|i:API|Carregando informações reais da API...
+RESX|UiTexts.resx|Implantacao.Loading|cs:API|Carregando informações reais da API...
+RESX|UiTexts.resx|Adm360.Dash.CapDashboardDesc|cs:SQL|Métricas e estatísticas apuradas via consultas reais em SQL.
+RESX|UiTexts.resx|Adm360.RelFin.IndDreFiltros|i:tenant|competência entre início e fim (inclusivo); opcional &lt;code&gt;clienteId&lt;/code&gt; com rejeição cross-tenant (400); sempre isolado por tenant.
+RESX|UiTexts.resx|Adm360.RelFin.IndDreFiltros|i:tenant|competência entre início e fim (inclusivo); opcional &lt;code&gt;clienteId&lt;/code&gt; com rejeição cross-tenant (400); sempre isolado por tenant.
+RESX|UiTexts.resx|Adm360.RelFin.IndDreFonte|i:tenant|lado receita/custo = &lt;code&gt;adm360_vendas&lt;/code&gt; somente &lt;code&gt;situacao='CONFIRMADA'&lt;/code&gt;, período sobre &lt;code&gt;competencia&lt;/coâ€¦
+RESX|UiTexts.resx|Adm360.RelFin.IndMargemFiltros|i:tenant|&lt;code&gt;competencia&lt;/code&gt; entre início e fim (inclusivo); opcional &lt;code&gt;clienteId&lt;/code&gt; (com rejeição cross-tenant); sem filtro de vendâ€¦
+RESX|UiTexts.resx|Adm360.RelFin.IndVencFiltros|i:tenant|período sobre &lt;code&gt;data_vencimento&lt;/code&gt; (inclusivo); opcional &lt;code&gt;clienteId&lt;/code&gt; (com rejeição cross-tenant); sempre isolado por â€¦
+RESX|UiTexts.resx|Adm360.RelFin.IndVencFiltros|i:tenant|período sobre &lt;code&gt;data_vencimento&lt;/code&gt; (inclusivo); opcional &lt;code&gt;clienteId&lt;/code&gt; (com rejeição cross-tenant); sempre isolado por â€¦
+RESX|UiTexts.resx|Adm360.RelFin.IndVendasFiltros|i:tenant|&lt;code&gt;competencia &amp;gt;= início AND competencia &amp;lt;= fim&lt;/code&gt; (inclusivo); opcionais &lt;code&gt;clienteId&lt;/code&gt; e &lt;code&gt;vendâ€¦
+RESX|UiTexts.resx|Adm360.RelFin.IndVendasFiltros|i:tenant|&lt;code&gt;competencia &amp;gt;= início AND competencia &amp;lt;= fim&lt;/code&gt; (inclusivo); opcionais &lt;code&gt;clienteId&lt;/code&gt; e &lt;code&gt;vendâ€¦
+RESX|UiTexts.en.resx|Nav.LogsESaude|i:Logs|Logs and Health
+RESX|UiTexts.en.resx|Shift.TipFilter|i:server|Filter the operation on the server.
+RESX|UiTexts.en.resx|Clinical.PhTipSensitive|i:logs|Sensitive data does not appear in technical logs.
+RESX|UiTexts.en.resx|Clinical.FormHiddenHint|i:antiforgery|Health 360 form with validation, antiforgery and data preservation in case of error.
+RESX|UiTexts.en.resx|Implantacao.Loading|i:API|Loading real information from the API...
+RESX|UiTexts.en.resx|Implantacao.Loading|cs:API|Loading real information from the API...
+RESX|UiTexts.en.resx|Adm360.Dash.CapDashboardDesc|cs:SQL|Metrics computed through real SQL queries.
+RESX|UiTexts.en.resx|Adm360.Produtos.JsPrevLocal|i:server| — local preview; the official calculation is recomputed on the server when saving.
+RESX|UiTexts.en.resx|Adm360.RelFin.IndDreFiltros|i:tenant|accrual between start and end (inclusive); optional &lt;code&gt;clienteId&lt;/code&gt; with cross-tenant rejection (400); always isolated by tenant.
+RESX|UiTexts.en.resx|Adm360.RelFin.IndDreFiltros|i:tenant|accrual between start and end (inclusive); optional &lt;code&gt;clienteId&lt;/code&gt; with cross-tenant rejection (400); always isolated by tenant.
+RESX|UiTexts.en.resx|Adm360.RelFin.IndDreFonte|i:tenant|revenue/cost side = &lt;code&gt;adm360_vendas&lt;/code&gt; only &lt;code&gt;situacao='CONFIRMADA'&lt;/code&gt;, period over &lt;code&gt;competencia&lt;/code&gt;â€¦
+RESX|UiTexts.en.resx|Adm360.RelFin.IndMargemFiltros|i:tenant|&lt;code&gt;competencia&lt;/code&gt; between start and end (inclusive); optional &lt;code&gt;clienteId&lt;/code&gt; (with cross-tenant rejection); no salespersoâ€¦
+RESX|UiTexts.en.resx|Adm360.RelFin.IndVencFiltros|i:tenant|period over &lt;code&gt;data_vencimento&lt;/code&gt; (inclusive); optional &lt;code&gt;clienteId&lt;/code&gt; (with cross-tenant rejection); always isolated by â€¦
+RESX|UiTexts.en.resx|Adm360.RelFin.IndVencFiltros|i:tenant|period over &lt;code&gt;data_vencimento&lt;/code&gt; (inclusive); optional &lt;code&gt;clienteId&lt;/code&gt; (with cross-tenant rejection); always isolated by â€¦
+RESX|UiTexts.en.resx|Adm360.RelFin.IndVendasFiltros|i:tenant|&lt;code&gt;competencia &amp;gt;= start AND competencia &amp;lt;= end&lt;/code&gt; (inclusive); optional &lt;code&gt;clienteId&lt;/code&gt; and &lt;code&gt;vendâ€¦
+RESX|UiTexts.en.resx|Adm360.RelFin.IndVendasFiltros|i:tenant|&lt;code&gt;competencia &amp;gt;= start AND competencia &amp;lt;= end&lt;/code&gt; (inclusive); optional &lt;code&gt;clienteId&lt;/code&gt; and &lt;code&gt;vendâ€¦
+RESX|UiTexts.en.resx|Adm360.RelFin.IndVendasFonte|i:fallback|&lt;code&gt;adm360_vendas&lt;/code&gt; (one row per confirmed sale), with customer/payer/salesperson names resolved via &lt;code&gt;adm360_parceiros&lt;/code&gtâ€¦
+RESX|UiTexts.es.resx|Clinical.PhTipSensitive|i:logs|Los datos sensibles no aparecen en los logs técnicos.
+RESX|UiTexts.es.resx|Clinical.FormHiddenHint|i:antiforgery|Formulario Salud 360 con validación, antiforgery y preservación de datos en caso de error.
+RESX|UiTexts.es.resx|Implantacao.Loading|i:API|Cargando información real de la API...
+RESX|UiTexts.es.resx|Implantacao.Loading|cs:API|Cargando información real de la API...
+RESX|UiTexts.es.resx|Adm360.Dash.CapDashboardDesc|cs:SQL|Métricas y estadísticas calculadas mediante consultas reales en SQL.
+RESX|UiTexts.es.resx|Adm360.RelFin.IndDreFiltros|i:tenant|competencia entre inicio y fin (inclusivo); opcional &lt;code&gt;clienteId&lt;/code&gt; con rechazo cross-tenant (400); siempre aislado por tenant.
+RESX|UiTexts.es.resx|Adm360.RelFin.IndDreFiltros|i:tenant|competencia entre inicio y fin (inclusivo); opcional &lt;code&gt;clienteId&lt;/code&gt; con rechazo cross-tenant (400); siempre aislado por tenant.
+RESX|UiTexts.es.resx|Adm360.RelFin.IndDreFonte|i:tenant|lado ingreso/costo = &lt;code&gt;adm360_vendas&lt;/code&gt; solo &lt;code&gt;situacao='CONFIRMADA'&lt;/code&gt;, período sobre &lt;code&gt;competencia&lt;/code&â€¦
+RESX|UiTexts.es.resx|Adm360.RelFin.IndMargemFiltros|i:tenant|&lt;code&gt;competencia&lt;/code&gt; entre inicio y fin (inclusivo); opcional &lt;code&gt;clienteId&lt;/code&gt; (con rechazo cross-tenant); sin filtro de vendeâ€¦
+RESX|UiTexts.es.resx|Adm360.RelFin.IndVencFiltros|i:tenant|período sobre &lt;code&gt;data_vencimento&lt;/code&gt; (inclusivo); opcional &lt;code&gt;clienteId&lt;/code&gt; (con rechazo cross-tenant); siempre aislado por â€¦
+RESX|UiTexts.es.resx|Adm360.RelFin.IndVencFiltros|i:tenant|período sobre &lt;code&gt;data_vencimento&lt;/code&gt; (inclusivo); opcional &lt;code&gt;clienteId&lt;/code&gt; (con rechazo cross-tenant); siempre aislado por â€¦
+RESX|UiTexts.es.resx|Adm360.RelFin.IndVendasFiltros|i:tenant|&lt;code&gt;competencia &amp;gt;= inicio AND competencia &amp;lt;= fin&lt;/code&gt; (inclusivo); opcionales &lt;code&gt;clienteId&lt;/code&gt; y &lt;code&gt;venâ€¦
+RESX|UiTexts.es.resx|Adm360.RelFin.IndVendasFiltros|i:tenant|&lt;code&gt;competencia &amp;gt;= inicio AND competencia &amp;lt;= fin&lt;/code&gt; (inclusivo); opcionales &lt;code&gt;clienteId&lt;/code&gt; y &lt;code&gt;venâ€¦
+RESX|UiTexts.es.resx|Adm360.RelFin.IndVendasFonte|i:fallback|&lt;code&gt;adm360_vendas&lt;/code&gt; (una fila por venta confirmada), con nombres de cliente/pagador/vendedor resueltos vía &lt;code&gt;adm360_parceiros&lt;/câ€¦
+RESX|UiTexts.fr.resx|Clinical.PhTipSensitive|i:logs|Les données sensibles n'apparaissent pas dans les logs techniques.
+RESX|UiTexts.fr.resx|Clinical.FormHiddenHint|i:antiforgery|Formulaire Santé 360 avec validation, antiforgery et conservation des données en cas d'erreur.
+RESX|UiTexts.fr.resx|Implantacao.Loading|i:API|Chargement des informations réelles de l'API...
+RESX|UiTexts.fr.resx|Implantacao.Loading|cs:API|Chargement des informations réelles de l'API...
+RESX|UiTexts.fr.resx|Adm360.Dash.CapDashboardDesc|cs:SQL|Métriques et statistiques calculées par requêtes SQL réelles.
+RESX|UiTexts.fr.resx|Adm360.RelFin.IndDreFiltros|i:tenant|rattachement entre début et fin (inclusif) ; optionnel &lt;code&gt;clienteId&lt;/code&gt; avec rejet cross-tenant (400) ; toujours isolé par tenant.
+RESX|UiTexts.fr.resx|Adm360.RelFin.IndDreFiltros|i:tenant|rattachement entre début et fin (inclusif) ; optionnel &lt;code&gt;clienteId&lt;/code&gt; avec rejet cross-tenant (400) ; toujours isolé par tenant.
+RESX|UiTexts.fr.resx|Adm360.RelFin.IndDreFonte|i:tenant|côté chiffre d'affaires/coût = &lt;code&gt;adm360_vendas&lt;/code&gt; seulement &lt;code&gt;situacao='CONFIRMADA'&lt;/code&gt;, période sur &lt;code&gt;competenâ€¦
+RESX|UiTexts.fr.resx|Adm360.RelFin.IndMargemFiltros|i:tenant|&lt;code&gt;competencia&lt;/code&gt; entre début et fin (inclusif) ; optionnel &lt;code&gt;clienteId&lt;/code&gt; (avec rejet cross-tenant) ; pas de filtre commâ€¦
+RESX|UiTexts.fr.resx|Adm360.RelFin.IndVencFiltros|i:tenant|période sur &lt;code&gt;data_vencimento&lt;/code&gt; (inclusif) ; optionnel &lt;code&gt;clienteId&lt;/code&gt; (avec rejet cross-tenant) ; toujours isolé par teâ€¦
+RESX|UiTexts.fr.resx|Adm360.RelFin.IndVencFiltros|i:tenant|période sur &lt;code&gt;data_vencimento&lt;/code&gt; (inclusif) ; optionnel &lt;code&gt;clienteId&lt;/code&gt; (avec rejet cross-tenant) ; toujours isolé par teâ€¦
+RESX|UiTexts.fr.resx|Adm360.RelFin.IndVendasFiltros|i:tenant|&lt;code&gt;competencia &amp;gt;= début AND competencia &amp;lt;= fin&lt;/code&gt; (inclusif) ; optionnels &lt;code&gt;clienteId&lt;/code&gt; et &lt;code&gt;venâ€¦
+RESX|UiTexts.fr.resx|Adm360.RelFin.IndVendasFiltros|i:tenant|&lt;code&gt;competencia &amp;gt;= début AND competencia &amp;lt;= fin&lt;/code&gt; (inclusif) ; optionnels &lt;code&gt;clienteId&lt;/code&gt; et &lt;code&gt;venâ€¦
+VIEW|Administrativo360/Cargos.cshtml|L275|i:bootstrap|bootstrap.Modal.getOrCreateInstance(modalEditar).show();
+VIEW|Administrativo360/Cargos.cshtml|L287|i:bootstrap|bootstrap.Modal.getOrCreateInstance(document.getElementById('modalImpactoCg')).show();
+VIEW|Administrativo360/Cargos.cshtml|L303|i:bootstrap|if (window.bootstrap && window.bootstrap.Modal) { abrirEdicao(inicial.dataset.id, inicial.dataset.codigo, inicial.dataset.nome, inicial.dataset.depid); return; â€¦
+VIEW|Administrativo360/Cargos.cshtml|L303|i:bootstrap|if (window.bootstrap && window.bootstrap.Modal) { abrirEdicao(inicial.dataset.id, inicial.dataset.codigo, inicial.dataset.nome, inicial.dataset.depid); return; â€¦
+VIEW|Administrativo360/Colaboradores.cshtml|L362|i:bootstrap|bootstrap.Modal.getOrCreateInstance(modalEditar).show();
+VIEW|Administrativo360/Colaboradores.cshtml|L375|i:bootstrap|bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAnexosColab')).show();
+VIEW|Administrativo360/Colaboradores.cshtml|L389|i:bootstrap|bootstrap.Modal.getOrCreateInstance(document.getElementById('modalStatusColab')).show();
+VIEW|Administrativo360/Colaboradores.cshtml|L407|i:bootstrap|if (window.bootstrap && window.bootstrap.Modal) { abrirEdicao(inicial.dataset.id, inicial.dataset.nome, inicial.dataset.email); return; }
+VIEW|Administrativo360/Colaboradores.cshtml|L407|i:bootstrap|if (window.bootstrap && window.bootstrap.Modal) { abrirEdicao(inicial.dataset.id, inicial.dataset.nome, inicial.dataset.email); return; }
+VIEW|Administrativo360/Departamentos.cshtml|L250|i:bootstrap|bootstrap.Modal.getOrCreateInstance(modalEditar).show();
+VIEW|Administrativo360/Departamentos.cshtml|L262|i:bootstrap|bootstrap.Modal.getOrCreateInstance(document.getElementById('modalImpactoDep')).show();
+VIEW|Administrativo360/Departamentos.cshtml|L278|i:bootstrap|if (window.bootstrap && window.bootstrap.Modal) { abrirEdicao(inicial.dataset.id, inicial.dataset.codigo, inicial.dataset.nome); return; }
+VIEW|Administrativo360/Departamentos.cshtml|L278|i:bootstrap|if (window.bootstrap && window.bootstrap.Modal) { abrirEdicao(inicial.dataset.id, inicial.dataset.codigo, inicial.dataset.nome); return; }
+VIEW|Administrativo360/FechamentoCaixa.cshtml|L42|i:banco de dados|Uma vez fechado, lançamentos de recebimento, pagamento ou estorno com data até o encerramento são bloqueados pelo banco de dados.
+VIEW|Administrativo360/FluxoCaixa.cshtml|L207|cs:API|// R20 (r20b1 F-R20-B): a API não envia "tipo" no item; a classificação é
+VIEW|Administrativo360/FluxoCaixa.cshtml|L252|cs:API|<!-- R8-B27 (§27): definições dos indicadores emitidas pela API (fiel ao SQL) — substitui o bloco estático -->
+VIEW|Administrativo360/FluxoCaixa.cshtml|L252|cs:SQL|<!-- R8-B27 (§27): definições dos indicadores emitidas pela API (fiel ao SQL) — substitui o bloco estático -->
+VIEW|Administrativo360/Index.cshtml|L107|cs:SQL|@* R8-B24 (§27): exibe as definições fiéis ao SQL dos indicadores organizacionais (mesmo critério "definição e rastreabilidade"; sem nova consulta/número/regra)â€¦
+VIEW|Administrativo360/Locais.cshtml|L232|i:bootstrap|new bootstrap.Modal(document.getElementById('modalLocal')).show();
+VIEW|Administrativo360/Locais.cshtml|L242|i:bootstrap|new bootstrap.Modal(document.getElementById('modalLocal')).show();
+VIEW|Administrativo360/OrcamentoImprimir.cshtml|L11|i:bootstrap|<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+VIEW|Administrativo360/OrcamentoImprimir.cshtml|L11|i:bootstrap|<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+VIEW|Administrativo360/Parceiros.cshtml|L318|i:bootstrap|new bootstrap.Modal(document.getElementById('modalAnexosParceiro')).show();
+VIEW|Administrativo360/Parceiros.cshtml|L331|i:bootstrap|new bootstrap.Modal(document.getElementById('modalParceiro')).show();
+VIEW|Administrativo360/Parceiros.cshtml|L344|i:bootstrap|new bootstrap.Modal(document.getElementById('modalParceiro')).show();
+VIEW|Administrativo360/Produtos.cshtml|L479|i:bootstrap|new bootstrap.Modal(document.getElementById('modalProduto')).show();
+VIEW|Administrativo360/Produtos.cshtml|L499|i:bootstrap|new bootstrap.Modal(document.getElementById('modalProduto')).show();
+VIEW|Administrativo360/Recebimentos.cshtml|L124|cs:GUID|ser preenchido (hidden com GUID vazio) e o recebimento caía em 400 na API. -->
+VIEW|Administrativo360/Recebimentos.cshtml|L124|cs:API|ser preenchido (hidden com GUID vazio) e o recebimento caía em 400 na API. -->
+VIEW|Administrativo360/ValeImprimir.cshtml|L11|i:bootstrap|<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+VIEW|Administrativo360/ValeImprimir.cshtml|L11|i:bootstrap|<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+VIEW|Administrativo360/_AnexosBloco.cshtml|L38|i:endpoints|// R72: bloco de anexos (PDF/Word/imagem) — fetch para os endpoints do proxy web
+VIEW|Administrativo360/_AnexosBloco.cshtml|L39|cs:CSRF|// (CSRF via input oculto incluido no FormData + wrapper global de window.fetch do layout).
+VIEW|Administrativo360/Cotacoes/Detalhes.cshtml|L275|cs:UUID|@* s8 (rodada 9): seleção pelo catálogo — cada candidato exibe a regulação ANVISA do seu cadastro; entrada manual por UUID continua disponível. *@
+VIEW|Administrativo360/Cotacoes/Detalhes.cshtml|L334|cs:UUID|UUID e o painel mostra o estado do cadastro do candidato (número / não aplicável / pendente).
+VIEW|Administrativo360/Cotacoes/Detalhes.cshtml|L387|i:Outbox|<!-- Anexos e Respostas Outbox -->
+VIEW|Administrativo360/Cotacoes/Detalhes.cshtml|L420|i:Outbox|<!-- Fila de Respostas / Outbox -->
+VIEW|Administrativo360/DocumentosXml/Importar.cshtml|L75|i:multipart|<form method="post" action="/Administrativo360/DocumentosXml/Importar" enctype="multipart/form-data">
+VIEW|Administrativo360/DocumentosXml/Triagens.cshtml|L152|i:Bootstrap|<!-- Modal Abrir/Reabrir triagem (um por documento; sem JS além do Bootstrap) -->
+VIEW|Administrativo360/Fiscal/Configurar.cshtml|L158|i:banco de dados|<div class="form-text text-secondary">Só o nome da referência. O valor do certificado fica em configuração separada, nunca no banco de dados nem nas telas.</divâ€¦
+VIEW|Administrativo360/Gestao/Dashboard.cshtml|L329|cs:SQL|@* R8-B25 (§27): exibe as definições fiéis ao SQL dos indicadores do dashboard gerencial (mesmo critério "definição e rastreabilidade"; sem nova consulta/númeroâ€¦
+VIEW|Assinaturas/_Form.cshtml|L8|i:Endpoint|@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(Model.ClienteId), Label = "Cliente", Endpoint = "â€¦
+VIEW|Assinaturas/_Form.cshtml|L12|i:Endpoint|@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(Model.PlanoId), Label = "Plano", Endpoint = "/apiâ€¦
+VIEW|Auditoria/Details.cshtml|L23|cs:JSON|<div class="col-lg-7"><div class="card border-0 shadow-sm"><div class="card-header bg-white fw-semibold">Detalhes JSON</div><div class="card-body"><pre class="sâ€¦
+VIEW|Auditoria/Index.cshtml|L51|cs:API|<div class="mt-3"><label class="form-label" for="auditText">Busca livre</label><input class="form-control" id="auditText" name="texto" value="@filtroTexto" placâ€¦
+VIEW|B2BLaunch/Form.cshtml|L4|cs:API|ViewData["BreadcrumbLabel"] = "API Keys";
+VIEW|B2BLaunch/Form.cshtml|L11|i:webhooks|("webhooks:write", "Configurar webhooks"),
+VIEW|B2BLaunch/Form.cshtml|L11|i:webhooks|("webhooks:write", "Configurar webhooks"),
+VIEW|B2BLaunch/Form.cshtml|L24|cs:API|<div class="alert alert-warning"><strong>Atenção:</strong> a API Key completa aparece apenas uma vez após a criação. Guarde em cofre seguro; depois disso o sistâ€¦
+VIEW|B2BLaunch/Form.cshtml|L63|cs:API|<button type="submit" class="btn btn-primary">Criar API Key</button>
+VIEW|Comercial/Funil.cshtml|L3|cs:API|<div class="row g-3">@foreach (var etapa in new[] { "Lead", "Oportunidade", "Proposta", "Negociação", "Ganha", "Perdida" }) { <div class="col-md-2"><div class="â€¦
+VIEW|CommandCenter/Index.cshtml|L69|cs:SQL|@* R8-B28 (§27): exibe as definições fiéis ao SQL dos indicadores de plataforma (governança global). *@
+VIEW|CommandCenter/Index.cshtml|L95|cs:SQL|@* R8-B23 (§27): exibe as definições fiéis ao SQL dos indicadores operacionais (mesmo critério "definição e rastreabilidade"; sem nova consulta/número/regra). *â€¦
+VIEW|CommercialDemoWeb/Simulador.cshtml|L13|cs:API|<label><input type="checkbox" name="api" value="true" aria-label="Api"> Deseja API?</label>
+VIEW|DashboardsPremium/Perfil.cshtml|L29|cs:API|o predicado do KPI (estado atual, reg_status='A', escopo tenant da API): Plantões -> /Plantoes e
+VIEW|Financeiro/Index.cshtml|L72|cs:API|<p>A API não retornou lançamentos para os filtros atuais. Isso não significa saldo zero, pagamento pendente, glosa ou repasse.</p><p><strong>Glosas e repasses:<â€¦
+VIEW|Financeiro/Index.cshtml|L107|i:endpoint|<span class="pp-locked-action"><button class="btn btn-sm btn-soft-success" type="button" disabled title="Use o detalhe; a confirmação exige status pendente, valâ€¦
+VIEW|Home/Dashboard.cshtml|L62|cs:API|@* R8-B21 (§27): exibe as definições dos indicadores já retornadas pela API (mesmo critério "definição e rastreabilidade"; sem nova consulta/número/regra). *@
+VIEW|Integracoes/ApiKeys.cshtml|L2|cs:API|ViewData["Title"] = "Integrações e API Keys";
+VIEW|Integracoes/ApiKeys.cshtml|L5|cs:API|<h1>Integrações e API Keys</h1>
+VIEW|Integracoes/ApiKeys.cshtml|L7|i:Webhooks|<a class="btn btn-primary" asp-controller="Integracoes" asp-action="Webhooks">Configurar webhooks</a>
+VIEW|Integracoes/ApiKeys.cshtml|L7|i:webhooks|<a class="btn btn-primary" asp-controller="Integracoes" asp-action="Webhooks">Configurar webhooks</a>
+VIEW|Integracoes/Logs.cshtml|L4|i:payload|<section class="container py-4"><h1>Logs de Integração</h1><p>Logs sem tokens, chaves, prescrições, diagnósticos ou payload clínico sensível.</p></section>
+VIEW|Integracoes/WebhookDetails.cshtml|L2|i:Webhook|ViewData["Title"] = "Detalhes do Webhook";
+VIEW|Integracoes/WebhookDetails.cshtml|L4|i:Webhook|<section class="container py-4"><h1>Detalhes do Webhook</h1><p>Entregas, status HTTP e reenvios seguros.</p></section>
+VIEW|Integracoes/Webhooks.cshtml|L2|i:Webhooks|ViewData["Title"] = "Webhooks";
+VIEW|Integracoes/Webhooks.cshtml|L5|i:Webhooks|<h1>Webhooks</h1>
+VIEW|Lgpd/Consentimentos.cshtml|L4|cs:API|<div class="alert alert-info mt-3">Histórico completo disponível na API <code>/api/lgpd/consentimentos</code>.</div>
+VIEW|Marketplace/Index.cshtml|L8|cs:API|<div class="col-md-4"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Oportunidades", "3", "BI avançado, API e revenda", "bi-rocket"â€¦
+VIEW|Marketplace/Index.cshtml|L11|cs:API|@foreach (var modulo in new[] { new { Nome = "BI Avançado", Status = "Disponível para upgrade", Icone = "bi-bar-chart" }, new { Nome = "API Enterprise", Status â€¦
+VIEW|MeuDia/Index.cshtml|L146|cs:SQL|@* R8-B22 (§27): exibe as definições fiéis ao SQL do resumo (mesmo critério "definição e rastreabilidade"; sem nova consulta/número/regra). *@
+VIEW|MinhaAssinatura/Index.cshtml|L15|cs:API|<section class="pp-empty-state pp-empty-state--featured" aria-labelledby="subscription-empty-title"><span class="pp-icon-surface" aria-hidden="true"><i class="bâ€¦
+VIEW|MinhaAssinatura/Index.cshtml|L29|cs:API|@if (Model.Limites.Count == 0 && Model.Uso.Count == 0) { <div class="pp-inline-empty"><i class="bi bi-bar-chart" aria-hidden="true"></i><div><strong>Consumo nãoâ€¦
+VIEW|Observabilidade/Index.cshtml|L9|i:Stack trace|<div class="alert alert-info"><i class="bi bi-shield-check"></i> Visão restrita a ADMINISTRADOR_GLOBAL. Stack traces e payloads sensíveis são mascarados.</div>
+VIEW|Observabilidade/Index.cshtml|L13|i:Endpoints|<div class="col-lg-4"><div class="card border-0 shadow-sm h-100"><div class="card-header bg-white fw-semibold">Endpoints lentos</div><div class="card-body"><preâ€¦
+VIEW|PlanosPublicos/Comparar.cshtml|L17|cs:API|<tr><td>API Mobile</td>@foreach (var plano in planos){<td>@(plano.PermiteMobile ? "Incluído" : "Não incluído")</td>}</tr>
+VIEW|Saude360/Formulario.cshtml|L62|i:Endpoint|<div class="col-md-4">@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(vm.PacienteId), Label = UiTâ€¦
+VIEW|Saude360/Formulario.cshtml|L63|i:Endpoint|<div class="col-md-4">@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(vm.MedicoId), Label = UiTexâ€¦
+VIEW|Saude360/Formulario.cshtml|L64|i:Endpoint|<div class="col-md-4">@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(vm.AgendamentoId), Label = â€¦
+VIEW|Saude360/Formulario.cshtml|L65|i:Endpoint|<div class="col-md-4">@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(vm.ConsultaId), Label = UiTâ€¦
+VIEW|Saude360/Formulario.cshtml|L66|i:Endpoint|<div class="col-md-4">@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(vm.PlanoSaudeId), Label = Uâ€¦
+VIEW|Seguranca/Index.cshtml|L16|cs:API|<div class="col-12 col-sm-6 col-lg-3"><article class="card shadow-sm h-100"><div class="card-body"><span class="text-muted small">@item</span><strong class="d-bâ€¦
+VIEW|Shared/SaasComercialPage.cshtml|L9|cs:API|<p><strong>API:</strong> <code>@Model.ApiPath</code></p>
+VIEW|Shared/_AutocompleteField.cshtml|L6|i:endpoint|<input id="@id" name="@Model.FieldName" value="@Model.Value" class="form-control" placeholder="@Model.Placeholder" data-autocomplete-field data-lookup-endpoint=â€¦
+VIEW|Shared/_AutocompleteField.cshtml|L6|i:Endpoint|<input id="@id" name="@Model.FieldName" value="@Model.Value" class="form-control" placeholder="@Model.Placeholder" data-autocomplete-field data-lookup-endpoint=â€¦
+VIEW|Shared/_Layout.cshtml|L5|cs:CSRF|// P0 CSRF: token antiforgery único por request — renderizado como meta no <head>, consumido
+VIEW|Shared/_Layout.cshtml|L31|i:bootstrap|<link rel="stylesheet" href="~/css/vendor/bootstrap.min.css" asp-append-version="true" />
+VIEW|Shared/_Layout.cshtml|L32|i:bootstrap|<link rel="stylesheet" href="~/css/vendor/bootstrap-compat.css" asp-append-version="true" />
+VIEW|Shared/_Layout.cshtml|L33|i:bootstrap|<link rel="stylesheet" href="~/css/icons/bootstrap-icons.css" asp-append-version="true" />
+VIEW|Shared/_Layout.cshtml|L74|cs:CSRF|// P0 CSRF: wrapper global de window.fetch — injeta o token antiforgery em requests
+VIEW|Shared/_Layout.cshtml|L140|i:bootstrap|<script src="~/js/vendor/bootstrap.bundle.min.js" asp-append-version="true"></script>
+VIEW|Shared/_LookupSelect.cshtml|L6|i:endpoint|<select id="@id" name="@Model.FieldName" class="form-select" data-lookup-select data-lookup-endpoint="@Model.Endpoint" data-current-value="@Model.Value">
+VIEW|Shared/_LookupSelect.cshtml|L6|i:Endpoint|<select id="@id" name="@Model.FieldName" class="form-select" data-lookup-select data-lookup-endpoint="@Model.Endpoint" data-current-value="@Model.Value">
+VIEW|Shared/_ToastMessages.cshtml|L65|cs:JSON|parsedToasts = JSON.parse(el.textContent || 'null') || new Array();
+VIEW|V112/OperationalPage.cshtml|L4|i:endpoint|var endpoint = (string)(ViewData["Endpoint"] ?? "/api/dashboard");
+VIEW|V112/OperationalPage.cshtml|L4|i:Endpoint|var endpoint = (string)(ViewData["Endpoint"] ?? "/api/dashboard");
+VIEW|V112/OperationalPage.cshtml|L7|i:endpoint|<section class="container py-4" data-v112-page="true" data-endpoint="@endpoint">
+VIEW|V112/OperationalPage.cshtml|L7|i:endpoint|<section class="container py-4" data-v112-page="true" data-endpoint="@endpoint">
+VIEW|V112/OperationalPage.cshtml|L18|cs:API|<pre id="v112Payload" class="border rounded p-3 bg-light text-break">Estado vazio: clique em "@action" para consultar a API.</pre>
+VIEW|V112/OperationalPage.cshtml|L24|i:endpoint|const endpoint = root.dataset.endpoint;
+VIEW|V112/OperationalPage.cshtml|L24|i:endpoint|const endpoint = root.dataset.endpoint;
+VIEW|V112/OperationalPage.cshtml|L26|i:payload|const payload = document.getElementById('v112Payload');
+VIEW|V112/OperationalPage.cshtml|L32|i:endpoint|const response = await fetch(endpoint, { headers: { 'Accept': 'application/json' } });
+VIEW|V112/OperationalPage.cshtml|L35|cs:JSON|payload.textContent = text ? JSON.stringify(JSON.parse(text), null, 2) : 'Sem dados.';
+VIEW|V112/OperationalPage.cshtml|L35|cs:JSON|payload.textContent = text ? JSON.stringify(JSON.parse(text), null, 2) : 'Sem dados.';
+VIEW|V112/OperationalPage.cshtml|L35|i:payload|payload.textContent = text ? JSON.stringify(JSON.parse(text), null, 2) : 'Sem dados.';
+VIEW|V112/OperationalPage.cshtml|L43|i:payload|document.getElementById('v112Filter').addEventListener('input', function () { payload.dataset.filter = this.value; });
+
+TOTAL_RESX_HITS=58
+TOTAL_VIEW_HITS=107

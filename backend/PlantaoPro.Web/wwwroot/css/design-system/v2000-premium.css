@@ -97,9 +97,7 @@ body.pp-body {
 .btn-primary:hover { background: #075e69; border-color: #075e69; }
 .btn-light, .btn-outline-secondary { color: #29485c; border-color: var(--fc-border); background: rgba(255,255,255,.74); }
 .badge, .status-badge, .context-chip { border: 1px solid currentColor; border-radius: 999px; font-weight: 700; letter-spacing: .01em; }
-.status-ativo, .status-concluido, .status-confirmado, .badge-success { color: var(--fc-success); background: #eaf7f0; }
-.status-pendente, .status-aguardando, .badge-warning { color: var(--fc-warning); background: #fff7da; }
-.status-cancelado, .status-inativo, .badge-danger { color: var(--fc-danger); background: #fff0f1; }
+/* R71: cores de estado migradas para o mapa canonico (v2151 secao 9); so a forma permanece aqui. */
 
 .table-responsive { border-radius: 13px; scrollbar-gutter: stable; }
 .table { --bs-table-bg: transparent; color: var(--fc-ink); }

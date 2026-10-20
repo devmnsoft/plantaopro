@@ -252,3 +252,35 @@ body.pp-a360 main .btn-outline-light {
 .btn-outline-info { --bs-btn-color: #0e7490; --bs-btn-border-color: #0e7490; --bs-btn-hover-bg: #0e7490; --bs-btn-hover-border-color: #0e7490; --bs-btn-active-bg: #0a5668; --bs-btn-active-border-color: #0a5668; }
 .btn-outline-danger { --bs-btn-color: #b42336; --bs-btn-border-color: #b42336; --bs-btn-hover-bg: #b42336; --bs-btn-hover-border-color: #b42336; --bs-btn-active-bg: #871b2a; --bs-btn-active-border-color: #871b2a; }
 .btn-outline-secondary { --bs-btn-color: #66727c; --bs-btn-border-color: #66727c; --bs-btn-hover-bg: #66727c; --bs-btn-hover-border-color: #66727c; --bs-btn-active-bg: #4c565f; --bs-btn-active-border-color: #4c565f; }
+
+/* --- 9) Mapa unico de estados: tom -> tinta/fundo (R71) ----------------------
+   Fonte unica da cor de estado do produto. O pareamento estado -> tom/icone
+   vive em backend/PlantaoPro.Web/Localization/EstadoVisual.cs e o componente
+   <partial name="_StatusBadge"> emite a classe de tom pp-status--<tom>.
+   Regra R71: nenhum outro arquivo pode definir cor de estado com valor
+   proprio — camadas que precisarem pintar estado consomem os tokens
+   --pp-tone-<tom>-ink | --pp-tone-<tom>-soft definidos aqui (auditavel em
+   docs/evidencias/2026-10-20-rodada-71/r71_audit_mapa.ps1). Os tons
+   continuam os da paleta funcional R69 (secao 8): passam AA sobre branco,
+   sobre a pagina (#f4f8fb) e sobre os fundos soft abaixo. */
+:root {
+    --pp-tone-success-ink: #087a4d;
+    --pp-tone-success-soft: #e8f7f0;
+    --pp-tone-warning-ink: #b45309;
+    --pp-tone-warning-soft: #fff4d8;
+    --pp-tone-info-ink: #0e7490;
+    --pp-tone-info-soft: #e8f2ff;
+    --pp-tone-danger-ink: #b42336;
+    --pp-tone-danger-soft: #ffeaed;
+    --pp-tone-secondary-ink: #66727c;
+    --pp-tone-secondary-soft: #e8eef5;
+}
+
+/* R71-MAPA-ESTADOS: componente canonico de estado (icone + texto). */
+.pp-status { display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .6rem; border-radius: 999px; border: 1px solid currentColor; font-size: .72rem; font-weight: 700; line-height: 1.2; text-transform: capitalize; white-space: nowrap; }
+.pp-status .bi { font-size: .85em; line-height: 1; }
+.pp-status--success { color: var(--pp-tone-success-ink); background: var(--pp-tone-success-soft); }
+.pp-status--warning { color: var(--pp-tone-warning-ink); background: var(--pp-tone-warning-soft); }
+.pp-status--info { color: var(--pp-tone-info-ink); background: var(--pp-tone-info-soft); }
+.pp-status--danger { color: var(--pp-tone-danger-ink); background: var(--pp-tone-danger-soft); }
+.pp-status--secondary { color: var(--pp-tone-secondary-ink); background: var(--pp-tone-secondary-soft); }

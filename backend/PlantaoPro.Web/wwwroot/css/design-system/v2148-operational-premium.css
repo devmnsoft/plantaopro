@@ -176,10 +176,10 @@ html { scrollbar-gutter: stable; }
 .pp-table-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .35rem; }
 .pp-table-actions .btn { min-height: 2.25rem; }
 .pp-status-badge { display: inline-flex; align-items: center; min-height: 1.65rem; padding: .24rem .55rem; border-radius: 999px; font-size: .68rem; font-weight: 800; letter-spacing: .025em; }
-.pp-status-badge.is-success { color: #0a684b; background: #e4f6ed; }
-.pp-status-badge.is-warning { color: #85520d; background: #fff1d6; }
-.pp-status-badge.is-danger { color: #97283a; background: #fde8eb; }
-.pp-status-badge.is-muted { color: #52636f; background: #eaf0f3; }
+.pp-status-badge.is-success { color: var(--pp-tone-success-ink, #087a4d); background: var(--pp-tone-success-soft, #e8f7f0); }
+.pp-status-badge.is-warning { color: var(--pp-tone-warning-ink, #b45309); background: var(--pp-tone-warning-soft, #fff4d8); }
+.pp-status-badge.is-danger { color: var(--pp-tone-danger-ink, #b42336); background: var(--pp-tone-danger-soft, #ffeaed); }
+.pp-status-badge.is-muted { color: var(--pp-tone-secondary-ink, #66727c); background: var(--pp-tone-secondary-soft, #e8eef5); }
 
 .pp-error-page { display: grid; grid-template-columns: auto minmax(0, 34rem); justify-content: center; align-items: center; gap: 1.25rem; min-height: min(28rem, 60dvh); padding: clamp(1.5rem, 5vw, 4rem); border: 1px solid var(--pp-v2148-line); border-radius: 1.2rem; background: #fff; box-shadow: var(--pp-v2148-shadow); }
 .pp-error-page__icon { display: grid; width: 4rem; height: 4rem; place-items: center; border-radius: 1.1rem; color: var(--pp-v2148-danger); background: #fdecef; }

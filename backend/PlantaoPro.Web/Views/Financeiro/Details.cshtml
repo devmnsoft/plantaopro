@@ -3,8 +3,7 @@
     var pg = Model.Data;
     ViewData["Title"] = "Detalhes do pagamento";
     var status = (pg?.Status ?? "pendente").Trim().ToLowerInvariant();
-    var statusIcon = status switch { "pago" => "bi-check-circle-fill", "cancelado" or "recusado" => "bi-x-octagon-fill", _ => "bi-clock-history" };
-    var statusText = string.IsNullOrWhiteSpace(pg?.Status) ? "Pendente" : pg.Status;
+    var estadoPag = EstadoVisual.Interpretar(pg?.Status);
     var pixSeguro = string.IsNullOrWhiteSpace(pg?.ChavePix) ? "Não informada" : $"•••• •••• {pg.ChavePix[^Math.Min(4, pg.ChavePix.Length)..]}";
 }
 
@@ -35,7 +34,7 @@
             <p><i class="bi bi-hospital" aria-hidden="true"></i> @pg.HospitalNome · @pg.EspecialidadeNome</p>
         </div>
         <div class="pp-payment-status-block">
-            <span class="pp-payment-status status-@status"><i class="bi @statusIcon" aria-hidden="true"></i> @statusText</span>
+            <partial name="_StatusBadge" model="@pg.Status" />
             <small>Registrado em @pg.RegDate.ToString("dd/MM/yyyy 'às' HH:mm")</small>
         </div>
     </section>
@@ -114,7 +113,7 @@
             else
             {
                 <section class="pp-payment-state pp-payment-state--compact">
-                    <i class="bi @statusIcon" aria-hidden="true"></i><div><h2>Pagamento @statusText</h2><p>@(status == "pago" ? "Quitação registrada. Uma contestação não desfaz este pagamento; o financeiro deve tratar eventual estorno separadamente." : "Não há ações disponíveis para este status.")</p></div>
+                    <i class="bi @estadoPag.Icone" aria-hidden="true"></i><div><h2>Pagamento @(string.IsNullOrWhiteSpace(pg.Status) ? "Pendente" : estadoPag.Rotulo)</h2><p>@(status == "pago" ? "Quitação registrada. Uma contestação não desfaz este pagamento; o financeiro deve tratar eventual estorno separadamente." : "Não há ações disponíveis para este status.")</p></div>
                 </section>
             }
 

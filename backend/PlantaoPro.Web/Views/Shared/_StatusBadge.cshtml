@@ -1,34 +1,9 @@
 @model string?
 @{
-    var rawStatus = (Model ?? string.Empty).Trim();
-    var normalizedStatus = rawStatus.ToLowerInvariant();
-    normalizedStatus = normalizedStatus
-        .Replace(" ", "-")
-        .Replace("_", "-")
-        .Replace("á", "a")
-        .Replace("à", "a")
-        .Replace("ã", "a")
-        .Replace("â", "a")
-        .Replace("é", "e")
-        .Replace("ê", "e")
-        .Replace("í", "i")
-        .Replace("ó", "o")
-        .Replace("õ", "o")
-        .Replace("ô", "o")
-        .Replace("ú", "u")
-        .Replace("ç", "c");
-    if (string.IsNullOrWhiteSpace(normalizedStatus))
-    {
-        normalizedStatus = "indefinido";
-    }
-    var label = string.IsNullOrWhiteSpace(rawStatus) ? "N/A" : rawStatus;
-    var icon = normalizedStatus switch
-    {
-        "pago" or "conferido" or "aprovado" or "concluido" => "bi-check-circle-fill",
-        "rejeitado" or "cancelado" => "bi-x-circle-fill",
-        "divergente" or "com-divergencia" => "bi-exclamation-diamond-fill",
-        "pendente" or "aguardando" or "aguardando-aprovacao" => "bi-clock-fill",
-        _ => "bi-info-circle-fill"
-    };
+    // R71: componente canonico de estado — sempre icone + texto (nunca cor sozinha).
+    // O pareamento estado->tom/icone vem do mapa unico EstadoVisual; a cor do tom
+    // vive somente na camada canonica v2151 (secao 9, tokens --pp-tone-*).
+    var estado = EstadoVisual.Interpretar(Model);
+    var rotulo = estado.Rotulo.Replace('_', ' ').Replace('-', ' ');
 }
-<span class="status-badge pp-semantic-badge status-@normalizedStatus" role="status" aria-label="Status: @label"><i class="bi @icon" aria-hidden="true"></i>@label.Replace('_', ' ')</span>
+<span class="status-badge pp-status pp-status--@estado.Tom status-@estado.Nome" role="status" aria-label="Status: @rotulo"><i class="bi @estado.Icone" aria-hidden="true"></i><span data-status-label>@rotulo</span></span>

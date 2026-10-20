@@ -37,7 +37,7 @@
 .pp-governance-notice{display:flex;gap:1rem;align-items:flex-start;margin:1rem 0 1.5rem;padding:1rem 1.25rem;background:linear-gradient(135deg,var(--pp-governance-soft),#fff)}
 .pp-governance-notice i{color:var(--pp-governance-accent);font-size:1.4rem}.pp-governance-notice p{margin:.25rem 0 0}
 .pp-status-badge{display:inline-flex;border-radius:999px;padding:.3rem .65rem;font-size:.75rem;font-weight:700;letter-spacing:.02em}
-.pp-status-badge--source{color:#3730a3;background:#e0e7ff}.pp-status-badge--unknown{color:#854d0e;background:#fef9c3}.pp-status-badge--unavailable{color:#9f1239;background:#ffe4e6}
+.pp-status-badge--source{color:var(--pp-tone-info-ink,#0e7490);background:var(--pp-tone-info-soft,#e8f2ff)}.pp-status-badge--unknown{color:var(--pp-tone-warning-ink,#b45309);background:var(--pp-tone-warning-soft,#fff4d8)}.pp-status-badge--unavailable{color:var(--pp-tone-danger-ink,#b42336);background:var(--pp-tone-danger-soft,#ffeaed)}
 .pp-admin-governance .btn:disabled,.pp-governance-panel .btn:disabled{cursor:not-allowed;opacity:.72}
 @media(max-width:991px){.pp-governance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:639px){.pp-governance-grid{grid-template-columns:1fr}.pp-governance-card,.pp-governance-panel{padding:1rem}.pp-governance-card .pp-card-actions{display:flex;width:100%;flex-direction:column;align-items:stretch}.pp-governance-card .btn{min-height:44px}.pp-governance-notice{align-items:flex-start}}

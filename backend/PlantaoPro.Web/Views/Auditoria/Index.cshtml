@@ -77,7 +77,7 @@
                             <td data-label="Ação"><span class="pp-status-badge is-warning">@log.Acao</span></td>
                             <td data-label="Entidade">@log.Entidade</td>
                             <td data-label="IP">@(string.IsNullOrWhiteSpace(log.IpOrigem) ? "Não informado" : log.IpOrigem)</td>
-                            <td data-label="Status"><span class="pp-status-badge @(log.Sucesso ? "is-success" : "is-danger")">@(log.Sucesso ? "Sucesso" : "Falha")</span></td>
+                            <td data-label="Status"><partial name="_StatusBadge" model='@(log.Sucesso ? "Sucesso" : "Falha")' /></td>
                             <td data-label="Ações"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@log.Id" aria-label="Abrir detalhes do evento de @log.DataHora.ToString("dd/MM/yyyy HH:mm")">Detalhes</a></td>
                         </tr>
                     }

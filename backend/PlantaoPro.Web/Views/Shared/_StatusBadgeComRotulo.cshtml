@@ -1,0 +1,10 @@
+@model StatusRotulo
+@{
+    // R71: variante rotulada do badge canonico — tom e icone derivados do estado,
+    // texto exibido = rotulo amigavel fornecido pela view.
+    var estado = EstadoVisual.Interpretar(Model.Status);
+    var rotulo = string.IsNullOrWhiteSpace(Model.Rotulo)
+        ? estado.Rotulo.Replace('_', ' ').Replace('-', ' ')
+        : Model.Rotulo;
+}
+<span class="status-badge pp-status pp-status--@estado.Tom status-@estado.Nome" role="status" aria-label="Status: @rotulo"><i class="bi @estado.Icone" aria-hidden="true"></i><span data-status-label>@rotulo</span></span>

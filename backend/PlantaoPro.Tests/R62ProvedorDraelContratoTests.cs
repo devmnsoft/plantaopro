@@ -78,7 +78,7 @@ public sealed class R62ProvedorDraelContratoTests : IAsyncLifetime
         var view = File.ReadAllText(Path.Combine(RepositoryPathResolver.RepoRoot,
             "backend", "PlantaoPro.Web", "Views", "AssistenteIa", "Index.cshtml"), System.Text.Encoding.UTF8);
         // IA da casa lidera a lista de provedores (principal e reserva) na tela de configuração.
-        Assert.Contains("string[] provedores = new[] { \"drael\", \"groq\", \"gemini\", \"deepseek\" };", view);
+        Assert.Contains("string[] provedores = new[] { \"drael\", \"groq\", \"gemini\", \"deepseek\", \"mistral\" };", view);
         Assert.Contains("Drael — IA da casa", view);
 
         // Contrato de banco: a migration v2356 estende os checks com 'drael' e está

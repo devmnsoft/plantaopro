@@ -378,7 +378,10 @@ public sealed class R16ScanFormBindingFonteTests
         "AtivarDepartamento",
         // Cotacoes/Detalhes.cshtml L572: painel IA POST via fetch (data-ai-url
         // /Administrativo360/Cotacoes/{id}/AnaliseIa, R20) — nao existe <form>.
-        "AnaliseIa"
+        "AnaliseIa",
+        // _AnexosBloco.cshtml (R72): remocao via fetch — literal da rota
+        // ('/Administrativo360/Anexos/Remover') montado no proprio bloco JS do partial.
+        "Remover"
     };
 
     // FANTASMA — zero pontos de chamada no Web (nem <form>, nem literal de URL) com a cadeia

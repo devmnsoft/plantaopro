@@ -1,0 +1,6 @@
+ARQ_VERIFICADOS=24
+DOCSCAN_BAD=4
+BAD=backend/PlantaoPro.Web/Views/Administrativo360/Colaboradores.cshtml
+BAD=backend/PlantaoPro.Web/wwwroot/css/pages/administrativo360-tema-claro.css
+BAD=database/pgadmin/instalar_no_banco_atual.sql
+BAD=database/scrpt_completo.sql

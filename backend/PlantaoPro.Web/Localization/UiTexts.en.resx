@@ -944,7 +944,7 @@
     <value>The indicators below use only the real results of the current page.</value>
   </data>
   <data name="Shift.TipFilter" xml:space="preserve">
-    <value>Filter the operation on the server.</value>
+    <value>The filter is applied to all records, not just the current page.</value>
   </data>
   <data name="Shift.TipRisk" xml:space="preserve">
     <value>Prioritize coverage risks.</value>
@@ -1121,7 +1121,7 @@
     <value>Records respect the current institution.</value>
   </data>
   <data name="Clinical.PhTipSensitive" xml:space="preserve">
-    <value>Sensitive data does not appear in technical logs.</value>
+    <value>Sensitive data does not appear in system records.</value>
   </data>
   <data name="Clinical.PhProfileNotes" xml:space="preserve">
     <value>The screen adapts the operation for reception, triage, doctor, finance and payers.</value>
@@ -1325,7 +1325,7 @@
     <value>Auditable form scoped to your institution, with no clinical data exposed in event records.</value>
   </data>
   <data name="Clinical.FormHiddenHint" xml:space="preserve">
-    <value>Health 360 form with validation, antiforgery and data preservation in case of error.</value>
+    <value>Health 360 form with validation, duplicate-submission protection and data preservation in case of error.</value>
   </data>
   <data name="Clinical.SectionPersonalData" xml:space="preserve">
     <value>Personal data</value>
@@ -1814,7 +1814,7 @@
     <value>Refresh</value>
   </data>
   <data name="Implantacao.Loading" xml:space="preserve">
-    <value>Loading real information from the API...</value>
+    <value>Loading real information from the system...</value>
   </data>
   <data name="Implantacao.KpisAria" xml:space="preserve">
     <value>Implementation KPIs</value>
@@ -2051,7 +2051,7 @@
     <value>Management Dashboard</value>
   </data>
   <data name="Adm360.Dash.CapDashboardDesc" xml:space="preserve">
-    <value>Metrics computed through real SQL queries.</value>
+    <value>Metrics computed from real system data.</value>
   </data>
   <data name="Adm360.Dash.CapabilityEnabled" xml:space="preserve">
     <value>Enabled</value>
@@ -2865,7 +2865,7 @@
     <value>not calculable (zero sale)</value>
   </data>
   <data name="Adm360.Produtos.JsPrevLocal" xml:space="preserve">
-    <value> — local preview; the official calculation is recomputed on the server when saving.</value>
+    <value> — local preview; the official value is calculated when you save.</value>
   </data>
   <data name="Adm360.Produtos.JsProcessando" xml:space="preserve">
     <value>Processing...</value>

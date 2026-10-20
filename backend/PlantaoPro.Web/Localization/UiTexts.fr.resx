@@ -944,7 +944,7 @@
     <value>Les indicateurs ci-dessous n'utilisent que les résultats réels de la page actuelle.</value>
   </data>
   <data name="Shift.TipFilter" xml:space="preserve">
-    <value>Filtrez l'opération sur le serveur.</value>
+    <value>Le filtre s'applique à tous les enregistrements, pas seulement à la page actuelle.</value>
   </data>
   <data name="Shift.TipRisk" xml:space="preserve">
     <value>Priorisez les risques de couverture.</value>
@@ -1121,7 +1121,7 @@
     <value>Les enregistrements respectent l'institution actuelle.</value>
   </data>
   <data name="Clinical.PhTipSensitive" xml:space="preserve">
-    <value>Les données sensibles n'apparaissent pas dans les logs techniques.</value>
+    <value>Les données sensibles n'apparaissent pas dans les registres du système.</value>
   </data>
   <data name="Clinical.PhProfileNotes" xml:space="preserve">
     <value>L'écran adapte l'opération pour l'accueil, le triage, le médecin, le financier et les assurances.</value>
@@ -1325,7 +1325,7 @@
     <value>Formulaire auditable limité au périmètre de votre institution, sans exposition de données cliniques dans les journaux d'événements.</value>
   </data>
   <data name="Clinical.FormHiddenHint" xml:space="preserve">
-    <value>Formulaire Santé 360 avec validation, antiforgery et conservation des données en cas d'erreur.</value>
+    <value>Formulaire Santé 360 avec validation, protection contre l'envoi en double et conservation des données en cas d'erreur.</value>
   </data>
   <data name="Clinical.SectionPersonalData" xml:space="preserve">
     <value>Données personnelles</value>
@@ -1814,7 +1814,7 @@
     <value>Actualiser</value>
   </data>
   <data name="Implantacao.Loading" xml:space="preserve">
-    <value>Chargement des informations réelles de l'API...</value>
+    <value>Chargement des informations réelles du système...</value>
   </data>
   <data name="Implantacao.KpisAria" xml:space="preserve">
     <value>KPIs de la mise en œuvre</value>
@@ -2051,7 +2051,7 @@
     <value>Tableau de Bord de Gestion</value>
   </data>
   <data name="Adm360.Dash.CapDashboardDesc" xml:space="preserve">
-    <value>Métriques et statistiques calculées par requêtes SQL réelles.</value>
+    <value>Métriques et statistiques calculées à partir des données réelles du système.</value>
   </data>
   <data name="Adm360.Dash.CapabilityEnabled" xml:space="preserve">
     <value>Activée</value>

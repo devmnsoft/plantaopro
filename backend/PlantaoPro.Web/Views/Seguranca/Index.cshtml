@@ -13,7 +13,7 @@
     <div class="row g-3 mb-4">
         @foreach (var item in new[] { "Usuários ativos", "Usuários bloqueados", "Sem perfil", "Sem instituição", "Logins com falha", "Sessões ativas", "Sessões revogadas", "Acessos negados" })
         {
-            <div class="col-12 col-sm-6 col-lg-3"><article class="card shadow-sm h-100"><div class="card-body"><span class="text-muted small">@item</span><strong class="d-block fs-3">—</strong><span class="badge text-bg-light">Dados persistidos via API</span></div></article></div>
+            <div class="col-12 col-sm-6 col-lg-3"><article class="card shadow-sm h-100"><div class="card-body"><span class="text-muted small">@item</span><strong class="d-block fs-3">—</strong><span class="badge text-bg-light">Dados carregados do sistema</span></div></article></div>
         }
     </div>
     <div class="row g-3">

@@ -204,7 +204,7 @@
                     {
                         @foreach (var it in f.Itens)
                         {
-                            // R20 (r20b1 F-R20-B): a API não envia "tipo" no item; a classificação é
+                            // R20 (r20b1 F-R20-B): a resposta não envia "tipo" no item; a classificação é
                             // derivada dos valores transportados (realizado x previsto receber/pagar).
                             var ehRealizado = it.RealizadoEntrada > 0m || it.RealizadoSaida > 0m;
                             var ehPrevistoReceber = !ehRealizado && it.PrevistoEntrada > 0m;

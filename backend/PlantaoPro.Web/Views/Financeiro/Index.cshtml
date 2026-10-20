@@ -69,7 +69,7 @@
     <div class="pp-empty-state" data-financial-status-honest data-glosa-rules data-repasse-rules>
         <i class="bi bi-calendar2-x"></i>
         <h5>Sem pagamentos</h5>
-        <p>A API não retornou lançamentos para os filtros atuais. Isso não significa saldo zero, pagamento pendente, glosa ou repasse.</p><p><strong>Glosas e repasses:</strong> serão exibidos somente quando a fonte financeira fornecer registros vinculados.</p>
+        <p>Não encontramos lançamentos para os filtros atuais. Isso não significa saldo zero, pagamento pendente, glosa ou repasse.</p><p><strong>Glosas e repasses:</strong> serão exibidos somente quando a fonte financeira fornecer registros vinculados.</p>
     </div>
 }
 else
@@ -104,7 +104,7 @@ else
                         <td class="text-end">
                             <div class="action-buttons">
                                 <a class="btn btn-sm btn-soft-primary" asp-action="Details" asp-route-id="@p.Id">Detalhes</a>
-                                <span class="pp-locked-action"><button class="btn btn-sm btn-soft-success" type="button" disabled title="Use o detalhe; a confirmação exige status pendente, valor e endpoint transacional.">Confirmar</button></span>
+                                <span class="pp-locked-action"><button class="btn btn-sm btn-soft-success" type="button" disabled title="Use o detalhe; a confirmação exige status pendente e valor informado.">Confirmar</button></span>
                                 <span class="pp-locked-action"><button class="btn btn-sm btn-soft-danger" type="button" disabled title="Use o detalhe; o cancelamento exige um lançamento real e justificativa.">Cancelar</button></span>
                             </div>
                         </td>

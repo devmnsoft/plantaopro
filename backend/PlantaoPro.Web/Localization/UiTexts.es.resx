@@ -944,7 +944,7 @@
     <value>Los indicadores de abajo usan solo los resultados reales de la página actual.</value>
   </data>
   <data name="Shift.TipFilter" xml:space="preserve">
-    <value>Filtre la operación en el servidor.</value>
+    <value>El filtro se aplica a todos los registros, no solo a la página actual.</value>
   </data>
   <data name="Shift.TipRisk" xml:space="preserve">
     <value>Priorice riesgos de cobertura.</value>
@@ -1121,7 +1121,7 @@
     <value>Los registros respetan la institución actual.</value>
   </data>
   <data name="Clinical.PhTipSensitive" xml:space="preserve">
-    <value>Los datos sensibles no aparecen en los logs técnicos.</value>
+    <value>Los datos sensibles no aparecen en los registros del sistema.</value>
   </data>
   <data name="Clinical.PhProfileNotes" xml:space="preserve">
     <value>La pantalla adapta la operación para recepción, triaje, médico, finanzas y aseguradoras.</value>
@@ -1325,7 +1325,7 @@
     <value>Formulario auditable con alcance de su institución y sin exposición de datos clínicos en los registros de eventos.</value>
   </data>
   <data name="Clinical.FormHiddenHint" xml:space="preserve">
-    <value>Formulario Salud 360 con validación, antiforgery y preservación de datos en caso de error.</value>
+    <value>Formulario Salud 360 con validación, protección contra envío duplicado y preservación de datos en caso de error.</value>
   </data>
   <data name="Clinical.SectionPersonalData" xml:space="preserve">
     <value>Datos personales</value>
@@ -1814,7 +1814,7 @@
     <value>Actualizar</value>
   </data>
   <data name="Implantacao.Loading" xml:space="preserve">
-    <value>Cargando información real de la API...</value>
+    <value>Cargando información real del sistema...</value>
   </data>
   <data name="Implantacao.KpisAria" xml:space="preserve">
     <value>KPIs de la implementación</value>
@@ -2051,7 +2051,7 @@
     <value>Panel Gerencial</value>
   </data>
   <data name="Adm360.Dash.CapDashboardDesc" xml:space="preserve">
-    <value>Métricas y estadísticas calculadas mediante consultas reales en SQL.</value>
+    <value>Métricas y estadísticas calculadas con los datos reales del sistema.</value>
   </data>
   <data name="Adm360.Dash.CapabilityEnabled" xml:space="preserve">
     <value>Habilitado</value>

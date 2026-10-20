@@ -12,7 +12,7 @@
     }
     else if (!Model.HasSubscription)
     {
-        <section class="pp-empty-state pp-empty-state--featured" aria-labelledby="subscription-empty-title"><span class="pp-icon-surface" aria-hidden="true"><i class="bi bi-link-45deg"></i></span><h2 id="subscription-empty-title">Assinatura ainda não vinculada</h2><p>A API não retornou um vínculo contratual para esta organização. Plano, preço, limites, consumo e cobranças permanecem ocultos para não apresentar estimativas como dados reais.</p><a class="btn btn-outline-primary" asp-controller="Configuracoes" asp-action="Index">Abrir central administrativa</a></section>
+        <section class="pp-empty-state pp-empty-state--featured" aria-labelledby="subscription-empty-title"><span class="pp-icon-surface" aria-hidden="true"><i class="bi bi-link-45deg"></i></span><h2 id="subscription-empty-title">Assinatura ainda não vinculada</h2><p>Não encontramos um vínculo contratual para esta organização. Plano, preço, limites, consumo e cobranças permanecem ocultos para não apresentar estimativas como dados reais.</p><a class="btn btn-outline-primary" asp-controller="Configuracoes" asp-action="Index">Abrir central administrativa</a></section>
     }
     else
     {
@@ -26,7 +26,7 @@
         <div class="pp-subscription-layout">
             <main class="pp-subscription-main">
                 <section class="pp-card pp-subscription-section" aria-labelledby="usage-title"><div class="pp-section-header"><div><span class="pp-eyebrow">Capacidade</span><h2 id="usage-title">Limites e uso</h2><p>Valores disponibilizados pela fonte contratual, sem projeções.</p></div></div>
-                    @if (Model.Limites.Count == 0 && Model.Uso.Count == 0) { <div class="pp-inline-empty"><i class="bi bi-bar-chart" aria-hidden="true"></i><div><strong>Consumo não informado</strong><p>A API ainda não disponibilizou limites ou uso para este contrato.</p></div></div> }
+                    @if (Model.Limites.Count == 0 && Model.Uso.Count == 0) { <div class="pp-inline-empty"><i class="bi bi-bar-chart" aria-hidden="true"></i><div><strong>Consumo não informado</strong><p>Limites e uso ainda não foram informados para este contrato.</p></div></div> }
                     else { <div class="table-responsive"><table class="pp-data-table"><thead><tr><th scope="col">Métrica</th><th scope="col">Origem</th><th scope="col">Valor</th></tr></thead><tbody>@foreach (var item in Model.Limites) { <tr><th scope="row">@item.Nome</th><td>Limite contratado</td><td>@item.Valor</td></tr> }@foreach (var item in Model.Uso) { <tr><th scope="row">@item.Nome</th><td>Uso atual</td><td>@item.Valor</td></tr> }</tbody></table></div> }
                 </section>
                 <section class="pp-card pp-subscription-section" aria-labelledby="billing-title"><div class="pp-section-header"><div><span class="pp-eyebrow">Cobranças</span><h2 id="billing-title">Histórico de cobrança</h2><p>Somente eventos registrados na cobrança.</p></div></div>

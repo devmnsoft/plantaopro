@@ -1404,6 +1404,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2362_r72_anexos_arquivos",
+                            "source":  "database/migrations/2026_10_v2362_r72_anexos_arquivos.sql",
+                            "checksum":  "fae123b2a7b3b8b40155764f70c17105c0c43385074bc8ca38d789551ea0e5e2",
+                            "dependsOn":  [
+                                              "2026_10_v2361_r71c_ai_provedor_mistral"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

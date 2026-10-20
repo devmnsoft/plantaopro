@@ -1,0 +1,244 @@
+@model PlantaoPro.Web.Models.AnexosBlocoViewModel
+@{
+    // Instancia estavel por pagina: categoria + prefixo do registro (ou "modal" quando aberto sob demanda).
+    var sufixo = (Model.EntidadeId?.ToString("N") ?? "modal");
+    var uid = (Model.Categoria.ToLowerInvariant() + "-" + sufixo[..Math.Min(8, sufixo.Length)]).Replace('-', '_');
+}
+<div class="anexos-bloco" id="anexos-@uid"
+     data-categoria="@Model.Categoria"
+     data-entidade-id="@(Model.EntidadeId?.ToString("N") ?? "")">
+    <div class="anexos-status alert small py-2 d-none" role="status"></div>
+    <form class="row g-2 align-items-end mb-2 anexos-form" data-single-submit>
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="categoria" class="anexos-categoria" value="@Model.Categoria" />
+        <input type="hidden" name="entidadeId" class="anexos-entidade" value="@(Model.EntidadeId?.ToString("N") ?? "")" />
+        <div class="col-md-5">
+            <label class="form-label small fw-bold mb-1" for="anexosArq-@uid">Arquivo <span class="text-danger">*</span></label>
+            <input type="file" class="form-control form-control-sm anexos-arquivo" id="anexosArq-@uid"
+                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.gif" required />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small fw-bold mb-1" for="anexosObs-@uid">Observação</label>
+            <input type="text" class="form-control form-control-sm anexos-obs" id="anexosObs-@uid"
+                   name="observacao" maxlength="160" placeholder="Ex.: contrato, foto do documento, nota fiscal" />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-primary anexos-enviar">
+                <i class="bi bi-upload me-1" aria-hidden="true"></i>Enviar arquivo
+            </button>
+        </div>
+    </form>
+    <div class="form-text small mb-2">@Model.Ajuda</div>
+    <ul class="list-group list-group-flush small anexos-lista">
+        <li class="list-group-item py-2 text-muted">Sem documentos anexados.</li>
+    </ul>
+</div>
+
+<script>
+// R72: bloco de anexos (PDF/Word/imagem) — fetch para os endpoints do proxy web
+// (CSRF via input oculto incluido no FormData + wrapper global de window.fetch do layout).
+(function () {
+    var apiBase = '/Administrativo360/Anexos';
+    // Literal completo da rota de remocao: o gate de binding (R16/R21) casa esta
+    // string em quotes na view para manter a acao classificada como JS-driven
+    // (fetch sem <form> estatico) na whitelist auto-verificada.
+    var rotaRemover = '/Administrativo360/Anexos/Remover';
+    var maxBytes = 8 * 1024 * 1024;
+
+    if (!window.PPAnexos) {
+        window.PPAnexos = {
+            formatarTamanho: function (bytes) {
+                if (!bytes || bytes <= 0) return '0 B';
+                if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+                if (bytes >= 1024) return Math.round(bytes / 1024) + ' KB';
+                return bytes + ' B';
+            },
+            abrir: function (raiz) {
+                if (raiz && typeof window.PPAnexos._carregar === 'function') window.PPAnexos._carregar(raiz);
+            }
+        };
+    }
+    window.PPAnexos._carregar = null; // preenchido ao montar o primeiro bloco
+
+    function statusDe(raiz) { return raiz.querySelector('.anexos-status'); }
+    function listaDe(raiz) { return raiz.querySelector('.anexos-lista'); }
+
+    function mostrarStatus(raiz, texto, tipo) {
+        var el = statusDe(raiz);
+        if (!el) return;
+        el.textContent = texto || '';
+        el.classList.remove('d-none', 'alert-success', 'alert-danger');
+        if (texto) {
+            el.classList.add(tipo === 'erro' ? 'alert-danger' : 'alert-success');
+        } else {
+            el.classList.add('d-none');
+        }
+    }
+
+    function itemLista(raiz, it) {
+        var li = document.createElement('li');
+        li.className = 'list-group-item py-2 gap-2 d-flex justify-content-between align-items-start flex-wrap';
+
+        var info = document.createElement('span');
+        info.style.wordBreak = 'break-word';
+
+        var linha1 = document.createElement('span');
+        var icone = document.createElement('i');
+        icone.className = 'bi bi-file-earmark me-1';
+        icone.setAttribute('aria-hidden', 'true');
+        var nome = document.createElement('span');
+        nome.className = 'fw-semibold';
+        nome.textContent = it.nomeOriginal || 'arquivo';
+        linha1.appendChild(icone);
+        linha1.appendChild(nome);
+        info.appendChild(linha1);
+
+        var meta = document.createElement('div');
+        meta.className = 'text-muted';
+        try {
+            meta.textContent = window.PPAnexos.formatarTamanho(it.tamanho) + ' · ' + new Date(it.criadoEm).toLocaleString('pt-BR');
+        } catch (e) {
+            meta.textContent = window.PPAnexos.formatarTamanho(it.tamanho);
+        }
+        info.appendChild(meta);
+
+        if (it.observacao) {
+            var obs = document.createElement('div');
+            obs.className = 'text-muted fst-italic';
+            obs.textContent = it.observacao;
+            info.appendChild(obs);
+        }
+
+        var acoes = document.createElement('span');
+        acoes.className = 'btn btn-sm btn-outline-secondary anexos-remover px-2 py-0';
+        acoes.setAttribute('role', 'button');
+        acoes.setAttribute('tabindex', '0');
+        acoes.title = 'Remover documento';
+        acoes.dataset.anexoId = it.id;
+        acoes.innerHTML = '<i class="bi bi-trash me-1"></i>Remover';
+
+        var baixar = document.createElement('a');
+        baixar.href = apiBase + '/Baixar/' + it.id;
+        baixar.className = 'btn btn-sm btn-outline-primary px-2 py-0 me-1';
+        baixar.innerHTML = '<i class="bi bi-download me-1"></i>Baixar';
+
+        li.appendChild(info);
+        li.appendChild(baixar);
+        li.appendChild(acoes);
+
+        acoes.addEventListener('click', function () { remover(raiz, it.id, acoes); });
+        acoes.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); remover(raiz, it.id, acoes); }
+        });
+        return li;
+    }
+
+    function carregar(raiz) {
+        var cat = raiz.dataset.categoria;
+        var ent = raiz.dataset.entidadeId || '';
+        var listaEl = listaDe(raiz);
+        listaEl.innerHTML = '<li class="list-group-item py-2 text-muted">Carregando…</li>';
+        var url = apiBase + '/Lista?categoria=' + encodeURIComponent(cat) + (ent ? '&entidadeId=' + encodeURIComponent(ent) : '');
+        fetch(url, { headers: { 'Accept': 'application/json' } })
+            .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('http')); })
+            .then(function (itens) {
+                listaEl.innerHTML = '';
+                if (!itens || itens.length === 0) {
+                    var vazio = document.createElement('li');
+                    vazio.className = 'list-group-item py-2 text-muted';
+                    vazio.textContent = 'Sem documentos anexados.';
+                    listaEl.appendChild(vazio);
+                    return;
+                }
+                itens.forEach(function (it) { listaEl.appendChild(itemLista(raiz, it)); });
+            })
+            .catch(function () {
+                listaEl.innerHTML = '<li class="list-group-item py-2 text-danger">Não foi possível carregar os documentos agora.</li>';
+            });
+    }
+
+    // Confirmação em duas etapas no proprio botao (estado textual + cor): o primeiro
+    // clique arma a acao e o segundo executa. Evita o dialogo nativo do navegador
+    // (proibido pelo gate de homologacao) sem abrir modal novo dentro de modal.
+    function armarRemocao(btn) {
+        if (btn.dataset.anexosArmando === '1') return true;
+        btn.dataset.anexosArmando = '1';
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-outline-danger');
+        btn.title = 'A remoção não pode ser desfeita. Clique novamente para confirmar.';
+        btn.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Confirmar remoção?';
+        setTimeout(function () { desarmarRemocao(btn); }, 6000);
+        return false;
+    }
+
+    function desarmarRemocao(btn) {
+        btn.dataset.anexosArmando = '';
+        btn.classList.remove('btn-outline-danger');
+        btn.classList.add('btn-outline-secondary');
+        btn.title = 'Remover documento';
+        btn.innerHTML = '<i class="bi bi-trash me-1"></i>Remover';
+    }
+
+    function remover(raiz, id, btn) {
+        if (!armarRemocao(btn)) return;
+        mostrarStatus(raiz, '', null);
+        fetch(rotaRemover + '/' + id, { method: 'POST' })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (res && res.ok) { carregar(raiz); }
+                else { mostrarStatus(raiz, (res && res.erro) || 'Não foi possível remover o arquivo.', 'erro'); }
+            })
+            .catch(function () { mostrarStatus(raiz, 'Falha de conexão ao remover o arquivo.', 'erro'); });
+    }
+
+    function ligarEnvio(raiz) {
+        var form = raiz.querySelector('.anexos-form');
+        if (!form || form.dataset.anexosLigado === '1') return;
+        form.dataset.anexosLigado = '1';
+        form.addEventListener('submit', function (ev) {
+            ev.preventDefault();
+            var arquivoInput = form.querySelector('.anexos-arquivo');
+            var botao = form.querySelector('.anexos-enviar');
+            var arquivo = arquivoInput ? arquivoInput.files[0] : null;
+            if (!arquivo) {
+                mostrarStatus(raiz, 'Selecione um arquivo para enviar.', 'erro');
+                return;
+            }
+            if (arquivo.size > maxBytes) {
+                mostrarStatus(raiz, 'O arquivo excede o limite de 8 MB.', 'erro');
+                return;
+            }
+            var fd = new FormData(form);
+            if (botao) { botao.disabled = true; botao.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Enviando…'; }
+            fetch(apiBase + '/Upload', { method: 'POST', body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (botao) { botao.disabled = false; botao.innerHTML = '<i class="bi bi-upload me-1"></i>Enviar arquivo'; }
+                    if (res && res.ok) {
+                        mostrarStatus(raiz, 'Arquivo enviado com sucesso.', null);
+                        form.reset();
+                        carregar(raiz);
+                    } else {
+                        mostrarStatus(raiz, (res && res.erro) || 'Não foi possível enviar o arquivo.', 'erro');
+                    }
+                })
+                .catch(function () {
+                    if (botao) { botao.disabled = false; botao.innerHTML = '<i class="bi bi-upload me-1"></i>Enviar arquivo'; }
+                    mostrarStatus(raiz, 'Falha de conexão ao enviar o arquivo.', 'erro');
+                });
+        });
+    }
+
+    var raiz = document.getElementById('anexos-@uid');
+    if (raiz) {
+        window.PPAnexos._carregar = carregar;
+        ligarEnvio(raiz);
+        if (raiz.dataset.entidadeId) {
+            carregar(raiz);
+        } else {
+            var listaEl = listaDe(raiz);
+            listaEl.innerHTML = '<li class="list-group-item py-2 text-muted">Abra um registro para ver e enviar documentos.</li>';
+        }
+    }
+})();
+</script>

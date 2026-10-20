@@ -207,5 +207,6 @@
     "database/seeds/system/090_notificacoes.sql":  "8131520e5a8419ec144e4341f6e4d502d2c08fc600e3a73022352fe6d6a09c0c",
     "database/seeds/system/100_status_operacionais.sql":  "80db8de1ece47e4e865653963f6c06dea96a25eb124dc200f356d4a08510fdf8",
     "database/seeds/system/110_configuracoes_runtime.sql":  "b5cf4e3cbe7ca237a50a4da5ff5312f7f34f7bf8d499ee94f0cf0a068e608728",
-    "database/migrations/2026_10_v2361_r71c_ai_provedor_mistral.sql":  "0f3f15038bfde6d08b2f1619c431f0ca81f542a383e79ee8a4fb7fff8b408bd7"
+    "database/migrations/2026_10_v2361_r71c_ai_provedor_mistral.sql":  "0f3f15038bfde6d08b2f1619c431f0ca81f542a383e79ee8a4fb7fff8b408bd7",
+    "database/migrations/2026_10_v2362_r72_anexos_arquivos.sql":  "fae123b2a7b3b8b40155764f70c17105c0c43385074bc8ca38d789551ea0e5e2"
 }

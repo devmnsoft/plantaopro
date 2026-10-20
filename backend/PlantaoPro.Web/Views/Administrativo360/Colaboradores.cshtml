@@ -11,6 +11,11 @@
     var total = Model.Pagina.Total;
     var fimItem = Math.Min((long)Model.Page * Model.Pagina.PageSize, total);
     var iniItem = total == 0 ? 0L : fimItem - Model.Pagina.PageSize + 1;
+    var anexosColabVm = new PlantaoPro.Web.Models.AnexosBlocoViewModel
+    {
+        Categoria = "FUNCIONARIO",
+        Ajuda = "Os documentos ficam vinculados a este colaborador específico. Formatos: PDF, Word (.doc/.docx) e imagens. Até 8 MB por arquivo."
+    };
 }
 
 @section Styles {
@@ -144,6 +149,7 @@
                                             </td>
                                             <td class="text-end">
                                                 <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-outline-secondary" data-anexos-colab data-id="@item.Id" data-nome="@item.Nome" title="Documentos do colaborador (PDF, Word, imagem)" aria-label="Documentos de @item.Nome"><i class="bi bi-paperclip"></i></button>
                                                     <button type="button" class="btn btn-outline-primary" data-editar-colab data-id="@item.Id" data-nome="@item.Nome" data-email="@item.Email" title="Editar dados de contato" aria-label="Editar @item.Nome"><i class="bi bi-pencil"></i></button>
                                                     @if (item.Status == "ATIVO")
                                                     {
@@ -300,6 +306,25 @@
         </div>
     </div>
 
+    <!-- Modal: documentos do colaborador (anexos R72) -->
+    <div class="modal fade" id="modalAnexosColab" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark text-light border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title"><i class="bi bi-paperclip me-2 text-info"></i>Documentos do Colaborador</h5>
+                    <span id="anexosColabRotulo" class="text-secondary small ms-2"></span>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <partial name="_AnexosBloco" model="anexosColabVm" />
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if (Model.Editar is not null)
     {
         <span id="editarInicial" class="d-none" data-id="@Model.Editar.Id" data-nome="@Model.Editar.Nome" data-email="@Model.Editar.Email"></span>
@@ -337,6 +362,19 @@
                 bootstrap.Modal.getOrCreateInstance(modalEditar).show();
             }
 
+            function abrirAnexosColab(id, nome) {
+                var rotulo = document.getElementById('anexosColabRotulo');
+                if (rotulo) rotulo.textContent = nome || '';
+                var raiz = document.getElementById('anexos-funcionario-modal');
+                if (raiz) {
+                    raiz.dataset.entidadeId = id;
+                    var campoEntidade = raiz.querySelector('.anexos-entidade');
+                    if (campoEntidade) campoEntidade.value = id;
+                    if (window.PPAnexos) window.PPAnexos.abrir(raiz);
+                }
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAnexosColab')).show();
+            }
+
             var modaisStatus = {
                 AFASTADO: { titulo: 'Afastar colaborador?', texto: '"NOME" será marcado como AFASTADO. O colaborador deixa de ser elegível para novas contratações até ser reativado.' },
                 DESLIGADO: { titulo: 'Desligar colaborador?', texto: '"NOME" será marcado como DESLIGADO. Contratos vigentes NÃO são encerrados automaticamente — encerre-os individualmente após esta ação. O histórico fica preservado.' },
@@ -356,6 +394,8 @@
                 tabela.addEventListener('click', function (e) {
                     var ed = e.target.closest('[data-editar-colab]');
                     if (ed) abrirEdicao(ed.dataset.id, ed.dataset.nome, ed.dataset.email);
+                    var an = e.target.closest('[data-anexos-colab]');
+                    if (an) abrirAnexosColab(an.dataset.id, an.dataset.nome);
                     var st = e.target.closest('[data-status-colab]');
                     if (st) abrirStatus(st.dataset.alvo, st.dataset.id, st.dataset.nome);
                 });

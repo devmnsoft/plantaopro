@@ -229,6 +229,7 @@ builder.Services.AddScoped<ICaixaRepository>(sp => new CaixaRepository(GetConn(s
 builder.Services.AddScoped<IAdm360FinanceiroRelatoriosRepository>(sp => new Adm360FinanceiroRelatoriosRepository(GetConn(sp)));
 builder.Services.AddScoped<ICotacoesRepository>(sp => new CotacoesRepository(GetConn(sp)));
 builder.Services.AddScoped<IDocumentosXmlRepository>(sp => new DocumentosXmlRepository(GetConn(sp)));
+builder.Services.AddScoped<IAnexosArquivosRepository>(sp => new AnexosArquivosRepository(GetConn(sp)));
 builder.Services.AddScoped<IGestaoDashboardRepository>(sp => new GestaoDashboardRepository(GetConn(sp)));
 builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();

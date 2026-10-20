@@ -27,6 +27,14 @@
     };
 
     var situacao = Model.Nota?.Resumo.Situacao?.ToUpperInvariant();
+
+    // R72: bloco de anexos da pré-nota (PDF/Word/imagem) — entidade existe pós-criação.
+    var anexosNotaVm = new PlantaoPro.Web.Models.AnexosBlocoViewModel
+    {
+        Categoria = "NOTA_FISCAL",
+        EntidadeId = Model.Nota?.Resumo.Id,
+        Ajuda = "Anexe a nota fiscal emitida ou documentos de apoio: PDF, Word (.doc/.docx) ou imagem. Até 8 MB por arquivo."
+    };
 }
 
 <div class="container-fluid py-3">
@@ -282,6 +290,13 @@
                         </tr>
                     </tfoot>
                 </table>
+            </div>
+        </div>
+
+        <div class="card bg-dark border-secondary mt-3">
+            <div class="card-header bg-dark p-2 text-light small fw-bold text-uppercase"><i class="bi bi-paperclip me-1"></i>Documentos da Nota (PDF, Word, Imagem)</div>
+            <div class="card-body">
+                <partial name="/Views/Administrativo360/_AnexosBloco.cshtml" model="anexosNotaVm" />
             </div>
         </div>
     }

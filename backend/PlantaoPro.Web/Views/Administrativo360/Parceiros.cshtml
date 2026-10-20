@@ -1,6 +1,11 @@
 @model PlantaoPro.Web.Models.ParceirosIndexViewModel
 @{
     ViewData["Title"] = "Parceiros — Administrativo 360";
+    var anexosParceiroVm = new PlantaoPro.Web.Models.AnexosBlocoViewModel
+    {
+        Categoria = "EMPRESA",
+        Ajuda = "Documentos desta empresa: contrato, CNPJ, fotos e notas fiscais em PDF, Word ou imagem. Até 8 MB por arquivo."
+    };
 }
 
 <div class="container-fluid py-3">
@@ -162,6 +167,10 @@
                                             onclick="editarParceiro('@p.Id', '@p.Nome', '@p.Documento', @p.Fornecedor.ToString().ToLower(), @p.Ativo.ToString().ToLower(), @p.EhHospital.ToString().ToLower(), @p.EhPagador.ToString().ToLower(), @p.EhCliente.ToString().ToLower())" aria-label="Editar parceiro">
                                         <i class="bi bi-pencil"></i>
                                     </button>
+                                    <button class="btn btn-outline-secondary btn-sm py-0 px-2 me-1" type="button"
+                                            onclick="abrirAnexosParceiro('@p.Id', '@p.Nome')" title="Documentos da empresa (PDF, Word, imagem)" aria-label="Documentos de @p.Nome">
+                                        <i class="bi bi-paperclip"></i>
+                                    </button>
                                     <form method="post" asp-action="AlternarStatusParceiro" class="d-inline" onsubmit="return desabilitarAoEnviar(this);">
                                         <input type="hidden" name="id" value="@p.Id" />
                                         <input type="hidden" name="ativo" value="@((!p.Ativo).ToString().ToLower())" />
@@ -275,8 +284,40 @@
     </div>
 </div>
 
+<!-- Modal de Documentos da Empresa (anexos R72) -->
+<div class="modal fade" id="modalAnexosParceiro" tabindex="-1" aria-labelledby="modalAnexosParceiroLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold" id="modalAnexosParceiroLabel"><i class="bi bi-paperclip me-2"></i>Documentos da Empresa</h5>
+                <span id="anexosParceiroRotulo" class="text-muted small ms-2"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body p-4">
+                <partial name="_AnexosBloco" model="anexosParceiroVm" />
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script>
+    function abrirAnexosParceiro(id, nome) {
+        var rotulo = document.getElementById('anexosParceiroRotulo');
+        if (rotulo) rotulo.textContent = nome || '';
+        var raiz = document.getElementById('anexos-empresa-modal');
+        if (raiz) {
+            raiz.dataset.entidadeId = id;
+            var campoEntidade = raiz.querySelector('.anexos-entidade');
+            if (campoEntidade) campoEntidade.value = id;
+            if (window.PPAnexos) window.PPAnexos.abrir(raiz);
+        }
+        new bootstrap.Modal(document.getElementById('modalAnexosParceiro')).show();
+    }
+
     function abrirModalNovoParceiro() {
         document.getElementById('modalParceiroLabel').innerText = 'Novo Parceiro';
         document.getElementById('parceiroId').value = '';

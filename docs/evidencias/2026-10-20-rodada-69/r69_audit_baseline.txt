@@ -1,0 +1,378 @@
+== R69 auditoria WCAG AA de contraste (texto/fundo) ==
+Total arquivos parseados: 73
+Total regras com par color+fundo resolvido: 274
+
+--- A) Tokens canonicos x superficies (tokens.css) ---
+OK         texto primario sobre surface               fg=#10213a bg=#ffffff ratio=16,15 req=4,5
+OK         texto primario sobre pagina                fg=#10213a bg=#f4f8fb ratio=15,12 req=4,5
+OK         texto primario sobre subtle                fg=#10213a bg=#f8fafd ratio=15,44 req=4,5
+OK         texto primario sobre hover-bg              fg=#10213a bg=#edf4fc ratio=14,57 req=4,5
+OK         texto secundario sobre surface             fg=#405a80 bg=#ffffff ratio=7,02 req=4,5
+OK         texto secundario sobre pagina              fg=#405a80 bg=#f4f8fb ratio=6,57 req=4,5
+OK         texto secundario sobre hover-bg            fg=#405a80 bg=#edf4fc ratio=6,33 req=4,5
+OK         texto muted sobre surface                  fg=#607482 bg=#ffffff ratio=4,86 req=4,5
+OK         texto muted sobre pagina                   fg=#607482 bg=#f4f8fb ratio=4,55 req=4,5
+OK         texto soft sobre surface                   fg=#64748b bg=#ffffff ratio=4,76 req=4,5
+FALHA      texto soft sobre pagina                    fg=#64748b bg=#f4f8fb ratio=4,46 req=4,5
+OK         texto inverso sobre superficie inversa     fg=#ffffff bg=#0b2a52 ratio=14,31 req=4,5
+OK         sidebar texto sobre navy                   fg=#ffffff bg=#0b2a52 ratio=14,31 req=4,5
+OK         sidebar muted sobre navy                   fg=#c6d7eb bg=#0b2a52 ratio=9,76 req=4,5
+OK         clinico texto sobre clinico bg             fg=#0f172a bg=#f4f8fb ratio=16,72 req=4,5
+OK         clinico muted sobre clinico bg             fg=#475569 bg=#f4f8fb ratio=7,1 req=4,5
+OK         sucesso sobre soft                         fg=#087a4d bg=#e8f7f0 ratio=4,87 req=4,5
+OK         sucesso sobre branco                       fg=#087a4d bg=#ffffff ratio=5,38 req=4,5
+OK         alerta sobre soft                          fg=#805000 bg=#fff4d8 ratio=6,26 req=4,5
+OK         alerta sobre branco                        fg=#805000 bg=#ffffff ratio=6,85 req=4,5
+OK         perigo sobre soft                          fg=#c33b46 bg=#ffeaed ratio=4,52 req=4,5
+OK         perigo sobre branco                        fg=#c33b46 bg=#ffffff ratio=5,21 req=4,5
+OK         info sobre soft                            fg=#176ba0 bg=#e8f2ff ratio=5,09 req=4,5
+OK         info sobre branco                          fg=#176ba0 bg=#ffffff ratio=5,76 req=4,5
+OK         branco sobre sucesso                       fg=#ffffff bg=#087a4d ratio=5,38 req=4,5
+OK         branco sobre alerta                        fg=#ffffff bg=#805000 ratio=6,85 req=4,5
+OK         branco sobre perigo                        fg=#ffffff bg=#c33b46 ratio=5,21 req=4,5
+OK         branco sobre info                          fg=#ffffff bg=#176ba0 ratio=5,76 req=4,5
+OK         branco sobre brand primary                 fg=#ffffff bg=#1d6fe9 ratio=4,66 req=4,5
+OK         branco sobre brand primary hover           fg=#ffffff bg=#1a63d8 ratio=5,5 req=4,5
+OK         branco sobre brand dark                    fg=#ffffff bg=#0b2a52 ratio=14,31 req=4,5
+OK         branco sobre brand ink                     fg=#ffffff bg=#0e1d33 ratio=16,91 req=4,5
+OK         branco sobre navy-900                      fg=#ffffff bg=#0a2238 ratio=16,17 req=4,5
+OK         branco sobre blue-600                      fg=#ffffff bg=#2563eb ratio=5,17 req=4,5
+OK         acento teal como indicador (nao-texto)     fg=#ffffff bg=#0d9488 ratio=3,74 req=3
+OK         acento cyan como indicador (nao-texto)     fg=#ffffff bg=#0891b2 ratio=3,68 req=3
+OK         acento green como indicador (nao-texto)    fg=#ffffff bg=#16a34a ratio=3,3 req=3
+OK         acento amber como indicador (nao-texto)    fg=#ffffff bg=#d97706 ratio=3,19 req=3
+OK         acento accent como indicador (nao-texto)   fg=#ffffff bg=#0891a6 ratio=3,74 req=3
+OK         branco sobre color success                 fg=#ffffff bg=#087a4d ratio=5,38 req=4,5
+OK         branco sobre color warning                 fg=#ffffff bg=#a15c00 ratio=5,19 req=4,5
+OK         branco sobre color danger                  fg=#ffffff bg=#b42336 ratio=6,49 req=4,5
+OK         focus ring sobre pagina (nao-texto)        fg=#1d6fe9 bg=#f4f8fb ratio=4,37 req=3
+OK         brand primary sobre pagina (nao-texto)     fg=#1d6fe9 bg=#f4f8fb ratio=4,37 req=3
+
+--- B) Pares self-contained por regra (cascade efetivo) ---
+OK       ratio=6,76   req=4,5  sel=#capsLockWarning:not(.d-none) fg=#7a4b00 bg=#fff4d6 file=design-system\clinical.css
+OK       ratio=16,15  req=4,5  sel=.action-filter input,.action-filter select fg=#10213a bg=#ffffff file=design-system\operations.css
+INFO     ratio=4,19   req=4,5  sel=.action-tabs a.is-active fg=#1d6fe9 bg=#eaf4ff file=design-system\operations.css
+OK       ratio=8,04   req=4,5  sel=.alert-warning:has(+ .pp-app-shell), body > .alert-warning:first-child fg=#674300 bg=#fff4d4 file=design-system\v2132-premium-global.css
+OK       ratio=13,85  req=4,5  sel=.auth-environment-notice fg=#09243c bg=#e8f1fb file=demo-access.css
+OK       ratio=12,55  req=4,5  sel=.auth-environment-notice fg=#e8fbfc bg=rgb(4 20 38 / .88) file=design-system\components.css
+OK       ratio=7,34   req=4,5  sel=.auth-password-toggle fg=#1549ab bg=#eaf4ff file=design-system\components.css
+OK       ratio=4,87   req=4,5  sel=.auth-security fg=#087a4d bg=#e8f7f0 file=design-system\components.css
+OK       ratio=5,11   req=4,5  sel=.auth-security fg=#506b7d bg=#edf6f5 file=design-system\v2000-premium.css
+OK       ratio=5,49   req=4,5  sel=.auth-security fg=#526579 bg=#eef6fb file=design-system\clinical.css
+OK       ratio=14,31  req=4,5  sel=.auth-story fg=#ffffff bg=#0b2a52 file=design-system\components.css
+OK       ratio=7,31   req=4,5  sel=.availability-feedback.is-error fg=#9b1c2c bg=#fff0f1 file=pages\minha-disponibilidade.css
+OK       ratio=6,4    req=4,5  sel=.availability-feedback:not(:empty) fg=#126548 bg=#eaf7f2 file=pages\minha-disponibilidade.css
+OK       ratio=15,78  req=4,5  sel=.availability-hero fg=#fff bg=#0b2341 file=pages\minha-disponibilidade.css
+OK       ratio=8,16   req=4,5  sel=.btn-check:checked + .btn-primary,
+.btn-check:active + .btn-primary fg=#fff bg=#1549ab file=design-system\v2150-bloco-c-canonical.css
+OK       ratio=8,16   req=4,5  sel=.btn-context:hover fg=#fff bg=#1549ab file=design-system\components.css
+OK       ratio=7,85   req=4,5  sel=.btn-context fg=#1549ab bg=#f7fbff file=design-system\components.css
+OK       ratio=9,65   req=4,5  sel=.btn-light, .btn-outline-secondary fg=#29485c bg=rgba(255,255,255,.74) file=design-system\v2000-premium.css
+OK       ratio=5,88   req=4,5  sel=.btn-primary fg=#fff bg=#096f7b file=design-system\v2000-premium.css
+OK       ratio=15,42  req=4,5  sel=.card-header fg=#0a2238 bg=#f7fafb file=design-system\v2010-screen-polish.css
+OK       ratio=10,16  req=4,5  sel=.cc-button fg=#09201d bg=#63dcc3 file=pages\command-center.css
+OK       ratio=16,11  req=4,5  sel=.cc-filters input,.cc-filters select fg=#e8f1f2 bg=#0b1519 file=pages\command-center.css
+OK       ratio=13,75  req=4,5  sel=.cc-journey a fg=#dce8ed bg=#111d22 file=pages\command-center.css
+OK       ratio=15,63  req=4,5  sel=.central-context fg=#fff bg=#10243e file=pages\minha-central.css
+OK       ratio=4,86   req=4,5  sel=.clinical-journey i fg=#0f766e bg=#ccfbf1 file=design-system\clinical.css
+OK       ratio=7,4    req=4,5  sel=.clinical-status fg=#07554e bg=#d9f2ee file=design-system\clinical-workspace.css
+OK       ratio=9,28   req=4,5  sel=.context-pill.is-global fg=#4c1d95 bg=#f3e8ff file=design-system\v2146-pending-notifications.css
+OK       ratio=8,76   req=4,5  sel=.context-pill fg=#164e63 bg=#ecfeff file=design-system\v2146-pending-notifications.css
+INFO     ratio=4,19   req=4,5  sel=.day-shortcuts a>i:first-child fg=#1d6fe9 bg=#eaf4ff file=pages\meu-dia.css
+OK       ratio=4,73   req=3    sel=.demo-empty-state__icon fg=#087681 bg=#dff5f5 file=design-system\v2000-premium.css
+OK       ratio=9,68   req=4,5  sel=.empty-state fg=#26435f bg=#f4f9ff file=design-system\components.css
+OK       ratio=4,29   req=3    sel=.empty-state-icon, .pp-icon-surface fg=#087f8c bg=#e9f6f6 file=design-system\v2010-screen-polish.css
+OK       ratio=4,18   req=3    sel=.empty-state-icon fg=#087f8c bg=#dff5f5 file=design-system\v2000-premium.css
+OK       ratio=4,66   req=3    sel=.empty-state-icon fg=#1268d3 bg=#e7f1fd file=design-system\v2120-premium-final-polish.css
+OK       ratio=7,34   req=3    sel=.empty-state-icon fg=#1549ab bg=#eaf4ff file=design-system\components.css
+OK       ratio=8,96   req=4,5  sel=.executive-intelligence .table-modern thead th fg=#294950 bg=#f1f7f6 file=design-system\v2124-operational-intelligence.css
+OK       ratio=16,15  req=4,5  sel=.form-control, .form-select fg=#10213a bg=#ffffff file=design-system\components.css
+OK       ratio=15,7   req=4,5  sel=.form-control, .form-select fg=#10243b bg=#fff file=design-system\v2000-premium.css
+OK       ratio=14,55  req=4,5  sel=.form-control,.form-select,.pp-form-control fg=#172b3a bg=#fff file=design-system\v2000-premium.css
+OK       ratio=17,85  req=4,5  sel=.form-control.bg-dark,
+.form-select.bg-dark fg=#0f172a bg=#fff file=design-system\v2150-bloco-c-canonical.css
+OK       ratio=17,85  req=4,5  sel=.form-control.bg-dark:focus,
+.form-select.bg-dark:focus fg=#0f172a bg=#fff file=design-system\v2150-bloco-c-canonical.css
+OK       ratio=14,63  req=4,5  sel=.form-control::file-selector-button fg=#212529 bg=#f8f9fa file=vendor\bootstrap.min.css
+OK       ratio=14,63  req=4,5  sel=.form-control::-webkit-file-upload-button fg=#212529 bg=#f8f9fa file=vendor\bootstrap.min.css
+OK       ratio=15,43  req=4,5  sel=.form-control:focus fg=#212529 bg=#fff file=vendor\bootstrap.min.css
+OK       ratio=15,43  req=4,5  sel=.form-control fg=#212529 bg=#fff file=vendor\bootstrap.min.css
+OK       ratio=15,43  req=4,5  sel=.form-select fg=#212529 bg=#fff file=vendor\bootstrap.min.css
+OK       ratio=14,63  req=4,5  sel=.input-group-text fg=#212529 bg=#f8f9fa file=vendor\bootstrap.min.css
+OK       ratio=7,89   req=4,5  sel=.intelligence-empty fg=#31545a bg=#f6fbfa file=design-system\v2124-operational-intelligence.css
+OK       ratio=5,97   req=3    sel=.intelligence-guide__icon fg=#07665e bg=#dff4f0 file=design-system\v2124-operational-intelligence.css
+OK       ratio=4,53   req=4,5  sel=.invalid-tooltip fg=#fff bg=#dc3545 file=vendor\bootstrap.min.css
+OK       ratio=5,49   req=4,5  sel=.is-next .pp-status-pill fg=#076b75 bg=#dff5f3 file=design-system\v2145-onboarding-help.css
+OK       ratio=7,34   req=3    sel=.kpi-icon fg=#1549ab bg=#eaf4ff file=design-system\components.css
+OK       ratio=13,92  req=4,5  sel=.mark,mark fg=#212529 bg=#fff3cd file=vendor\bootstrap.min.css
+OK       ratio=4,66   req=4,5  sel=.nav-link-app.active fg=#fff bg=#1d6fe9 file=design-system\navigation.css
+CTX      ratio=1,16   req=4,5  sel=.nav-link-app.active fg=#fff bg=rgb(56 171 179 / .16) file=design-system\v2000-premium.css
+CTX      ratio=1      req=4,5  sel=.nav-link-app:hover fg=#fff bg=rgb(255 255 255 / 7%) file=design-system\v2000-premium.css
+CTX      ratio=1      req=4,5  sel=.nav-link-app:hover fg=#fff bg=rgb(255 255 255/.1) file=design-system\navigation.css
+CTX      ratio=1,01   req=4,5  sel=.nav-link-app:hover fg=#fff bg=rgba(212, 245, 245, .07) file=design-system\v2000-premium.css
+OK       ratio=4,66   req=3    sel=.next-action-spotlight__icon fg=#fff bg=#1d6fe9 file=pages\meu-dia.css
+FALHA    ratio=1,04   req=4,5  sel=.operation-command__hero .btn-outline-primary fg=#e9ffff bg=rgba(255,255,255,.04) file=design-system\v2000-premium.css
+OK       ratio=6,58   req=4,5  sel=.operation-view-switcher a:hover,.operation-view-switcher a.is-active fg=#075e69 bg=#dff5f5 file=design-system\v2000-premium.css
+OK       ratio=4,18   req=3    sel=.page-header-icon fg=#087f8c bg=#dff5f5 file=design-system\v2000-premium.css
+OK       ratio=4,75   req=4,5  sel=.pagination .active > .page-link fg=#fff bg=#087f8c file=design-system\v2000-premium.css
+OK       ratio=6,29   req=4,5  sel=.pp-a360-org .badge.bg-dark fg=#405a80 bg=#eef3f9 file=pages\administrativo360-organizacao.css
+OK       ratio=15,44  req=4,5  sel=.pp-a360-org .card.bg-dark > .card-header,
+.pp-a360-org .card-header.bg-dark fg=#10213a bg=#f8fafd file=pages\administrativo360-organizacao.css
+OK       ratio=16,15  req=4,5  sel=.pp-a360-org .card.bg-dark,
+.pp-a360-org .card.bg-black fg=#10213a bg=#ffffff file=pages\administrativo360-organizacao.css
+OK       ratio=16,15  req=4,5  sel=.pp-a360-org .modal-content.bg-dark fg=#10213a bg=#ffffff file=pages\administrativo360-organizacao.css
+OK       ratio=6,71   req=4,5  sel=.pp-a360-org .table-dark > :not(caption) > tr > th fg=#405a80 bg=#f8fafd file=pages\administrativo360-organizacao.css
+OK       ratio=14,57  req=4,5  sel=.pp-a360-org .table-dark.table-hover > tbody > tr:hover > * fg=#10213a bg=#edf4fc file=pages\administrativo360-organizacao.css
+INFO     ratio=4,19   req=4,5  sel=.pp-account-card__avatar fg=#1d6fe9 bg=#eaf4ff file=design-system\workspaces.css
+OK       ratio=4,25   req=3    sel=.pp-action-card__icon fg=#087f8c bg=#e8f5f5 file=design-system\v2000-premium.css
+OK       ratio=4,19   req=3    sel=.pp-action-card__icon fg=#1d6fe9 bg=#eaf4ff file=design-system\workspaces.css
+OK       ratio=14,03  req=4,5  sel=.pp-ai-panel__text fg=#1f2937 bg=#f8fafc file=design-system\assistente-ia.css
+OK       ratio=14,68  req=4,5  sel=.pp-ai-panel fg=#1f2937 bg=#ffffff file=design-system\assistente-ia.css
+OK       ratio=7,56   req=4,5  sel=.pp-alert--error,.pp-error-panel,.pp-error-banner fg=#991b1b bg=#fff1f2 file=design-system\feedback.css
+OK       ratio=8,36   req=4,5  sel=.pp-alert--info,.pp-info-panel,.pp-info-banner fg=#174b7a bg=#eff7ff file=design-system\feedback.css
+OK       ratio=6,81   req=4,5  sel=.pp-alert--success,.pp-success-panel,.pp-success-banner fg=#166534 bg=#f0fdf4 file=design-system\feedback.css
+OK       ratio=8,36   req=4,5  sel=.pp-alert--warning,.pp-warning-panel,.pp-warning-banner,.pp-update-banner fg=#713f12 bg=#fffbeb file=design-system\feedback.css
+OK       ratio=9,67   req=4,5  sel=.pp-assisted-context fg=#513b00 bg=#fff4cf file=design-system\v2133-real-screens.css
+OK       ratio=8,2    req=4,5  sel=.pp-auth-body .pp-error-panel:not(:empty) fg=#8f2020 bg=#fff5f5 file=auth-login-v2127.css
+OK       ratio=6,87   req=4,5  sel=.pp-auth-body .pp-login-delay fg=#75500b bg=#fff9e9 file=design-system\v2141-premium-cockpit.css
+OK       ratio=16,59  req=4,5  sel=.pp-auth-brand-panel fg=#fff bg=#071f3a file=design-system\clinical.css
+OK       ratio=8,68   req=4,5  sel=.pp-auth-context-message fg=#124b6c bg=#eff8fd file=design-system\v2141-premium-cockpit.css
+OK       ratio=7,34   req=4,5  sel=.pp-avatar fg=#1549ab bg=#eaf4ff file=design-system\components.css
+OK       ratio=4,52   req=4,5  sel=.pp-badge--danger fg=#c33b46 bg=#ffeaed file=design-system\badges.css
+OK       ratio=5,09   req=4,5  sel=.pp-badge--info fg=#176ba0 bg=#e8f2ff file=design-system\badges.css
+OK       ratio=6,49   req=4,5  sel=.pp-badge--neutral fg=#475569 bg=#e8eef5 file=design-system\badges.css
+OK       ratio=5,17   req=4,5  sel=.pp-badge--primary fg=#1a5fd0 bg=#e8f2ff file=design-system\badges.css
+OK       ratio=4,87   req=4,5  sel=.pp-badge--success fg=#087a4d bg=#e8f7f0 file=design-system\badges.css
+OK       ratio=6,26   req=4,5  sel=.pp-badge--warning fg=#805000 bg=#fff4d8 file=design-system\badges.css
+OK       ratio=13,57  req=4,5  sel=.pp-body fg=#102c3d bg=#f4f8fb file=design-system\v2116-premium-review.css
+OK       ratio=4,7    req=3    sel=.pp-calendar-empty__icon fg=#08795f bg=#e1f4ef file=pages\v2119-shift-operations.css
+OK       ratio=7,09   req=4,5  sel=.pp-chip-list li fg=#174ea6 bg=#edf4ff file=design-system\saas.css
+OK       ratio=9,2    req=4,5  sel=.pp-client-validation-summary fg=#7a271a bg=#fff5f4 file=design-system\v2126-form-feedback.css
+OK       ratio=21     req=4,5  sel=.pp-closing-blockers fg=#000 bg=#fff file=design-system\financial.css
+OK       ratio=10,62  req=4,5  sel=.pp-closing-blockers fg=#513500 bg=#fff8df file=design-system\financial.css
+OK       ratio=6,31   req=3    sel=.pp-confirm-icon fg=#805000 bg=#fff5dc file=design-system\v2010-screen-polish.css
+OK       ratio=6,37   req=3    sel=.pp-confirm-icon fg=#92400e bg=#fef3c7 file=design-system\feedback.css
+OK       ratio=6,8    req=3    sel=.pp-confirm-modal-danger .pp-confirm-icon fg=#991b1b bg=#fee2e2 file=design-system\feedback.css
+OK       ratio=4,71   req=3    sel=.pp-confirm-modal-danger .pp-confirm-icon fg=#c33b46 bg=#fff0f1 file=design-system\v2010-screen-polish.css
+OK       ratio=6,49   req=3    sel=.pp-confirm-modal-success .pp-confirm-icon fg=#166534 bg=#dcfce7 file=design-system\v2151-wp-c-ajuste-canonical.css
+OK       ratio=16,61  req=4,5  sel=.pp-content fg=#111827 bg=#f4f8fb file=design-system\v2137-global-ux.css
+OK       ratio=8,73   req=4,5  sel=.pp-content-container .alert-info fg=#164d58 bg=#eef9f7 file=design-system\v2123-saas-operations.css
+OK       ratio=7,93   req=4,5  sel=.pp-content-container .alert-warning fg=#604b1c bg=#fff9e9 file=design-system\v2123-saas-operations.css
+OK       ratio=4,66   req=4,5  sel=.pp-content-container .btn-primary,
+.pp-content-container .button-primary fg=#fff bg=#1d6fe9 file=design-system\v2150-bloco-c-canonical.css
+OK       ratio=8,16   req=4,5  sel=.pp-content-container .btn-primary:active,
+.pp-content-container .button-primary:active fg=#fff bg=#1549ab file=design-system\v2150-bloco-c-canonical.css
+OK       ratio=5,5    req=4,5  sel=.pp-content-container .btn-primary:hover,
+.pp-content-container .button-primary:hover,
+... fg=#fff bg=#1a63d8 file=design-system\v2150-bloco-c-canonical.css
+OK       ratio=7,03   req=4,5  sel=.pp-content-container .table > thead th fg=#36586a bg=#f1f7f8 file=design-system\v2123-saas-operations.css
+OK       ratio=9,95   req=4,5  sel=.pp-context-bar.is-global .pp-context-bar__actions .btn-outline-primary:hover fg=#092a43 bg=#8ce3df file=design-system\v2148-operational-premium.css
+CTX      ratio=1,81   req=3    sel=.pp-context-bar.is-global .pp-context-bar__icon fg=#9cc3fb bg=rgb(255 255 255 / 12%) file=design-system\v2151-wp-c-ajuste-canonical.css
+CTX      ratio=1      req=3    sel=.pp-context-bar.is-global .pp-context-bar__icon fg=#fff bg=rgb(255 255 255 / 12%) file=design-system\v2148-operational-premium.css
+OK       ratio=14,75  req=4,5  sel=.pp-context-bar.is-global fg=#fff bg=#092a43 file=design-system\v2148-operational-premium.css
+OK       ratio=6,4    req=3    sel=.pp-context-bar__icon fg=#086170 bg=#e7f6f5 file=design-system\v2148-operational-premium.css
+OK       ratio=5,26   req=3    sel=.pp-context-bar__icon fg=#1a5fd0 bg=#eaf4ff file=design-system\v2151-wp-c-ajuste-canonical.css
+OK       ratio=6,17   req=4,5  sel=.pp-coverage-badge.is-covered fg=#126548 bg=#dcf6e9 file=design-system\operations.css
+OK       ratio=5,54   req=4,5  sel=.pp-coverage-badge.is-open,.pp-risk-badge fg=#a9362d bg=#fee9e7 file=design-system\operations.css
+OK       ratio=4,87   req=4,5  sel=.pp-data-source fg=#087a4d bg=#e8f7f0 file=design-system\premium-operations.css
+OK       ratio=5,92   req=3    sel=.pp-data-state__icon fg=#076773 bg=#e7f6f6 file=design-system\v2133-real-screens.css
+OK       ratio=14,47  req=4,5  sel=.pp-data-table th fg=#0b2443 bg=#f3f7fa file=design-system\clinical.css
+OK       ratio=4,65   req=4,5  sel=.pp-data-table th fg=#607482 bg=#f8fafb file=design-system\clinical.css
+OK       ratio=4,65   req=4,5  sel=.pp-data-table th fg=#607482 bg=#f8fafd file=design-system\components.css
+OK       ratio=4,6    req=4,5  sel=.pp-detail-drawer__status fg=#087e89 bg=#f8fafb file=design-system\drawers.css
+OK       ratio=15,05  req=4,5  sel=.pp-empty-state__visual fg=#fff bg=#0b2747 file=design-system\components.css
+OK       ratio=6,03   req=3    sel=.pp-error-page__icon fg=#a9283b bg=#fdecef file=design-system\v2148-operational-premium.css
+OK       ratio=7,82   req=4,5  sel=.pp-error-panel:not(:empty) fg=#8e2635 bg=#fff3f4 file=design-system\v2000-premium.css
+OK       ratio=6,84   req=4,5  sel=.pp-field-warning fg=#92400e bg=#fffbeb file=design-system\assistente-ia.css
+OK       ratio=14,55  req=4,5  sel=.pp-form-control, .pp-form-field > :where(input, select, textarea), .pp-password-field ... fg=#172b3a bg=#fff file=design-system\forms.css
+OK       ratio=5,21   req=4,5  sel=.pp-form-error::before,.field-validation-error:not(:empty)::before fg=#fff bg=#c33b46 file=design-system\feedback.css
+OK       ratio=4,83   req=4,5  sel=.pp-form-error:not(:empty)::before fg=#ffffff bg=#dc2626 file=design-system\forms.css
+OK       ratio=5,58   req=3    sel=.pp-future-empty-state .empty-state-icon fg=#176596 bg=#e8f3fa file=design-system\v2010-screen-polish.css
+OK       ratio=16,59  req=4,5  sel=.pp-global-command-grid>a fg=#071f3a bg=#fff file=design-system\v2139-premium-library.css
+OK       ratio=11,95  req=4,5  sel=.pp-global-module-map a fg=#173a50 bg=#fff file=design-system\v2140-guided-journeys.css
+OK       ratio=13,59  req=4,5  sel=.pp-global-scope-banner fg=#dbeafe bg=#071f3a file=design-system\v2137-global-ux.css
+OK       ratio=4,81   req=4,5  sel=.pp-guided-empty>i fg=#176bc0 bg=#eaf3ff file=design-system\v2121-saas-guided.css
+OK       ratio=4,66   req=4,5  sel=.pp-guided-journey__steps .is-current a > span fg=#fff bg=#1d6fe9 file=design-system\v2151-wp-c-ajuste-canonical.css
+OK       ratio=7,01   req=4,5  sel=.pp-guided-journey__steps .is-current a fg=#075e56 bg=#eaf8f5 file=design-system\v2140-guided-journeys.css
+OK       ratio=7,34   req=4,5  sel=.pp-guided-journey__steps .is-current a fg=#1549ab bg=#eaf4ff file=design-system\v2151-wp-c-ajuste-canonical.css
+OK       ratio=5,36   req=4,5  sel=.pp-guided-journey__steps .is-current a>span fg=#fff bg=#08786d file=design-system\v2140-guided-journeys.css
+OK       ratio=5,72   req=4,5  sel=.pp-guided-journey__steps a > span fg=#48617f bg=#edf3fb file=design-system\v2151-wp-c-ajuste-canonical.css
+OK       ratio=8,16   req=4,5  sel=.pp-guided-journey__steps a:hover,
+.pp-guided-journey__steps a:focus-visible fg=#1549ab bg=#fff file=design-system\v2151-wp-c-ajuste-canonical.css
+OK       ratio=7,22   req=4,5  sel=.pp-guided-journey__steps a:hover,.pp-guided-journey__steps a:focus-visible fg=#0b625a bg=#fff file=design-system\v2140-guided-journeys.css
+OK       ratio=5,52   req=4,5  sel=.pp-guided-journey__steps a>span fg=#496171 bg=#e5eef2 file=design-system\v2140-guided-journeys.css
+OK       ratio=11,77  req=4,5  sel=.pp-help-card fg=#173b52 bg=#fff file=design-system\v2145-onboarding-help.css
+INFO     ratio=4,31   req=4,5  sel=.pp-help-card>i:first-child fg=#087f8c bg=#e8f7f7 file=design-system\v2145-onboarding-help.css
+OK       ratio=7,55   req=4,5  sel=.pp-help-note fg=#245848 bg=#eef8f4 file=design-system\v2010-screen-polish.css
+OK       ratio=15,8   req=4,5  sel=.pp-help-search fg=#fff bg=#09243c file=design-system\v2145-onboarding-help.css
+OK       ratio=11,77  req=4,5  sel=.pp-help-shortcuts a fg=#173b52 bg=#fff file=design-system\v2145-onboarding-help.css
+OK       ratio=6,24   req=4,5  sel=.pp-help-steps li:before fg=#125b8f bg=#e2f1fb file=design-system\v2010-screen-polish.css
+OK       ratio=13,13  req=4,5  sel=.pp-help-trigger fg=#17324d bg=#fff file=design-system\v2010-screen-polish.css
+OK       ratio=5,62   req=4,5  sel=.pp-how-it-works summary span fg=#fff bg=#0b7189 file=design-system\v2121-saas-guided.css
+OK       ratio=4,75   req=3    sel=.pp-icon-surface fg=#2563eb bg=#eff6ff file=design-system\clinical.css
+OK       ratio=4,18   req=3    sel=.pp-implementation-item.is-next .pp-implementation-item__icon fg=#087f8c bg=#dff5f3 file=design-system\v2145-onboarding-help.css
+OK       ratio=4,34   req=3    sel=.pp-implementation-item__icon fg=#607483 bg=#eef3f5 file=design-system\v2145-onboarding-help.css
+OK       ratio=4,65   req=4,5  sel=.pp-inline-empty fg=#607482 bg=#f8fafb file=design-system\v2010-screen-polish.css
+OK       ratio=7,68   req=4,5  sel=.pp-live-context fg=#24555d bg=#eff8f7 file=design-system\v2000-premium.css
+OK       ratio=6,85   req=4,5  sel=.pp-live-context fg=#315b68 bg=#edf8f7 file=design-system\v2000-premium.css
+OK       ratio=8,41   req=4,5  sel=.pp-login-connection fg=#842c20 bg=#fff7f5 file=design-system\v2142-guided-premium.css
+OK       ratio=8,77   req=4,5  sel=.pp-login-context__item.is-current fg=#244c59 bg=#f0fafa file=design-system\v2121-saas-guided.css
+OK       ratio=5,62   req=4,5  sel=.pp-login-context__item fg=#526778 bg=#f8fafc file=design-system\v2121-saas-guided.css
+OK       ratio=5,56   req=4,5  sel=.pp-login-context__status fg=#08734c bg=#edfcf5 file=design-system\v2121-saas-guided.css
+OK       ratio=7,32   req=4,5  sel=.pp-login-delay fg=#714b00 bg=#fff8e6 file=design-system\v2138-session-internal.css
+OK       ratio=6,99   req=4,5  sel=.pp-login-progress fg=#155e66 bg=#f0faf9 file=design-system\v2143-qa-visual.css
+OK       ratio=10,73  req=4,5  sel=.pp-next-step fg=#173b52 bg=#eaf7f6 file=design-system\v2145-onboarding-help.css
+OK       ratio=6,71   req=4,5  sel=.pp-notice fg=#405a80 bg=#f8fafd file=design-system\workspaces.css
+OK       ratio=5,88   req=3    sel=.pp-onboarding-card__icon fg=#19664d bg=#dff1eb file=design-system\v2010-screen-polish.css
+OK       ratio=15,58  req=4,5  sel=.pp-onboarding-summary fg=#fff bg=#0b2443 file=design-system\clinical.css
+OK       ratio=6,18   req=4,5  sel=.pp-operational-journey span.is-current fg=#126548 bg=#e2f4ee file=design-system\operations.css
+OK       ratio=5,72   req=4,5  sel=.pp-operational-journey span fg=#526274 bg=#f2f5f8 file=design-system\operations.css
+INFO     ratio=4,4    req=4,5  sel=.pp-payment-card__heading>i fg=#087f6d bg=#e8f5f1 file=design-system\financial.css
+OK       ratio=5,94   req=4,5  sel=.pp-premium-table thead th, .pp-data-table thead th fg=#496273 bg=#f3f7f9 file=design-system\v2148-operational-premium.css
+OK       ratio=6,39   req=4,5  sel=.pp-premium-table thead th fg=#405f72 bg=#f4f9fb file=design-system\v2122-saas-commerce.css
+OK       ratio=5,82   req=4,5  sel=.pp-premium-table thead th fg=#49647f bg=#f5f9fd file=design-system\v2121-saas-guided.css
+OK       ratio=5,81   req=4,5  sel=.pp-report-badge fg=#4b6369 bg=#f0f5f6 file=pages\report-center.css
+OK       ratio=7,17   req=4,5  sel=.pp-report-categories button,.pp-filter-summary button fg=#405c63 bg=#fff file=pages\report-center.css
+OK       ratio=6,62   req=4,5  sel=.pp-report-categories button:hover,.pp-report-categories button:focus-visible,.pp-repor... fg=#086252 bg=#e9f7f3 file=pages\report-center.css
+OK       ratio=9,41   req=4,5  sel=.pp-report-guide fg=#24464c bg=#edf8f5 file=pages\report-center.css
+OK       ratio=7,03   req=4,5  sel=.pp-report-hero__trust span fg=#126457 bg=rgba(255,255,255,.82) file=pages\report-center.css
+OK       ratio=5,34   req=4,5  sel=.pp-report-toolbar output fg=#526871 bg=#f0f5f6 file=pages\report-center.css
+OK       ratio=7,34   req=4,5  sel=.pp-result-count fg=#1549ab bg=#eaf4ff file=design-system\components.css
+OK       ratio=8,02   req=4,5  sel=.pp-scope-guardrails > span fg=#365466 bg=#fff file=design-system\v2143-qa-visual.css
+OK       ratio=6,63   req=3    sel=.pp-screen-guide__icon fg=#075d73 bg=#e4f5f7 file=design-system\v2126-form-feedback.css
+OK       ratio=7,87   req=4,5  sel=.pp-shift-feedback--error fg=#991b1b bg=#fff7f7 file=pages\v2119-shift-operations.css
+OK       ratio=5,03   req=4,5  sel=.pp-shift-lane--covered>header fg=#08795f bg=#effaf6 file=pages\v2119-shift-operations.css
+OK       ratio=6,09   req=4,5  sel=.pp-shift-lane--risk>header fg=#a13b39 bg=#fff4f2 file=pages\v2119-shift-operations.css
+OK       ratio=5,37   req=4,5  sel=.pp-shift-viewbar__controls .is-active fg=#08795f bg=#fff file=pages\v2119-shift-operations.css
+OK       ratio=6,68   req=4,5  sel=.pp-status-badge.is-danger fg=#97283a bg=#fde8eb file=design-system\v2148-operational-premium.css
+OK       ratio=5,41   req=4,5  sel=.pp-status-badge.is-muted fg=#52636f bg=#eaf0f3 file=design-system\v2148-operational-premium.css
+OK       ratio=6,04   req=4,5  sel=.pp-status-badge.is-success fg=#0a684b bg=#e4f6ed file=design-system\v2148-operational-premium.css
+OK       ratio=5,86   req=4,5  sel=.pp-status-badge.is-warning fg=#85520d bg=#fff1d6 file=design-system\v2148-operational-premium.css
+OK       ratio=8,06   req=4,5  sel=.pp-status-badge--source fg=#3730a3 bg=#e0e7ff file=design-system\saas.css
+OK       ratio=6,68   req=4,5  sel=.pp-status-badge--unavailable fg=#9f1239 bg=#ffe4e6 file=design-system\saas.css
+OK       ratio=6,38   req=4,5  sel=.pp-status-badge--unknown fg=#854d0e bg=#fef9c3 file=design-system\saas.css
+OK       ratio=5,4    req=4,5  sel=.pp-status-pill fg=#526575 bg=#eef3f5 file=design-system\v2145-onboarding-help.css
+OK       ratio=5,17   req=4,5  sel=.pp-step fg=#ffffff bg=#2563eb file=design-system\forms.css
+OK       ratio=7,04   req=4,5  sel=.pp-stepper li[aria-current="step"],
+.pp-stepper li.is-current fg=#075b68 bg=#e8f7f5 file=design-system\v2122-saas-commerce.css
+OK       ratio=5,17   req=4,5  sel=.pp-stepper li[aria-current="step"]::before fg=#ffffff bg=#2563eb file=design-system\clinical.css
+OK       ratio=5,77   req=4,5  sel=.pp-stepper strong fg=#fff bg=#1769aa file=design-system\clinical.css
+OK       ratio=8,66   req=4,5  sel=.pp-table-responsive thead th fg=#294b60 bg=#f4f8fa file=design-system\v2142-guided-premium.css
+OK       ratio=5,71   req=3    sel=.pp-toast__icon fg=#175fae bg=#eaf3ff file=design-system\feedback.css
+OK       ratio=8,36   req=4,5  sel=.pp-unsaved-banner fg=#713f12 bg=#fffbeb file=design-system\forms.css
+OK       ratio=15,58  req=4,5  sel=.pp-user-menu__trigger fg=#0b2443 bg=#fff file=design-system\clinical.css
+OK       ratio=14,55  req=4,5  sel=.pp-user-menu__trigger fg=#172b3a bg=#fff file=design-system\layout.css
+OK       ratio=11,77  req=4,5  sel=.pp-v2141-kpi-grid a fg=#173b52 bg=#fff file=design-system\v2141-premium-cockpit.css
+OK       ratio=6,36   req=4,5  sel=.priority-badge,.status-badge fg=#315f68 bg=#edf4f5 file=design-system\v2070-notifications.css
+OK       ratio=4,19   req=3    sel=.productivity-item__icon fg=#1d6fe9 bg=#eaf4ff file=design-system\operations.css
+OK       ratio=15,65  req=4,5  sel=.professional-hero fg=#fff bg=#10243d file=pages\professional-portal.css
+OK       ratio=15,78  req=4,5  sel=.report-head fg=#0b2341 bg=#fff file=pages\operational-reports.css
+OK       ratio=15,78  req=4,5  sel=.report-head fg=#fff bg=#0b2341 file=pages\operational-reports.css
+OK       ratio=5,55   req=3    sel=.risk-panel__icon,.operation-quick-actions>a>i fg=#126a73 bg=#dff5f5 file=design-system\v2000-premium.css
+OK       ratio=5,49   req=3    sel=.risk-panel__icon--critical,.risk-panel__icon--risk fg=#b4233c bg=#fae8eb file=design-system\v2000-premium.css
+OK       ratio=4,42   req=3    sel=.risk-panel__icon--waiting fg=#956706 bg=#fbf1d8 file=design-system\v2000-premium.css
+OK       ratio=12,07  req=4,5  sel=.save-indicator fg=#fff bg=#173c38 file=design-system\clinical-workspace.css
+CTX      ratio=1      req=4,5  sel=.sidebar-collapse fg=#fff bg=rgb(255 255 255 / .08) file=design-system\components.css
+CTX      ratio=1,02   req=4,5  sel=.sidebar-search kbd fg=#c8dcef bg=rgb(0 0 0 / .14) file=design-system\components.css
+CTX      ratio=1,11   req=4,5  sel=.sidebar-search fg=#eaf4ff bg=rgb(255 255 255 / .07) file=design-system\components.css
+OK       ratio=4,66   req=4,5  sel=.skip-link fg=#ffffff bg=#1d6fe9 file=design-system\accessibility.css
+OK       ratio=7,02   req=4,5  sel=.state-panel fg=#405a80 bg=#fff file=design-system\v2150-bloco-c-canonical.css
+OK       ratio=4,91   req=4,5  sel=.status-ativo, .status-concluido, .status-confirmado, .badge-success fg=#18794e bg=#eaf7f0 file=design-system\v2000-premium.css
+OK       ratio=6,31   req=4,5  sel=.status-badge fg=#17634f bg=#e5f4ef file=pages\professional-portal.css
+OK       ratio=5,76   req=4,5  sel=.status-badge fg=#52616a bg=#f1f3f5 file=design-system\v2070-notifications.css
+OK       ratio=5,85   req=4,5  sel=.status-cancelado, .status-inativo, .badge-danger fg=#b4233c bg=#fff0f1 file=design-system\v2000-premium.css
+OK       ratio=6,92   req=4,5  sel=.status-conferido,.status-aprovado,.status-pago,.status-concluido fg=#075e54 bg=#e6f7f1 file=design-system\financial.css
+OK       ratio=6,08   req=4,5  sel=.status-divergente,.status-com-divergencia fg=#8a4b08 bg=#fff1d6 file=design-system\financial.css
+OK       ratio=4,54   req=4,5  sel=.status-pendente, .status-aguardando, .badge-warning fg=#9a6700 bg=#fff7da file=design-system\v2000-premium.css
+OK       ratio=6,5    req=4,5  sel=.status-pendente,.status-aguardando-aprovacao fg=#76510b bg=#fff5cc file=design-system\financial.css
+OK       ratio=6,52   req=4,5  sel=.status-rejeitado,.status-cancelado fg=#9f2632 bg=#ffeaed file=design-system\financial.css
+OK       ratio=7,58   req=4,5  sel=.table > :not(caption) > th,
+.pp-content-container .table > :not(caption) > th fg=#33506b bg=#eef4f9 file=design-system\v2150-bloco-c-canonical.css
+OK       ratio=4,63   req=4,5  sel=.table td[colspan]:not([colspan="1"]).text-center fg=#64748b bg=#fafcfe file=design-system\v2150-bloco-c-canonical.css
+OK       ratio=8,81   req=4,5  sel=.table thead th fg=#24485c bg=#edf5f7 file=design-system\v2132-premium-global.css
+OK       ratio=6,54   req=4,5  sel=.table thead th fg=#40596c bg=#edf3f5 file=design-system\v2000-premium.css
+OK       ratio=6,71   req=4,5  sel=.table thead th fg=#405a80 bg=#f8fafd file=design-system\tables.css
+OK       ratio=6,79   req=4,5  sel=.table thead th fg=#435a73 bg=#f7fafc file=design-system\v2120-premium-final-polish.css
+OK       ratio=5,54   req=4,5  sel=.table thead th fg=#4d6577 bg=rgba(228,239,241,.6) file=design-system\v2000-premium.css
+OK       ratio=5,45   req=4,5  sel=.table thead th fg=#506874 bg=#f3f7f8 file=design-system\v2000-premium.css
+OK       ratio=16,59  req=4,5  sel=.tenant-context-badge.is-global fg=#fff bg=#071f3a file=design-system\v2137-global-ux.css
+OK       ratio=7,05   req=4,5  sel=.tenant-context-badge fg=#075d67 bg=#edf9f9 file=design-system\v2132-premium-global.css
+OK       ratio=4,53   req=4,5  sel=.text-bg-danger fg=#fff bg=RGBA(var(--bs-danger-rgb),var(--bs-bg-opacity,1)) file=vendor\bootstrap.min.css
+OK       ratio=15,43  req=4,5  sel=.text-bg-dark fg=#fff bg=RGBA(var(--bs-dark-rgb),var(--bs-bg-opacity,1)) file=vendor\bootstrap.min.css
+OK       ratio=10,72  req=4,5  sel=.text-bg-info fg=#000 bg=RGBA(var(--bs-info-rgb),var(--bs-bg-opacity,1)) file=vendor\bootstrap.min.css
+OK       ratio=19,92  req=4,5  sel=.text-bg-light fg=#000 bg=RGBA(var(--bs-light-rgb),var(--bs-bg-opacity,1)) file=vendor\bootstrap.min.css
+OK       ratio=4,66   req=4,5  sel=.text-bg-primary fg=#fff bg=RGBA(var(--bs-primary-rgb),var(--bs-bg-opacity,1)) file=vendor\bootstrap.min.css
+OK       ratio=4,69   req=4,5  sel=.text-bg-secondary fg=#fff bg=RGBA(var(--bs-secondary-rgb),var(--bs-bg-opacity,1)) file=vendor\bootstrap.min.css
+OK       ratio=4,53   req=4,5  sel=.text-bg-success fg=#fff bg=RGBA(var(--bs-success-rgb),var(--bs-bg-opacity,1)) file=vendor\bootstrap.min.css
+OK       ratio=12,88  req=4,5  sel=.text-bg-warning fg=#000 bg=RGBA(var(--bs-warning-rgb),var(--bs-bg-opacity,1)) file=vendor\bootstrap.min.css
+OK       ratio=4,86   req=4,5  sel=.topbar-search kbd fg=#607482 bg=#fff file=design-system\components.css
+OK       ratio=6,7    req=4,5  sel=.topbar-search fg=#405a80 bg=#f8fafb file=design-system\navigation.css
+OK       ratio=6,71   req=4,5  sel=.topbar-search fg=#405a80 bg=#f8fafd file=design-system\components.css
+INFO     ratio=4,19   req=4,5  sel=.user-avatar fg=#1d6fe9 bg=#eaf4ff file=design-system\navigation.css
+OK       ratio=4,83   req=4,5  sel=.validation-summary-errors::before fg=#fff bg=#dc2626 file=design-system\feedback.css
+OK       ratio=7,56   req=4,5  sel=.validation-summary-errors fg=#991b1b bg=#fff1f2 file=design-system\feedback.css
+OK       ratio=4,53   req=4,5  sel=.valid-tooltip fg=#fff bg=#198754 file=vendor\bootstrap.min.css
+OK       ratio=4,75   req=4,5  sel=::selection fg=#fff bg=#087f8c file=design-system\v2000-premium.css
+OK       ratio=15,63  req=4,5  sel=:is(.form-control, .form-select, .pp-form-control) fg=#10243e bg=#fff file=design-system\v2120-premium-final-polish.css
+OK       ratio=14,78  req=4,5  sel=:is(.form-control, .form-select, .pp-form-control) fg=#102a3d bg=#fff file=design-system\v2132-premium-global.css
+OK       ratio=7,09   req=4,5  sel=:where(.table, .pp-data-table) thead th fg=#375563 bg=#edf3f5 file=design-system\v2116-premium-review.css
+OK       ratio=6      req=4,5  sel=:where(.table, .pp-data-table) thead th fg=#486170 bg=#f2f6f8 file=design-system\v2010-screen-polish.css
+OK       ratio=6,29   req=4,5  sel=body.pp-a360 .badge.bg-dark fg=#405a80 bg=#eef3f9 file=pages\administrativo360-tema-claro.css
+OK       ratio=16,15  req=4,5  sel=body.pp-a360 .card.bg-dark,
+body.pp-a360 .card.bg-black fg=#10213a bg=#ffffff file=pages\administrativo360-tema-claro.css
+OK       ratio=15,44  req=4,5  sel=body.pp-a360 .card-header.bg-dark,
+body.pp-a360 .card-header.bg-black,
+body.pp-a360 .ca... fg=#10213a bg=#f8fafd file=pages\administrativo360-tema-claro.css
+OK       ratio=16,15  req=4,5  sel=body.pp-a360 .form-control.bg-dark,
+body.pp-a360 .form-control.bg-black,
+body.pp-a360 .... fg=#10213a bg=#ffffff file=pages\administrativo360-tema-claro.css
+OK       ratio=16,15  req=4,5  sel=body.pp-a360 .modal-content.bg-dark,
+body.pp-a360 .modal-content.bg-black fg=#10213a bg=#ffffff file=pages\administrativo360-tema-claro.css
+OK       ratio=6,71   req=4,5  sel=body.pp-a360 .table-dark > :not(caption) > tr > th fg=#405a80 bg=#f8fafd file=pages\administrativo360-tema-claro.css
+OK       ratio=14,57  req=4,5  sel=body.pp-a360 .table-dark.table-hover > tbody > tr:hover > * fg=#10213a bg=#edf4fc file=pages\administrativo360-tema-claro.css
+OK       ratio=14,14  req=4,5  sel=body.pp-body fg=#10243b bg=#eef4f6 file=design-system\v2000-premium.css
+OK       ratio=14,7   req=4,5  sel=body.pp-body fg=#10243b bg=#f4f8fb file=design-system\v2000-premium.css
+OK       ratio=14,63  req=4,5  sel=body.pp-body fg=#10243e bg=#f4f8fb file=design-system\v2120-premium-final-polish.css
+OK       ratio=14,1   req=4,5  sel=body.pp-body fg=#10283e bg=#f4f8fb file=design-system\v2000-premium.css
+OK       ratio=13,84  req=4,5  sel=body.pp-body fg=#102a3d bg=#f4f8fb file=design-system\v2132-premium-global.css
+OK       ratio=15,12  req=4,5  sel=body fg=#10213a bg=#f4f8fb file=design-system\components.css
+OK       ratio=13,63  req=4,5  sel=body fg=#172b3a bg=#f4f8fb file=design-system\v2000-premium.css
+OK       ratio=15,43  req=4,5  sel=body fg=#212529 bg=#fff file=vendor\bootstrap.min.css
+OK       ratio=15,43  req=4,5  sel=kbd fg=#fff bg=#212529 file=vendor\bootstrap.min.css
+
+--- D) Bootstrap: pares funcionais efetivos (vendor + compat, cascade real) ---
+OK       ratio=4,66   badge brancosobre bg primary bg=29, 111, 233 src=--bs-primary-rgb
+OK       ratio=4,66   utilitario de texto primary sobre branco src=--bs-primary-rgb
+FALHA    ratio=4,37   utilitario de texto primary sobre pagina bg=#f4f8fb
+OK       ratio=4,5    botao contorno primary fg=#0d6efd sobre branco
+OK       ratio=4,53   badge brancosobre bg success bg=25,135,84 src=--bs-success-rgb
+OK       ratio=4,53   utilitario de texto success sobre branco src=--bs-success-rgb
+FALHA    ratio=4,24   utilitario de texto success sobre pagina bg=#f4f8fb
+OK       ratio=4,53   botao contorno success fg=#198754 sobre branco
+FALHA    ratio=1,63   badge brancosobre bg warning bg=255,193,7 src=--bs-warning-rgb
+FALHA    ratio=1,63   utilitario de texto warning sobre branco src=--bs-warning-rgb
+FALHA    ratio=1,53   utilitario de texto warning sobre pagina bg=#f4f8fb
+FALHA    ratio=1,63   botao contorno warning fg=#ffc107 sobre branco
+FALHA    ratio=1,96   badge brancosobre bg info bg=13,202,240 src=--bs-info-rgb
+FALHA    ratio=1,96   utilitario de texto info sobre branco src=--bs-info-rgb
+FALHA    ratio=1,83   utilitario de texto info sobre pagina bg=#f4f8fb
+FALHA    ratio=1,96   botao contorno info fg=#0dcaf0 sobre branco
+OK       ratio=4,53   badge brancosobre bg danger bg=220,53,69 src=--bs-danger-rgb
+OK       ratio=4,53   utilitario de texto danger sobre branco src=--bs-danger-rgb
+FALHA    ratio=4,24   utilitario de texto danger sobre pagina bg=#f4f8fb
+OK       ratio=4,53   botao contorno danger fg=#dc3545 sobre branco
+OK       ratio=4,69   badge brancosobre bg secondary bg=108,117,125 src=--bs-secondary-rgb
+OK       ratio=4,69   utilitario de texto secondary sobre branco src=--bs-secondary-rgb
+FALHA    ratio=4,39   utilitario de texto secondary sobre pagina bg=#f4f8fb
+OK       ratio=4,69   botao contorno secondary fg=#6c757d sobre branco
+OK       ratio=5,85   link primario fg=26, 95, 208 sobre branco
+
+--- C) Estilos inline em views (<style> e style=...) ---
+OK       ratio=15,43  sel=body fg=#212529 bg=#ffffff file=OrcamentoImprimir.cshtml
+OK       ratio=18,1   sel=.table-itens th fg=#000 bg=#eee file=ValeImprimir.cshtml
+OK       ratio=5,17   sel=.pp-badge fg=#0369a1 bg=#e0f2fe file=_CommercialStyles.cshtml
+OK       ratio=4,5    sel=@@media (max-width:900px) fg=#fff bg=#0d6efd file=_CommercialStyles.cshtml
+
+RESUMO: OK=312 INFO=6 CTX=9 FALHAS=13
+R69_CONTRAST_FAILHA
+FALHAS=13

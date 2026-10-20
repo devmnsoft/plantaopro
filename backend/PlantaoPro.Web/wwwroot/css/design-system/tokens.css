@@ -30,7 +30,8 @@
     --pp-amber-500: #f59e0b;
     --pp-red-600: #dc2626;
     --pp-text: #0f172a;
-    --pp-text-soft: #64748b;
+    /* AA (R69): #5c6c81 mede >=4,5:1 sobre branco e sobre a pagina (#f4f8fb); o anterior #64748b media 4,46:1 na pagina. */
+    --pp-text-soft: #5c6c81;
     --pp-border-soft-v154: #e5edf5;
     --pp-shadow-panel: 0 18px 50px rgb(15 23 42 / .12);
     --pp-sidebar-width-v154: 280px;

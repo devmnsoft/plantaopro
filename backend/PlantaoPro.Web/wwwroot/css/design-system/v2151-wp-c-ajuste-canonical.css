@@ -17,7 +17,9 @@
         WP-B): contexto, guia e jornada compactam em ≤991px e
         a jornada é ocultada em ≤575px, liberando o conteúdo;
      4) Foco visível nos módulos fora do ADM360 (espelho do
-        escopo do tema claro administrativo360); 5) tintas com AA e breadcrumb da topbar sem teal (seções 5–7).
+        escopo do tema claro administrativo360); 5) tintas com AA e breadcrumb da topbar sem teal (seções 5–7);
+    8) Paleta funcional do Bootstrap 5.3 com piso AA para badges,
+    utilitarios de texto, contornos e botoes solidos (R69).
 
    Carregado por último em _Layout.cshtml, após o v2150: vence
    cascatas de mesma especificidade por ordem de carga.
@@ -208,3 +210,45 @@ body.pp-a360 main .btn-outline-light {
 
 .pp-breadcrumb a:hover,
 .pp-breadcrumb a:focus-visible { color: var(--pp-brand-primary-active); }
+
+/* --- 8) Paleta funcional do Bootstrap 5.3 com piso AA (R69) -------------- */
+
+/* Medido em R69 (docs/evidencias/2026-10-20-rodada-69): os valores default
+   do vendor falhavam AA em badges e utilitarios de texto em alta densidade:
+   warning #ffc107 (1,63:1), info #0dcaf0 (1,96:1) e primary na pagina
+   (4,37:1). Os tons abaixo passam >=4,5:1 sobre branco E sobre a pagina
+   (#f4f8fb); success/danger unificam com os tokens canonicos do sistema
+   (--pp-success/--pp-danger). O botao solido .btn-warning permanece amarelo
+   com tinta preta (ja passa AA) e o warning aqui cobre apenas os papéis de
+   texto/borda/badge, onde o amarelo claro nao tem contraste com branco. */
+:root {
+    --bs-primary: var(--pp-brand-primary-text);
+    --bs-primary-rgb: 26, 95, 208;
+    --bs-success: #087a4d;
+    --bs-success-rgb: 8, 122, 77;
+    --bs-warning: #b45309;
+    --bs-warning-rgb: 180, 83, 9;
+    --bs-info: #0e7490;
+    --bs-info-rgb: 14, 116, 144;
+    --bs-danger: #b42336;
+    --bs-danger-rgb: 180, 35, 54;
+    --bs-secondary: #66727c;
+    --bs-secondary-rgb: 102, 114, 124;
+}
+
+/* Botoes solidos: os hex prontos no vendor mediam <=4,53:1 no limite;
+   os tons abaixo dao margem AA e seguem a mesma familia. */
+.btn-success { --bs-btn-bg: #087a4d; --bs-btn-border-color: #087a4d; --bs-btn-hover-bg: #076a41; --bs-btn-hover-border-color: #076a41; --bs-btn-active-bg: #065c38; --bs-btn-active-border-color: #065c38; }
+.btn-danger { --bs-btn-bg: #b42336; --bs-btn-border-color: #b42336; --bs-btn-hover-bg: #9a1e30; --bs-btn-hover-border-color: #9a1e30; --bs-btn-active-bg: #871b2a; --bs-btn-active-border-color: #871b2a; }
+.btn-info { --bs-btn-bg: #0e7490; --bs-btn-border-color: #0e7490; --bs-btn-hover-bg: #0b6279; --bs-btn-hover-border-color: #0b6279; --bs-btn-active-bg: #0a5668; --bs-btn-active-border-color: #0a5668; }
+.btn-secondary { --bs-btn-bg: #66727c; --bs-btn-border-color: #66727c; --bs-btn-hover-bg: #57626b; --bs-btn-hover-border-color: #57626b; --bs-btn-active-bg: #4c565f; --bs-btn-active-border-color: #4c565f; }
+
+/* Botoes outline: no vendor, tinta/borda usavam os hex falhas prontos
+   (ex.: #ffc107 em texto pequeno = 1,63:1). Os tons AA acima; o hover
+   solido mantem tinta branca sobre o proprio tom (>=4,5:1). */
+.btn-outline-primary { --bs-btn-color: #1a5fd0; --bs-btn-border-color: #1a5fd0; --bs-btn-hover-bg: var(--pp-brand-primary-text); --bs-btn-hover-border-color: var(--pp-brand-primary-text); --bs-btn-active-bg: #144cb0; --bs-btn-active-border-color: #144cb0; }
+.btn-outline-success { --bs-btn-color: #087a4d; --bs-btn-border-color: #087a4d; --bs-btn-hover-bg: #087a4d; --bs-btn-hover-border-color: #087a4d; --bs-btn-active-bg: #065c38; --bs-btn-active-border-color: #065c38; }
+.btn-outline-warning { --bs-btn-color: #b45309; --bs-btn-border-color: #b45309; --bs-btn-hover-bg: #b45309; --bs-btn-hover-border-color: #b45309; --bs-btn-active-bg: #834007; --bs-btn-active-border-color: #834007; }
+.btn-outline-info { --bs-btn-color: #0e7490; --bs-btn-border-color: #0e7490; --bs-btn-hover-bg: #0e7490; --bs-btn-hover-border-color: #0e7490; --bs-btn-active-bg: #0a5668; --bs-btn-active-border-color: #0a5668; }
+.btn-outline-danger { --bs-btn-color: #b42336; --bs-btn-border-color: #b42336; --bs-btn-hover-bg: #b42336; --bs-btn-hover-border-color: #b42336; --bs-btn-active-bg: #871b2a; --bs-btn-active-border-color: #871b2a; }
+.btn-outline-secondary { --bs-btn-color: #66727c; --bs-btn-border-color: #66727c; --bs-btn-hover-bg: #66727c; --bs-btn-hover-border-color: #66727c; --bs-btn-active-bg: #4c565f; --bs-btn-active-border-color: #4c565f; }

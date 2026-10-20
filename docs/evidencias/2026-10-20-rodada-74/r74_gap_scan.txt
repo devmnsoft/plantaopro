@@ -1,0 +1,242 @@
+TOKEN|design-system/tokens.css|--pp-amber-500|#f59e0b
+TOKEN|design-system/tokens.css|--pp-bg|#f4f7fb
+TOKEN|design-system/tokens.css|--pp-bg-app|var(--pp-page-background)
+TOKEN|design-system/tokens.css|--pp-bg-body|#f3f7fb
+TOKEN|design-system/tokens.css|--pp-bg-elevated|var(--pp-surface-elevated)
+TOKEN|design-system/tokens.css|--pp-bg-subtle|var(--pp-surface-subtle)
+TOKEN|design-system/tokens.css|--pp-bg-surface|var(--pp-surface-default)
+TOKEN|design-system/tokens.css|--pp-blue-600|#2563eb
+TOKEN|design-system/tokens.css|--pp-border|var(--pp-border-default)
+TOKEN|design-system/tokens.css|--pp-border-default|#ccd7e5
+TOKEN|design-system/tokens.css|--pp-border-soft|#dce6f1
+TOKEN|design-system/tokens.css|--pp-border-soft-v154|#e5edf5
+TOKEN|design-system/tokens.css|--pp-border-strong|#91a5bf
+TOKEN|design-system/tokens.css|--pp-border-subtle|#e5ebf3
+TOKEN|design-system/tokens.css|--pp-border-width|1px
+TOKEN|design-system/tokens.css|--pp-brand-dark|#0b2a52
+TOKEN|design-system/tokens.css|--pp-brand-dark-hover|#071f3e
+TOKEN|design-system/tokens.css|--pp-brand-ink|#0e1d33
+TOKEN|design-system/tokens.css|--pp-brand-light|#eaf4ff
+TOKEN|design-system/tokens.css|--pp-brand-muted|#51698d
+TOKEN|design-system/tokens.css|--pp-brand-primary|#1f73f1
+TOKEN|design-system/tokens.css|--pp-brand-primary-active|#124b9f
+TOKEN|design-system/tokens.css|--pp-brand-primary-hover|#185fc8
+TOKEN|design-system/tokens.css|--pp-brand-primary-soft|#eaf4ff
+TOKEN|design-system/tokens.css|--pp-clinical-amber|#d97706
+TOKEN|design-system/tokens.css|--pp-clinical-bg|#f4f8fb
+TOKEN|design-system/tokens.css|--pp-clinical-blue|#2563eb
+TOKEN|design-system/tokens.css|--pp-clinical-border|#dbe5ef
+TOKEN|design-system/tokens.css|--pp-clinical-cyan|#0891b2
+TOKEN|design-system/tokens.css|--pp-clinical-green|#16a34a
+TOKEN|design-system/tokens.css|--pp-clinical-muted|#475569
+TOKEN|design-system/tokens.css|--pp-clinical-navy|#071a2f
+TOKEN|design-system/tokens.css|--pp-clinical-radius|16px
+TOKEN|design-system/tokens.css|--pp-clinical-red|#dc2626
+TOKEN|design-system/tokens.css|--pp-clinical-shadow|0 12px 32px rgb(15 23 42 / .08)
+TOKEN|design-system/tokens.css|--pp-clinical-surface|#ffffff
+TOKEN|design-system/tokens.css|--pp-clinical-surface-muted|#f8fbfd
+TOKEN|design-system/tokens.css|--pp-clinical-teal|#0d9488
+TOKEN|design-system/tokens.css|--pp-clinical-text|#0f172a
+TOKEN|design-system/tokens.css|--pp-color-accent|#0891a6
+TOKEN|design-system/tokens.css|--pp-color-amber-500|#c87800
+TOKEN|design-system/tokens.css|--pp-color-blue-600|#1768d7
+TOKEN|design-system/tokens.css|--pp-color-cyan-500|#14a9bd
+TOKEN|design-system/tokens.css|--pp-color-danger|#b42336
+TOKEN|design-system/tokens.css|--pp-color-green-600|#087a4d
+TOKEN|design-system/tokens.css|--pp-color-navy-900|#0b2747
+TOKEN|design-system/tokens.css|--pp-color-navy-950|#06172c
+TOKEN|design-system/tokens.css|--pp-color-primary|#165dba
+TOKEN|design-system/tokens.css|--pp-color-primary-dark|#0a315f
+TOKEN|design-system/tokens.css|--pp-color-red-600|#b42336
+TOKEN|design-system/tokens.css|--pp-color-success|#087a4d
+TOKEN|design-system/tokens.css|--pp-color-teal-500|#0d9488
+TOKEN|design-system/tokens.css|--pp-color-warning|#a15c00
+TOKEN|design-system/tokens.css|--pp-content-max|100rem
+TOKEN|design-system/tokens.css|--pp-cyan-500|#06b6d4
+TOKEN|design-system/tokens.css|--pp-danger|#b42336
+TOKEN|design-system/tokens.css|--pp-danger-soft|#ffeaed
+TOKEN|design-system/tokens.css|--pp-density|1
+TOKEN|design-system/tokens.css|--pp-disabled-opacity|.58
+TOKEN|design-system/tokens.css|--pp-focus|var(--pp-focus-ring)
+TOKEN|design-system/tokens.css|--pp-focus-ring|var(--pp-brand-primary)
+TOKEN|design-system/tokens.css|--pp-focus-shadow|0 0 0 .2rem color-mix(in srgb, var(--pp-brand-primary) 30%, transparent)
+TOKEN|design-system/tokens.css|--pp-font-body|1rem
+TOKEN|design-system/tokens.css|--pp-font-body-small|.875rem
+TOKEN|design-system/tokens.css|--pp-font-caption|.75rem
+TOKEN|design-system/tokens.css|--pp-font-card-title|1.0625rem
+TOKEN|design-system/tokens.css|--pp-font-display|clamp(2rem, 4vw, 3.5rem)
+TOKEN|design-system/tokens.css|--pp-font-helper|.8125rem
+TOKEN|design-system/tokens.css|--pp-font-label|.875rem
+TOKEN|design-system/tokens.css|--pp-font-page-title|clamp(1.65rem, 2.5vw, 2.25rem)
+TOKEN|design-system/tokens.css|--pp-font-sans|Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif
+TOKEN|design-system/tokens.css|--pp-font-section-title|clamp(1.25rem, 1.5vw, 1.5rem)
+TOKEN|design-system/tokens.css|--pp-font-size-base|1rem
+TOKEN|design-system/tokens.css|--pp-font-size-sm|.875rem
+TOKEN|design-system/tokens.css|--pp-green-600|#16a34a
+TOKEN|design-system/tokens.css|--pp-hover-bg|#edf4fc
+TOKEN|design-system/tokens.css|--pp-info|#245ea8
+TOKEN|design-system/tokens.css|--pp-info-soft|#e8f2ff
+TOKEN|design-system/tokens.css|--pp-line-body|1.55
+TOKEN|design-system/tokens.css|--pp-line-height|1.55
+TOKEN|design-system/tokens.css|--pp-line-tight|1.2
+TOKEN|design-system/tokens.css|--pp-muted|var(--pp-text-muted)
+TOKEN|design-system/tokens.css|--pp-navy-900|#0b243f
+TOKEN|design-system/tokens.css|--pp-navy-950|#06172b
+TOKEN|design-system/tokens.css|--pp-page-background|#f5f8fc
+TOKEN|design-system/tokens.css|--pp-primary|var(--pp-brand-primary)
+TOKEN|design-system/tokens.css|--pp-primary-hover|var(--pp-brand-primary-hover)
+TOKEN|design-system/tokens.css|--pp-primary-soft|var(--pp-brand-primary-soft)
+TOKEN|design-system/tokens.css|--pp-radius|var(--pp-radius-md)
+TOKEN|design-system/tokens.css|--pp-radius-card|1.125rem
+TOKEN|design-system/tokens.css|--pp-radius-lg|1rem
+TOKEN|design-system/tokens.css|--pp-radius-md|.75rem
+TOKEN|design-system/tokens.css|--pp-radius-panel|1.5rem
+TOKEN|design-system/tokens.css|--pp-radius-pill|999px
+TOKEN|design-system/tokens.css|--pp-radius-sm|.5rem
+TOKEN|design-system/tokens.css|--pp-radius-xl|1.375rem
+TOKEN|design-system/tokens.css|--pp-radius-xs|.375rem
+TOKEN|design-system/tokens.css|--pp-rail-width|4.75rem
+TOKEN|design-system/tokens.css|--pp-reading-width|68ch
+TOKEN|design-system/tokens.css|--pp-red-600|#dc2626
+TOKEN|design-system/tokens.css|--pp-shadow|var(--pp-shadow-sm)
+TOKEN|design-system/tokens.css|--pp-shadow-card|0 8px 28px rgb(6 23 44 / .08)
+TOKEN|design-system/tokens.css|--pp-shadow-floating|0 20px 54px rgb(6 23 44 / .16)
+TOKEN|design-system/tokens.css|--pp-shadow-lg|0 24px 64px rgb(8 32 61 / .16)
+TOKEN|design-system/tokens.css|--pp-shadow-md|0 16px 40px rgb(14 29 51 / .12)
+TOKEN|design-system/tokens.css|--pp-shadow-panel|0 18px 50px rgb(15 23 42 / .12)
+TOKEN|design-system/tokens.css|--pp-shadow-shell|0 14px 42px rgb(6 23 44 / .12)
+TOKEN|design-system/tokens.css|--pp-shadow-sm|0 6px 20px rgb(14 29 51 / .08)
+TOKEN|design-system/tokens.css|--pp-shadow-xs|0 1px 2px rgb(14 29 51 / .06)
+TOKEN|design-system/tokens.css|--pp-sidebar-active|var(--pp-brand-primary)
+TOKEN|design-system/tokens.css|--pp-sidebar-bg|var(--pp-brand-dark)
+TOKEN|design-system/tokens.css|--pp-sidebar-bg-secondary|var(--pp-brand-dark-hover)
+TOKEN|design-system/tokens.css|--pp-sidebar-collapsed-width|var(--pp-rail-width)
+TOKEN|design-system/tokens.css|--pp-sidebar-max|17rem
+TOKEN|design-system/tokens.css|--pp-sidebar-min|14rem
+TOKEN|design-system/tokens.css|--pp-sidebar-muted|#c6d7eb
+TOKEN|design-system/tokens.css|--pp-sidebar-text|var(--pp-text-inverse)
+TOKEN|design-system/tokens.css|--pp-sidebar-width|var(--pp-sidebar-max)
+TOKEN|design-system/tokens.css|--pp-sidebar-width-v154|280px
+TOKEN|design-system/tokens.css|--pp-space-1|.25rem
+TOKEN|design-system/tokens.css|--pp-space-10|2.5rem
+TOKEN|design-system/tokens.css|--pp-space-12|3rem
+TOKEN|design-system/tokens.css|--pp-space-2|.5rem
+TOKEN|design-system/tokens.css|--pp-space-3|.75rem
+TOKEN|design-system/tokens.css|--pp-space-4|1rem
+TOKEN|design-system/tokens.css|--pp-space-5|1.25rem
+TOKEN|design-system/tokens.css|--pp-space-6|1.5rem
+TOKEN|design-system/tokens.css|--pp-space-8|2rem
+TOKEN|design-system/tokens.css|--pp-success|#087a4d
+TOKEN|design-system/tokens.css|--pp-success-soft|#e8f7f0
+TOKEN|design-system/tokens.css|--pp-surface|#ffffff
+TOKEN|design-system/tokens.css|--pp-surface-canvas|#f3f7fb
+TOKEN|design-system/tokens.css|--pp-surface-card|#ffffff
+TOKEN|design-system/tokens.css|--pp-surface-dark|#071f3a
+TOKEN|design-system/tokens.css|--pp-surface-default|#ffffff
+TOKEN|design-system/tokens.css|--pp-surface-elevated|#ffffff
+TOKEN|design-system/tokens.css|--pp-surface-glass|rgb(255 255 255 / .86)
+TOKEN|design-system/tokens.css|--pp-surface-inverse|#0b2a52
+TOKEN|design-system/tokens.css|--pp-surface-muted|#f8fafc
+TOKEN|design-system/tokens.css|--pp-surface-page|var(--pp-page-background)
+TOKEN|design-system/tokens.css|--pp-surface-primary|var(--pp-surface-default)
+TOKEN|design-system/tokens.css|--pp-surface-raised|#ffffff
+TOKEN|design-system/tokens.css|--pp-surface-secondary|var(--pp-surface-subtle)
+TOKEN|design-system/tokens.css|--pp-surface-subtle|#f8fafd
+TOKEN|design-system/tokens.css|--pp-teal-500|#14b8a6
+TOKEN|design-system/tokens.css|--pp-text|#0f172a
+TOKEN|design-system/tokens.css|--pp-text-inverse|#ffffff
+TOKEN|design-system/tokens.css|--pp-text-main|#10233d
+TOKEN|design-system/tokens.css|--pp-text-muted|#51698d
+TOKEN|design-system/tokens.css|--pp-text-primary|#0e1d33
+TOKEN|design-system/tokens.css|--pp-text-secondary|#405a80
+TOKEN|design-system/tokens.css|--pp-text-soft|#5c6c81
+TOKEN|design-system/tokens.css|--pp-topbar-height|4.5rem
+TOKEN|design-system/tokens.css|--pp-topbar-height-v154|84px
+TOKEN|design-system/tokens.css|--pp-touch-target|2.75rem
+TOKEN|design-system/tokens.css|--pp-transition|220ms cubic-bezier(.2,.8,.2,1)
+TOKEN|design-system/tokens.css|--pp-transition-fast|140ms ease
+TOKEN|design-system/tokens.css|--pp-warning|#805000
+TOKEN|design-system/tokens.css|--pp-warning-soft|#fff4d8
+TOKEN|design-system/tokens.css|--pp-z-base|0
+TOKEN|design-system/tokens.css|--pp-z-drawer|1070
+TOKEN|design-system/tokens.css|--pp-z-dropdown|1030
+TOKEN|design-system/tokens.css|--pp-z-modal|1080
+TOKEN|design-system/tokens.css|--pp-z-overlay|1060
+TOKEN|design-system/tokens.css|--pp-z-sidebar|1040
+TOKEN|design-system/tokens.css|--pp-z-skip|1100
+TOKEN|design-system/tokens.css|--pp-z-sticky|1010
+TOKEN|design-system/tokens.css|--pp-z-toast|1090
+TOKEN|design-system/tokens.css|--pp-z-topbar|1020
+TOKEN|design-system/tokens.css|--pp-z-tour|1110
+TOKEN|design-system/v2150-bloco-c-canonical.css|--bs-link-color|var(--pp-brand-primary)
+TOKEN|design-system/v2150-bloco-c-canonical.css|--bs-link-color-rgb|31, 115, 241
+TOKEN|design-system/v2150-bloco-c-canonical.css|--bs-link-hover-color|var(--pp-brand-primary-hover)
+TOKEN|design-system/v2150-bloco-c-canonical.css|--bs-link-hover-color-rgb|26, 99, 216
+TOKEN|design-system/v2150-bloco-c-canonical.css|--bs-primary|var(--pp-brand-primary)
+TOKEN|design-system/v2150-bloco-c-canonical.css|--bs-primary-rgb|31, 115, 241
+TOKEN|design-system/v2150-bloco-c-canonical.css|--pp-bg|var(--pp-canvas-base)
+TOKEN|design-system/v2150-bloco-c-canonical.css|--pp-bg-app|var(--pp-canvas-base)
+TOKEN|design-system/v2150-bloco-c-canonical.css|--pp-brand-primary|#1f73f1
+TOKEN|design-system/v2150-bloco-c-canonical.css|--pp-brand-primary-active|#1549ab
+TOKEN|design-system/v2150-bloco-c-canonical.css|--pp-brand-primary-hover|#1a63d8
+TOKEN|design-system/v2150-bloco-c-canonical.css|--pp-canvas|var(--pp-canvas-base)
+TOKEN|design-system/v2150-bloco-c-canonical.css|--pp-canvas-base|#f4f8fb
+TOKEN|design-system/v2150-bloco-c-canonical.css|--pp-focus-ring|var(--pp-brand-primary)
+TOKEN|design-system/v2150-bloco-c-canonical.css|--pp-page-background|var(--pp-canvas-base)
+TOKEN|design-system/v2150-bloco-c-canonical.css|--pp-primary|var(--pp-brand-primary)
+TOKEN|design-system/v2150-bloco-c-canonical.css|--pp-v1970-canvas|var(--pp-canvas-base)
+TOKEN|design-system/v2150-bloco-c-canonical.css|--pp-v2116-canvas|var(--pp-canvas-base)
+TOKEN|design-system/v2150-bloco-c-canonical.css|--pp-v2120-canvas|var(--pp-canvas-base)
+TOKEN|design-system/v2150-bloco-c-canonical.css|--pp-v2132-canvas|var(--pp-canvas-base)
+TOKEN|design-system/v2150-bloco-c-canonical.css|--pp-v2137-surface|var(--pp-canvas-base)
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-danger|#b42336
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-danger-rgb|180, 35, 54
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-info|#0e7490
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-info-rgb|14, 116, 144
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-link-color|var(--pp-brand-primary-text)
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-link-color-rgb|26, 95, 208
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-link-hover-color|var(--pp-brand-primary-active)
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-link-hover-color-rgb|21, 73, 171
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-primary|var(--pp-brand-primary-text)
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-primary-rgb|26, 95, 208
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-secondary|#66727c
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-secondary-rgb|102, 114, 124
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-success|#087a4d
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-success-rgb|8, 122, 77
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-warning|#b45309
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--bs-warning-rgb|180, 83, 9
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--pp-brand-primary|#1d6fe9
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--pp-brand-primary-active|#1549ab
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--pp-brand-primary-hover|#1a63d8
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--pp-brand-primary-text|#1a5fd0
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--pp-tone-danger-ink|#b42336
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--pp-tone-danger-soft|#ffeaed
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--pp-tone-info-ink|#0e7490
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--pp-tone-info-soft|#e8f2ff
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--pp-tone-secondary-ink|#66727c
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--pp-tone-secondary-soft|#e8eef5
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--pp-tone-success-ink|#087a4d
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--pp-tone-success-soft|#e8f7f0
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--pp-tone-warning-ink|#b45309
+TOKEN|design-system/v2151-wp-c-ajuste-canonical.css|--pp-tone-warning-soft|#fff4d8
+TOKENCOUNT|design-system/v2150-bloco-c-canonical.css|21
+TOKENCOUNT|design-system/tokens.css|170
+TOKENCOUNT|design-system/v2151-wp-c-ajuste-canonical.css|30
+
+CONTRASTE_CSS_INFO|custom.css|L28|1|#fff sobre rgba(255,255,255,.08)|.nav-link-app:hover
+CONTRASTE_CSS_INFO|plantaopro-design-system.css|L34|1.13|#eaf2ff sobre rgba(255,255,255,.14)|.pp-pill-soft
+CONTRASTE_CSS_INFO|plantaopro-design-system.css|L34|2.09|#bbf7d0 sobre rgba(16,185,129,.16)|.pp-pill-env
+CONTRASTE_CSS_INFO|saude360-design-system.css|L27|2.73|#475569 sobre linear-gradient(135deg, rgba(14, 165, 233, .08), rgba(16, 185, 129, .08))|.saude360-empty-state
+CONTRASTE_CSS_INFO|design-system/clinical.css|L511|1.86|#fff sobre radial-gradient(circle at 90% 0,rgba(45,212,191,.25),transparent 35%),linear-gradient(135deg,#062b38,#075d67 60%,#0f766e)|}
+ .clinical-command-hero
+CONTRASTE_CSS_INFO|design-system/v2000-premium.css|L56|1.16|#fff sobre rgba(212, 245, 245, .07)|.nav-link-app:hover
+CONTRASTE_CSS_INFO|design-system/v2000-premium.css|L57|3.02|#f4ffff sobre linear-gradient(90deg, rgba(54, 161, 167, .24), rgba(54, 161, 167, .08))|.nav-link-app.active
+CONTRASTE_CSS_INFO|design-system/v2000-premium.css|L98|9.65|#29485c sobre rgba(255,255,255,.74)|.btn-light, .btn-outline-secondary
+CONTRASTE_CSS_INFO|design-system/v2000-premium.css|L105|5.2|#4d6577 sobre rgba(228,239,241,.6)|.table thead th
+CONTRASTE_CSS_INFO|design-system/v2000-premium.css|L133|14.71|#eaf6f7 sobre linear-gradient(145deg, rgba(7,34,55,.58), rgba(12,62,72,.34))|.pp-auth-brand-panel
+CONTRASTE_CSS_INFO|design-system/v2000-premium.css|L441|1.04|#e9ffff sobre rgba(255,255,255,.04)|.operation-command__hero .btn-outline-primary
+CONTRASTE_CSS_IMAGEM|design-system/v2150-bloco-c-canonical.css|L99|1.74|#fff sobre #a9c6f5+imagem|.pp-content-container .btn-primary:disabled, .pp-content-container .btn-primary.disabled, .pp-conten
+CONTRASTE_CSS_INFO|pages/meu-dia.css|L1|1.92|#fff sobre radial-gradient(circle at 85% 10%,rgba(76,201,240,.25),transparent 35%),linear-gradient(135deg,#071d39,#0f4c81 62%,#126b7e)|.day-command-hero
+CONTRASTE_CSS_INFO|pages/report-center.css|L4|7.03|#126457 sobre rgba(255,255,255,.82)|.pp-report-hero__trust span
+
+

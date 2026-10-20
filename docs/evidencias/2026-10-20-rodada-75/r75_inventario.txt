@@ -1,0 +1,1378 @@
+PAGINA|Account|AccessDenied|Account/AccessDenied|ARQ_OK|NOME|
+PAGINA|Account|ForgotPassword|Account/ForgotPassword|ARQ_OK|NOME|
+PAGINA|Account|Login|Account/Login|ARQ_OK|NOME|
+PAGINA|Account|NoEligibleContext|Account/NoEligibleContext|ARQ_OK|NOME|
+PAGINA|Account|ResetPassword|Account/ResetPassword|ARQ_OK|NOME|
+PAGINA|Adm360CotacoesWeb|ContasPortal|Administrativo360/Cotacoes/ContasPortal|ARQ_OK|LIT|
+PAGINA|Adm360CotacoesWeb|Detalhes|Administrativo360/Cotacoes/Detalhes|ARQ_OK|LIT|
+PAGINA|Adm360CotacoesWeb|Estabelecimentos|Administrativo360/Cotacoes/Estabelecimentos|ARQ_OK|LIT|
+PAGINA|Adm360CotacoesWeb|Index|Administrativo360/Cotacoes/Index|ARQ_OK|LIT|
+PAGINA|Adm360CotacoesWeb|Relacionamento|Administrativo360/Cotacoes/Relacionamento|ARQ_OK|LIT|
+PAGINA|Adm360DocumentosXmlWeb|Detalhes|Administrativo360/DocumentosXml/Detalhes|ARQ_OK|LIT|
+PAGINA|Adm360DocumentosXmlWeb|Importar|Administrativo360/DocumentosXml/Importar|ARQ_OK|LIT|
+PAGINA|Adm360DocumentosXmlWeb|Index|Administrativo360/DocumentosXml/Index|ARQ_OK|LIT|
+PAGINA|Adm360DocumentosXmlWeb|Sincronizacao|Administrativo360/DocumentosXml/Sincronizacao|ARQ_OK|LIT|
+PAGINA|Adm360DocumentosXmlWeb|Triagens|Administrativo360/DocumentosXml/Triagens|ARQ_OK|LIT|
+PAGINA|Adm360FiscalWeb|Configurar|Administrativo360/Fiscal/Configurar|ARQ_OK|LIT|
+PAGINA|Adm360FiscalWeb|Detalhes|Administrativo360/Fiscal/Detalhes|ARQ_OK|LIT|
+PAGINA|Adm360FiscalWeb|Notas|Administrativo360/Fiscal/Notas|ARQ_OK|LIT|
+PAGINA|Adm360FiscalWeb|Nova|Administrativo360/Fiscal/Nova|ARQ_OK|LIT|
+PAGINA|Adm360GestaoWeb|Dashboard|Administrativo360/Gestao/Dashboard|ARQ_OK|LIT|
+PAGINA|Adm360GestaoWeb|Monitor|Administrativo360/Gestao/Monitor|ARQ_OK|LIT|
+PAGINA|Administrativo360|AtivarCargo|Administrativo360/AtivarCargo|ARQ_FALTA|NOME via TransicaoAsync>EnviarAsync|
+PAGINA|Administrativo360|AtivarDepartamento|Administrativo360/AtivarDepartamento|ARQ_FALTA|NOME via TransicaoAsync>EnviarAsync|
+PAGINA|Administrativo360|AtualizarCargo|Administrativo360/AtualizarCargo|ARQ_FALTA|NOME via EnviarAsync|
+PAGINA|Administrativo360|AtualizarColaborador|Administrativo360/AtualizarColaborador|ARQ_FALTA|NOME via EnviarAsync|
+PAGINA|Administrativo360|AtualizarDepartamento|Administrativo360/AtualizarDepartamento|ARQ_FALTA|NOME via EnviarAsync|
+PAGINA|Administrativo360|Cadastros|Administrativo360/Cadastros|ARQ_OK|NOME|
+PAGINA|Administrativo360|CancelarContrato|Administrativo360/CancelarContrato|ARQ_FALTA|NOME via TransicaoAsync>EnviarAsync|
+PAGINA|Administrativo360|Cargo|Administrativo360/Cargo|ARQ_FALTA|NOME via EnviarAsync|
+PAGINA|Administrativo360|Cargos|Administrativo360/Cargos|ARQ_OK|NOME|
+PAGINA|Administrativo360|CirurgiaDetalhes|Administrativo360/CirurgiaDetalhes|ARQ_OK|NOME|
+PAGINA|Administrativo360|CirurgiaNova|Administrativo360/CirurgiaNova|ARQ_OK|NOME|
+PAGINA|Administrativo360|Cirurgias|Administrativo360/Cirurgias|ARQ_OK|NOME|
+PAGINA|Administrativo360|Colaborador|Administrativo360/Colaborador|ARQ_FALTA|NOME via EnviarAsync|
+PAGINA|Administrativo360|Colaboradores|Administrativo360/Colaboradores|ARQ_OK|NOME|
+PAGINA|Administrativo360|Coleta|Administrativo360/Coleta|ARQ_OK|NOME|
+PAGINA|Administrativo360|ComissoesPendentes|Administrativo360/ComissoesPendentes|ARQ_OK|NOME|
+PAGINA|Administrativo360|ContasFinanceiras|Administrativo360/ContasFinanceiras|ARQ_OK|NOME|
+PAGINA|Administrativo360|Contrato|Administrativo360/Contratos|ARQ_OK|LIT|
+PAGINA|Administrativo360|ContratoDetalhes|Administrativo360/ContratoDetalhes|ARQ_OK|NOME|
+PAGINA|Administrativo360|Contratos|Administrativo360/Contratos|ARQ_OK|NOME|
+PAGINA|Administrativo360|Departamento|Administrativo360/Departamento|ARQ_FALTA|NOME via EnviarAsync|
+PAGINA|Administrativo360|Departamentos|Administrativo360/Departamentos|ARQ_OK|NOME|
+PAGINA|Administrativo360|EncerrarContrato|Administrativo360/ContratoDetalhes|ARQ_OK|LIT|
+PAGINA|Administrativo360|Estoque|Administrativo360/Estoque|ARQ_OK|NOME|
+PAGINA|Administrativo360|FechamentoCaixa|Administrativo360/FechamentoCaixa|ARQ_OK|NOME|
+PAGINA|Administrativo360|FluxoCaixa|Administrativo360/FluxoCaixa|ARQ_OK|NOME|
+PAGINA|Administrativo360|InativarCargo|Administrativo360/InativarCargo|ARQ_FALTA|NOME via TransicaoAsync>EnviarAsync|
+PAGINA|Administrativo360|InativarDepartamento|Administrativo360/InativarDepartamento|ARQ_FALTA|NOME via TransicaoAsync>EnviarAsync|
+PAGINA|Administrativo360|Index|Administrativo360/Index|ARQ_OK|NOME|
+PAGINA|Administrativo360|Inspecoes|Administrativo360/Inspecoes|ARQ_OK|NOME|
+PAGINA|Administrativo360|Inventarios|Administrativo360/Inventarios|ARQ_OK|NOME|
+PAGINA|Administrativo360|Locais|Administrativo360/Locais|ARQ_OK|NOME|
+PAGINA|Administrativo360|Lotes|Administrativo360/Lotes|ARQ_OK|NOME|
+PAGINA|Administrativo360|Movimentacoes|Administrativo360/Movimentacoes|ARQ_OK|NOME|
+PAGINA|Administrativo360|NovaDespesa|Administrativo360/NovaDespesa|ARQ_OK|NOME|
+PAGINA|Administrativo360|Ocorrencias|Administrativo360/Ocorrencias|ARQ_OK|NOME|
+PAGINA|Administrativo360|OrcamentoDetalhes|Administrativo360/OrcamentoDetalhes|ARQ_OK|NOME|
+PAGINA|Administrativo360|OrcamentoEditar|Administrativo360/OrcamentoEditar|ARQ_OK|NOME|
+PAGINA|Administrativo360|OrcamentoImprimir|Administrativo360/OrcamentoImprimir|ARQ_OK|NOME|
+PAGINA|Administrativo360|OrcamentoNovo|Administrativo360/OrcamentoNovo|ARQ_OK|NOME|
+PAGINA|Administrativo360|OrcamentoReserva|Administrativo360/OrcamentoReserva|ARQ_OK|NOME|
+PAGINA|Administrativo360|Orcamentos|Administrativo360/Orcamentos|ARQ_OK|NOME|
+PAGINA|Administrativo360|Parceiros|Administrativo360/Parceiros|ARQ_OK|NOME|
+PAGINA|Administrativo360|PedidosCompra|Administrativo360/PedidosCompra|ARQ_OK|NOME|
+PAGINA|Administrativo360|Produtos|Administrativo360/Produtos|ARQ_OK|NOME|
+PAGINA|Administrativo360|Recebimentos|Administrativo360/Recebimentos|ARQ_OK|NOME|
+PAGINA|Administrativo360|Relatorios|Administrativo360/Relatorios|ARQ_OK|NOME|
+PAGINA|Administrativo360|RelatoriosFinanceiros|Administrativo360/RelatoriosFinanceiros|ARQ_OK|NOME|
+PAGINA|Administrativo360|StatusColaborador|Administrativo360/StatusColaborador|ARQ_FALTA|NOME via TransicaoAsync>EnviarAsync|
+PAGINA|Administrativo360|TituloDetalhes|Administrativo360/TituloDetalhes|ARQ_OK|NOME|
+PAGINA|Administrativo360|TituloPagarDetalhes|Administrativo360/TituloPagarDetalhes|ARQ_OK|NOME|
+PAGINA|Administrativo360|TitulosPagar|Administrativo360/TitulosPagar|ARQ_OK|NOME|
+PAGINA|Administrativo360|TitulosReceber|Administrativo360/TitulosReceber|ARQ_OK|NOME|
+PAGINA|Administrativo360|ValeDetalhes|Administrativo360/ValeDetalhes|ARQ_OK|NOME|
+PAGINA|Administrativo360|ValeImprimir|Administrativo360/ValeImprimir|ARQ_OK|NOME|
+PAGINA|Administrativo360|ValeNovo|Administrativo360/ValeNovo|ARQ_OK|NOME|
+PAGINA|Administrativo360|Vales|Administrativo360/Vales|ARQ_OK|NOME|
+PAGINA|Administrativo360|Valorizacao|Administrativo360/Valorizacao|ARQ_OK|NOME|
+PAGINA|Administrativo360|ValorizacaoPrevia|Administrativo360/ValorizacaoPrevia|ARQ_OK|NOME|
+PAGINA|Administrativo360|VendaDetalhes|Administrativo360/VendaDetalhes|ARQ_OK|NOME|
+PAGINA|Administrativo360|Vendas|Administrativo360/Vendas|ARQ_OK|NOME|
+PAGINA|AdminSaas|Alertas|AdminSaas/Dashboard|ARQ_OK|LIT|
+PAGINA|AdminSaas|Assinaturas|AdminSaas/Dashboard|ARQ_OK|LIT|
+PAGINA|AdminSaas|Billing|AdminSaas/Dashboard|ARQ_OK|LIT|
+PAGINA|AdminSaas|Clientes|AdminSaas/Dashboard|ARQ_OK|LIT|
+PAGINA|AdminSaas|Implantacoes|AdminSaas/Dashboard|ARQ_OK|LIT|
+PAGINA|AdminSaas|Index|AdminSaas/Index|ARQ_OK|LIT|
+PAGINA|AdminSaas|Leads|AdminSaas/Dashboard|ARQ_OK|LIT|
+PAGINA|AdminSaas|Monitoramento|AdminSaas/Dashboard|ARQ_OK|LIT|
+PAGINA|AdminSaas|Parceiros|AdminSaas/Dashboard|ARQ_OK|LIT|
+PAGINA|AdminSaas|Planos|AdminSaas/Dashboard|ARQ_OK|LIT|
+PAGINA|AdminSaas|Propostas|AdminSaas/Dashboard|ARQ_OK|LIT|
+PAGINA|AdminSaas|Tenants|AdminSaas/Dashboard|ARQ_OK|LIT|
+PAGINA|Agenda|Calendario|Agenda/Calendario|ARQ_FALTA|NOME via Carregar|
+PAGINA|Agenda|Conflitos|Agenda/Conflitos|ARQ_FALTA|NOME via Carregar|
+PAGINA|Agenda|Dia|Agenda/Dia|ARQ_FALTA|NOME via Carregar|
+PAGINA|Agenda|Hospitais|Agenda/Hospitais|ARQ_FALTA|NOME via Carregar|
+PAGINA|Agenda|Index|Agenda/Index|ARQ_OK|NOME via Carregar|
+PAGINA|Agenda|Medicos|Agenda/Medicos|ARQ_FALTA|NOME via Carregar|
+PAGINA|Agenda|Mes|Agenda/Mes|ARQ_FALTA|NOME via Carregar|
+PAGINA|Agenda|Semana|Agenda/Semana|ARQ_FALTA|NOME via Carregar|
+PAGINA|Agendamentos|AgendaDia|Agendamentos/AgendaPremium|ARQ_OK|LIT via AgendaPremiumAsync|
+PAGINA|Agendamentos|AgendaMedico|Agendamentos/AgendaPremium|ARQ_OK|LIT via AgendaPremiumAsync|
+PAGINA|Agendamentos|Calendario|Agendamentos/AgendaPremium|ARQ_OK|LIT via AgendaPremiumAsync|
+PAGINA|Agendamentos|Cancelamentos|Agendamentos/Cancelamentos|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Agendamentos|CheckIn|Agendamentos/AgendaPremium|ARQ_OK|LIT via AgendaPremiumAsync|
+PAGINA|Agendamentos|Create|Agendamentos/Create|ARQ_OK|NOME|
+PAGINA|Agendamentos|Details|Agendamentos/Details|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Agendamentos|Edit|Agendamentos/Edit|ARQ_OK|NOME|
+PAGINA|Agendamentos|Index|Agendamentos/AgendaPremium|ARQ_OK|LIT via AgendaPremiumAsync|
+PAGINA|Agendamentos|Salvar|Agendamentos/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+PAGINA|Agendamentos|Save|Agendamentos/Save|ARQ_FALTA|NOME|
+PAGINA|Ajuda|Artigo|Ajuda/Artigo|ARQ_OK|NOME|
+PAGINA|Ajuda|Busca|Ajuda/Busca|ARQ_OK|NOME|
+PAGINA|Ajuda|Checklist|Ajuda/Checklist|ARQ_OK|NOME|
+PAGINA|Ajuda|FluxoAtendimento|Ajuda/FluxoAtendimento|ARQ_OK|NOME|
+PAGINA|Ajuda|Index|Ajuda/Index|ARQ_OK|NOME|
+PAGINA|Ajuda|Modulo|Ajuda/Artigo|ARQ_OK|LIT|
+PAGINA|Ajuda|PerguntasFrequentes|Ajuda/PerguntasFrequentes|ARQ_OK|NOME|
+PAGINA|Ajuda|PrimeirosPassos|Ajuda/PrimeirosPassos|ARQ_OK|NOME|
+PAGINA|Assinaturas|AlterarPlano|Assinaturas/AlterarPlano|ARQ_OK|NOME|
+PAGINA|Assinaturas|Create|Assinaturas/Create|ARQ_OK|NOME|
+PAGINA|Assinaturas|Details|Assinaturas/Details|ARQ_OK|NOME|
+PAGINA|Assinaturas|Edit|Assinaturas/Edit|ARQ_OK|NOME|
+PAGINA|Assinaturas|Index|Assinaturas/Index|ARQ_OK|NOME|
+PAGINA|Assinaturas|Uso|Assinaturas/Uso|ARQ_OK|NOME|
+PAGINA|AssistenteIa|Index|AssistenteIa/Index|ARQ_OK|NOME|
+PAGINA|Auditoria|Details|Auditoria/NotFound|ARQ_OK|LIT|
+PAGINA|Auditoria|Index|Auditoria/Index|ARQ_OK|NOME|
+PAGINA|Beta|Clientes|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|Beta|Feedbacks|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|Beta|Index|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Beta|Indicadores|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Beta|Programas|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|Bi|Alertas|Bi/Index|ARQ_OK|LIT|
+PAGINA|Bi|Clientes|Bi/Clientes|ARQ_OK|NOME|
+PAGINA|Bi|Clinico|Bi/Index|ARQ_OK|LIT|
+PAGINA|Bi|Convenios|Bi/Index|ARQ_OK|LIT|
+PAGINA|Bi|Financeiro|Bi/Financeiro|ARQ_OK|NOME|
+PAGINA|Bi|Index|Bi/Index|ARQ_OK|NOME|
+PAGINA|Bi|Medicos|Bi/Medicos|ARQ_OK|NOME|
+PAGINA|Bi|Operacional|Bi/Index|ARQ_OK|LIT|
+PAGINA|Bi|Saas|Bi/Index|ARQ_OK|LIT|
+PAGINA|Bi|Sla|Bi/Sla|ARQ_OK|NOME|
+PAGINA|Bi|Widgets|Bi/Index|ARQ_OK|LIT|
+PAGINA|Cadastro|Confirmacao|Cadastro/Cadastro|ARQ_OK|LIT|
+PAGINA|Cadastro|Confirmar|Cadastro/Cadastro|ARQ_OK|LIT|
+PAGINA|Cadastro|Empresa|Cadastro/Cadastro|ARQ_OK|LIT|
+PAGINA|Cadastro|Plano|Cadastro/Cadastro|ARQ_OK|LIT|
+PAGINA|Cadastro|Sucesso|Cadastro/Sucesso|ARQ_OK|NOME|
+PAGINA|Cadastro|Usuario|Cadastro/Cadastro|ARQ_OK|LIT|
+PAGINA|Caixa|Index|V116/Caixa|ARQ_OK|LIT|
+PAGINA|CentralAtendimento|Index|CentralAtendimento/Index|ARQ_OK|NOME|
+PAGINA|CentralEscala|Calendario|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
+PAGINA|CentralEscala|ConvitesPendentes|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
+PAGINA|CentralEscala|Index|CentralEscala/Index|ARQ_OK|LIT via CarregarResumoAsync|
+PAGINA|CentralEscala|IndexLegacy|CentralEscala/Index|ARQ_OK|LIT via CarregarResumoAsync|
+PAGINA|CentralEscala|MedicosDisponiveis|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
+PAGINA|CentralEscala|MedicosSugeridos|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
+PAGINA|CentralEscala|Plantao|CentralEscala/Plantao|ARQ_OK|NOME|
+PAGINA|CentralEscala|PlantaoDescoberto|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
+PAGINA|CentralEscala|Risco|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
+PAGINA|CentralEscala|Substituicoes|CentralEscala/Substituicoes|ARQ_OK|NOME|
+PAGINA|CentralEscala|Sugestoes|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
+PAGINA|Cid|Create|Cid/Create|ARQ_OK|NOME via Formulario|
+PAGINA|Cid|Details|Cid/Details|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Cid|Edit|Cid/Edit|ARQ_OK|NOME via Formulario|
+PAGINA|Cid|Favoritos|Cid/Favoritos|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Cid|Importar|Cid/Importar|ARQ_OK|NOME via Formulario|
+PAGINA|Cid|Index|Cid/Index|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Cid|MaisUsados|Cid/MaisUsados|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Cid|Salvar|Cid/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+PAGINA|ClientePortal|Faturas|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ClientePortal|Index|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ClientePortal|MeuPlano|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ClientePortal|Onboarding|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ClientePortal|Parametrizacoes|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ClientePortal|Perfis|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ClientePortal|Suporte|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ClientePortal|Treinamento|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ClientePortal|Uso|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ClientePortal|Usuarios|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ClientePortal|WhiteLabel|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|Clientes|Details|Clientes/Details|ARQ_OK|NOME|
+PAGINA|Clientes|Index|Clientes/Index|ARQ_OK|NOME|
+PAGINA|Clientes|Inteligencia|Clientes/Inteligencia|ARQ_OK|NOME|
+PAGINA|Clientes|Jornada|Clientes/Jornada|ARQ_OK|NOME|
+PAGINA|ClinicaDashboard|FluxoAtendimento|ClinicaDashboard/FluxoAtendimento|ARQ_OK|LIT|
+PAGINA|ClinicaDashboard|Index|ClinicaDashboard/Index|ARQ_OK|NOME via ModuloAsync|
+PAGINA|ClinicaDashboard|Salvar|ClinicaDashboard/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+PAGINA|ClinicaFinanceiro|Caixa|ClinicaFinanceiro/Caixa|ARQ_OK|NOME via ModuloAsync|
+PAGINA|ClinicaFinanceiro|ContasReceber|ClinicaFinanceiro/ContasReceber|ARQ_OK|NOME via ModuloAsync|
+PAGINA|ClinicaFinanceiro|FechamentoCaixa|ClinicaFinanceiro/FechamentoCaixa|ARQ_OK|NOME via Caixa>ModuloAsync|
+PAGINA|ClinicaFinanceiro|Glosas|ClinicaFinanceiro/Glosas|ARQ_OK|NOME via ModuloAsync|
+PAGINA|ClinicaFinanceiro|Index|ClinicaFinanceiro/Index|ARQ_OK|NOME via ModuloAsync|
+PAGINA|ClinicaFinanceiro|Receber|ClinicaFinanceiro/Receber|ARQ_OK|NOME via Formulario|
+PAGINA|ClinicaFinanceiro|Relatorios|ClinicaFinanceiro/Relatorios|ARQ_OK|NOME via ModuloAsync|
+PAGINA|ClinicaFinanceiro|Repasses|ClinicaFinanceiro/Repasses|ARQ_OK|NOME via ModuloAsync|
+PAGINA|ClinicaFinanceiro|Salvar|ClinicaFinanceiro/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+PAGINA|ClinicaUnidades|Create|ClinicaUnidades/Create|ARQ_OK|NOME via Formulario|
+PAGINA|ClinicaUnidades|Edit|ClinicaUnidades/Edit|ARQ_OK|NOME via Formulario|
+PAGINA|ClinicaUnidades|Index|ClinicaUnidades/Index|ARQ_OK|NOME via ModuloAsync|
+PAGINA|ClinicaUnidades|Salvar|ClinicaUnidades/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+PAGINA|Cobertura|Criticos|OperacaoPremium/Cobertura|ARQ_OK|LIT|
+PAGINA|Cobertura|Details|OperacaoPremium/Cobertura|ARQ_OK|LIT|
+PAGINA|Cobertura|Index|OperacaoPremium/Cobertura|ARQ_OK|LIT|
+PAGINA|Cobertura|Sugestoes|OperacaoPremium/Cobertura|ARQ_OK|LIT|
+PAGINA|Comercial|Funil|Comercial/Funil|ARQ_OK|NOME|
+PAGINA|Comercial|Leads|Comercial/Leads|ARQ_OK|NOME|
+PAGINA|Comercial|Oportunidades|Comercial/Oportunidades|ARQ_OK|NOME|
+PAGINA|Comercial|PrevisaoReceita|Comercial/PrevisaoReceita|ARQ_OK|NOME|
+PAGINA|Comercial|Propostas|Comercial/Propostas|ARQ_OK|NOME|
+PAGINA|CommandCenter|Index|CommandCenter/Index|ARQ_OK|NOME|
+PAGINA|CommercialDemoWeb|CasosUso|CommercialDemoWeb/CommercialPage|ARQ_OK|LIT|
+PAGINA|CommercialDemoWeb|Contato|CommercialDemoWeb/Contato|ARQ_OK|LIT|
+PAGINA|CommercialDemoWeb|Demo|CommercialDemoWeb/CommercialPage|ARQ_OK|LIT|
+PAGINA|CommercialDemoWeb|Landing|CommercialDemoWeb/Landing|ARQ_OK|LIT|
+PAGINA|CommercialDemoWeb|Simulador|CommercialDemoWeb/Simulador|ARQ_OK|LIT|
+PAGINA|CommercialDemoWeb|SimuladorResultado|CommercialDemoWeb/ResultadoSimulador|ARQ_OK|LIT|
+PAGINA|Comunicacao|Details|Comunicacao/Details|ARQ_OK|NOME|
+PAGINA|Comunicacao|Index|Comunicacao/Index|ARQ_OK|NOME|
+PAGINA|Comunicacao|NovaConversa|Comunicacao/NovaConversa|ARQ_OK|NOME|
+PAGINA|Comunicacao|Templates|Comunicacao/Templates|ARQ_OK|NOME|
+PAGINA|ConferenciaExecucao|Index|ConferenciaExecucao/Index|ARQ_OK|NOME|
+PAGINA|Configuracoes|Index|Configuracoes/Index|ARQ_OK|NOME|
+PAGINA|Configuracoes|Saude|Configuracoes/Saude|ARQ_OK|NOME|
+PAGINA|ConfiguracoesFinanceiras|Index|V114/Produto|ARQ_OK|LIT|
+PAGINA|Consultas|Atendimento|Consultas/Atendimento|ARQ_OK|NOME|
+PAGINA|Consultas|Create|Consultas/Create|ARQ_OK|NOME via Formulario|
+PAGINA|Consultas|Details|Consultas/Details|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Consultas|Edit|Consultas/Edit|ARQ_OK|NOME via Formulario|
+PAGINA|Consultas|HistoricoPaciente|Consultas/HistoricoPaciente|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Consultas|Imprimir|Consultas/Imprimir|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Consultas|Index|Consultas/Index|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Consultas|Resumo|Consultas/Resumo|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Consultas|Salvar|Consultas/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+PAGINA|Contratos|Aceites|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Contratos|Create|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|Contratos|Details|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Contratos|Edit|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|Contratos|Index|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Contratos|Sla|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|ConvenioAutorizacoes|Index|V116/Autorizacoes|ARQ_OK|LIT|
+PAGINA|Convenios|Autorizacoes|Convenios/Autorizacoes|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Convenios|Contratos|Convenios/Contratos|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Convenios|Create|Convenios/Create|ARQ_OK|NOME via Formulario|
+PAGINA|Convenios|Dashboard|Convenios/Dashboard|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Convenios|Details|Convenios/Details|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Convenios|Edit|Convenios/Edit|ARQ_OK|NOME via Formulario|
+PAGINA|Convenios|Faturamento|Convenios/Faturamento|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Convenios|Glosas|Convenios/Glosas|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Convenios|Index|Convenios/Index|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Convenios|Planos|Convenios/Planos|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Convenios|Salvar|Convenios/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+PAGINA|Convenios|Tabelas|Convenios/Tabelas|ARQ_OK|NOME via ModuloAsync|
+PAGINA|ConvitePublicoWeb|Aceitar|Convite/Aceitar|ARQ_OK|LIT|
+PAGINA|ConvitePublicoWeb|ConfirmarAceite|Convite/Aceitar|ARQ_OK|LIT|
+PAGINA|Convites|Index|Convites/Index|ARQ_OK|NOME|
+PAGINA|ConvitesEquipe|Index|ConvitesEquipe/Index|ARQ_OK|LIT|
+PAGINA|Coordenacao|Index|Coordenacao/Index|ARQ_OK|NOME|
+PAGINA|CustomerSuccess|Alertas|CustomerSuccess/Alertas|ARQ_OK|NOME|
+PAGINA|CustomerSuccess|ContaDetails|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|CustomerSuccess|Contas|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|CustomerSuccess|Details|CustomerSuccess/Details|ARQ_OK|NOME|
+PAGINA|CustomerSuccess|Index|CustomerSuccess/Index|ARQ_OK|NOME|
+PAGINA|CustomerSuccess|Nps|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|CustomerSuccess|Oportunidades|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|CustomerSuccess|PlanosAcao|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|CustomerSuccess|Playbooks|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|CustomerSuccess|Recomendacoes|CustomerSuccess/Recomendacoes|ARQ_OK|NOME|
+PAGINA|CustomerSuccess|Riscos|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|DashboardsPremium|AdminGlobal|DashboardsPremium/Perfil|ARQ_OK|LIT via PerfilAsync|
+PAGINA|DashboardsPremium|AdministradorCliente|DashboardsPremium/Perfil|ARQ_OK|LIT via PerfilAsync|
+PAGINA|DashboardsPremium|Coordenacao|DashboardsPremium/Perfil|ARQ_OK|LIT via PerfilAsync|
+PAGINA|DashboardsPremium|Financeiro|DashboardsPremium/Perfil|ARQ_OK|LIT via PerfilAsync|
+PAGINA|DashboardsPremium|Medico|DashboardsPremium/Perfil|ARQ_OK|LIT via PerfilAsync|
+PAGINA|DashboardsPremium|Saude360|DashboardsPremium/Perfil|ARQ_OK|LIT via PerfilAsync|
+PAGINA|DemoAdmin|GerarDados|DemoAdmin/Dashboard|ARQ_FALTA|LIT via Index|
+PAGINA|DemoAdmin|Index|DemoAdmin/Dashboard|ARQ_FALTA|LIT|
+PAGINA|DemoAdmin|Roteiros|DemoAdmin/Dashboard|ARQ_FALTA|LIT via Index|
+PAGINA|DemoAdmin|Status|DemoAdmin/Dashboard|ARQ_FALTA|LIT via Index|
+PAGINA|Developer|ApiKeys|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|Developer|Autenticacao|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Developer|Endpoints|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Developer|Exemplos|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Developer|Index|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Developer|RateLimits|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Developer|Uso|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Developer|Webhooks|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Error|Error|Shared/Error|ARQ_OK|LIT|
+PAGINA|Escalas|Details|Escalas/Details|ARQ_OK|NOME|
+PAGINA|Escalas|Index|Escalas/Index|ARQ_OK|NOME via RenderPaged|
+PAGINA|Escalas|Substituir|Escalas/Substituir|ARQ_OK|NOME|
+PAGINA|Especialidades|Create|Especialidades/Create|ARQ_OK|NOME|
+PAGINA|Especialidades|Details|Especialidades/Details|ARQ_OK|NOME|
+PAGINA|Especialidades|Edit|Especialidades/Edit|ARQ_OK|NOME|
+PAGINA|Especialidades|Index|Especialidades/Index|ARQ_OK|NOME via RenderList|
+PAGINA|Executivo|Alertas|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Executivo|Clientes|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Executivo|Comercial|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Executivo|Index|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Executivo|Metas|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|Executivo|Operacao|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Executivo|Produto|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Executivo|Receita|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Expansoes|Details|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Expansoes|Index|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|FaturamentoClinico|Configuracoes|V114/Produto|ARQ_OK|LIT via Produto|
+PAGINA|FaturamentoClinico|ContasReceber|FaturamentoClinico/ContasReceber|ARQ_FALTA|NOME via Index|
+PAGINA|FaturamentoClinico|DemoBoleto|V114/Produto|ARQ_OK|LIT via Produto|
+PAGINA|FaturamentoClinico|Glosas|V114/Produto|ARQ_OK|LIT via Produto|
+PAGINA|FaturamentoClinico|Index|FaturamentoClinico/Index|ARQ_OK|NOME|
+PAGINA|FaturamentoClinico|Recebimentos|FaturamentoClinico/Recebimentos|ARQ_FALTA|NOME via Index|
+PAGINA|FaturamentoClinico|Regras|V114/Produto|ARQ_OK|LIT via Produto|
+PAGINA|FaturamentoClinico|RepassesMedicos|V114/Produto|ARQ_OK|LIT via Produto|
+PAGINA|FaturamentoClinico|Titulos|V114/Produto|ARQ_OK|LIT via Produto|
+PAGINA|FaturamentoRegras|Index|V114/Produto|ARQ_OK|LIT|
+PAGINA|FaturamentoSaas|Details|FaturamentoSaas/Details|ARQ_OK|NOME|
+PAGINA|FaturamentoSaas|GerarMensal|FaturamentoSaas/GerarMensal|ARQ_OK|NOME|
+PAGINA|FaturamentoSaas|Inadimplencia|FaturamentoSaas/Inadimplencia|ARQ_OK|NOME|
+PAGINA|FaturamentoSaas|Index|FaturamentoSaas/Index|ARQ_OK|NOME|
+PAGINA|Favoritos|Index|V114/Produto|ARQ_OK|LIT|
+PAGINA|FeatureFlags|Index|FeatureFlags/Dashboard|ARQ_OK|LIT|
+PAGINA|Fechamentos|Conferencia|OperacaoPremium/Fechamentos|ARQ_OK|LIT via Load|
+PAGINA|Fechamentos|Details|OperacaoPremium/Fechamentos|ARQ_OK|LIT via Load|
+PAGINA|Fechamentos|Index|OperacaoPremium/Fechamentos|ARQ_OK|LIT via Load|
+PAGINA|Fechamentos|Pendentes|OperacaoPremium/Fechamentos|ARQ_OK|LIT via Load|
+PAGINA|Financeiro|Confirmados|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
+PAGINA|Financeiro|Contestacoes|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
+PAGINA|Financeiro|Details|Financeiro/Details|ARQ_OK|NOME|
+PAGINA|Financeiro|Exportacoes|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
+PAGINA|Financeiro|Index|Financeiro/Index|ARQ_OK|NOME via RenderPaged|
+PAGINA|Financeiro|Pagamentos|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
+PAGINA|Financeiro|Pendentes|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
+PAGINA|Financeiro|Relatorios|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
+PAGINA|GestorDashboard|Index|GestorDashboard/Index|ARQ_FALTA|NOME via ModuloAsync|
+PAGINA|GestorDashboard|Salvar|GestorDashboard/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+PAGINA|Glosas|Index|V114/Produto|ARQ_OK|LIT|
+PAGINA|GoToMarket|Campanhas|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|GoToMarket|CasosUso|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|GoToMarket|Decisores|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|GoToMarket|Index|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|GoToMarket|Materiais|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|GuiasConvenio|Index|V116/Guias|ARQ_OK|LIT|
+PAGINA|HistoricoAcoes|Index|V114/Produto|ARQ_OK|LIT|
+PAGINA|Home|Dashboard|Home/Dashboard|ARQ_OK|NOME|
+PAGINA|Home|Produto|Home/Produto|ARQ_OK|NOME|
+PAGINA|Hospitais|Create|Hospitais/Create|ARQ_OK|NOME|
+PAGINA|Hospitais|Details|Hospitais/Details|ARQ_OK|NOME|
+PAGINA|Hospitais|Edit|Hospitais/Edit|ARQ_OK|NOME|
+PAGINA|Hospitais|Index|Hospitais/Index|ARQ_OK|NOME via RenderList|
+PAGINA|HospitalArea|Escalas|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|HospitalArea|Index|HospitalArea/Index|ARQ_OK|NOME|
+PAGINA|HospitalArea|NovaSolicitacao|HospitalArea/NovaSolicitacao|ARQ_OK|NOME|
+PAGINA|HospitalArea|Plantoes|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Implantacao|Index|Implantacao/Index|ARQ_OK|NOME|
+PAGINA|Integracoes|ApiKeys|Integracoes/ApiKeys|ARQ_OK|NOME|
+PAGINA|Integracoes|Index|Integracoes/ApiKeys|ARQ_OK|LIT|
+PAGINA|Integracoes|Logs|Integracoes/Logs|ARQ_OK|NOME|
+PAGINA|Integracoes|WebhookDetails|Integracoes/WebhookDetails|ARQ_OK|NOME|
+PAGINA|Integracoes|Webhooks|Integracoes/Webhooks|ARQ_OK|NOME|
+PAGINA|Inteligencia|Dashboard|Inteligencia/Dashboard|ARQ_OK|NOME|
+PAGINA|ItensFaturaveis|Create|V114/Form|ARQ_OK|LIT|
+PAGINA|ItensFaturaveis|Details|V114/Produto|ARQ_OK|LIT|
+PAGINA|ItensFaturaveis|Edit|V114/Form|ARQ_OK|LIT|
+PAGINA|ItensFaturaveis|Index|V114/Produto|ARQ_OK|LIT|
+PAGINA|Jornada|Index|V114/Produto|ARQ_OK|LIT|
+PAGINA|JornadaClientes|Details|JornadaClientes/Details|ARQ_OK|NOME|
+PAGINA|JornadaClientes|Funil|JornadaClientes/Funil|ARQ_OK|NOME|
+PAGINA|JornadaClientes|Index|JornadaClientes/Index|ARQ_OK|NOME|
+PAGINA|JornadaClientes|Tarefas|JornadaClientes/Tarefas|ARQ_OK|NOME|
+PAGINA|Lgpd|Consentimentos|Lgpd/Consentimentos|ARQ_OK|NOME|
+PAGINA|Lgpd|Eventos|Lgpd/Eventos|ARQ_OK|NOME|
+PAGINA|Lgpd|ExportarDados|Lgpd/ExportarDados|ARQ_OK|NOME|
+PAGINA|Lgpd|Index|Lgpd/Index|ARQ_OK|NOME|
+PAGINA|Lgpd|MinhaPrivacidade|Lgpd/MinhaPrivacidade|ARQ_OK|NOME|
+PAGINA|Lgpd|Politica|Lgpd/Politica|ARQ_OK|NOME|
+PAGINA|Lgpd|Retencao|Lgpd/Retencao|ARQ_OK|NOME|
+PAGINA|Lgpd|Solicitacoes|Lgpd/Solicitacoes|ARQ_OK|NOME|
+PAGINA|LotesFaturamento|Index|V116/Lotes|ARQ_OK|LIT|
+PAGINA|Manual|AdminClinica|Manual/Manual|ARQ_OK|LIT|
+PAGINA|Manual|AdminSaas|Manual/Manual|ARQ_OK|LIT|
+PAGINA|Manual|Auditor|Manual/Manual|ARQ_OK|LIT|
+PAGINA|Manual|Convenios|Manual/Manual|ARQ_OK|LIT|
+PAGINA|Manual|Financeiro|Manual/Manual|ARQ_OK|LIT|
+PAGINA|Manual|Index|Manual/Manual|ARQ_OK|LIT|
+PAGINA|Manual|Medico|Manual/Manual|ARQ_OK|LIT|
+PAGINA|Manual|Parceiro|Manual/Manual|ARQ_OK|LIT|
+PAGINA|Manual|Perfil|Manual/Manual|ARQ_OK|LIT|
+PAGINA|Manual|Recepcao|Manual/Manual|ARQ_OK|LIT|
+PAGINA|Manual|Triagem|Manual/Manual|ARQ_OK|LIT|
+PAGINA|Marketplace|Details|Marketplace/Index|ARQ_OK|LIT|
+PAGINA|Marketplace|Index|Marketplace/Index|ARQ_OK|NOME|
+PAGINA|MedicoArea|Agenda|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|MedicoArea|Convites|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|MedicoArea|Disponibilidade|MedicoArea/Disponibilidade|ARQ_OK|LIT|
+PAGINA|MedicoArea|Index|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|MedicoArea|Indisponibilidades|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|MedicoArea|Pagamentos|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|MedicoArea|Perfil|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|MedicoArea|Preferencias|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|MedicoArea|SolicitarSubstituicao|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|MedicoArea|Substituicoes|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|Medicos|Create|Medicos/Create|ARQ_OK|NOME|
+PAGINA|Medicos|Details|Medicos/Details|ARQ_OK|NOME|
+PAGINA|Medicos|Edit|Medicos/Edit|ARQ_OK|NOME|
+PAGINA|Medicos|Index|Medicos/Index|ARQ_OK|NOME via RenderList|
+PAGINA|MeuDia|Index|MeuDia/Index|ARQ_OK|NOME|
+PAGINA|MinhaAgenda|Agenda|MinhaAgenda/Agenda|ARQ_OK|NOME|
+PAGINA|MinhaAgenda|Detalhe|MinhaAgenda/Detalhe|ARQ_OK|NOME|
+PAGINA|MinhaAgenda|Index|MinhaAgenda/Index|ARQ_OK|NOME|
+PAGINA|MinhaAgenda|MeusPagamentos|MinhaAgenda/MeusPagamentos|ARQ_OK|NOME|
+PAGINA|MinhaAgenda|PlantoesDisponiveis|MinhaAgenda/PlantoesDisponiveis|ARQ_OK|NOME|
+PAGINA|MinhaAgenda|Presencas|MinhaAgenda/Presencas|ARQ_OK|NOME|
+PAGINA|MinhaAssinatura|Cancelamento|MinhaAssinatura/Cancelamento|ARQ_OK|LIT|
+PAGINA|MinhaAssinatura|Downgrade|MinhaAssinatura/Downgrade|ARQ_OK|LIT|
+PAGINA|MinhaAssinatura|Faturas|MinhaAssinatura/Faturas|ARQ_OK|LIT|
+PAGINA|MinhaAssinatura|Index|MinhaAssinatura/Index|ARQ_OK|NOME|
+PAGINA|MinhaAssinatura|Limites|MinhaAssinatura/Limites|ARQ_OK|LIT|
+PAGINA|MinhaAssinatura|Modulos|MinhaAssinatura/Modulos|ARQ_OK|LIT|
+PAGINA|MinhaAssinatura|RevisarModulos|MinhaAssinatura/Modulos|ARQ_OK|LIT|
+PAGINA|MinhaAssinatura|Upgrade|MinhaAssinatura/Upgrade|ARQ_OK|LIT|
+PAGINA|MinhaAssinatura|Uso|MinhaAssinatura/Uso|ARQ_OK|LIT|
+PAGINA|MinhaCentral|Index|MinhaCentral/Index|ARQ_OK|NOME|
+PAGINA|Modulos|Create|Modulos/Form|ARQ_OK|LIT|
+PAGINA|Modulos|Index|Modulos/Dashboard|ARQ_OK|LIT|
+PAGINA|Modulos|Save|Modulos/Form|ARQ_OK|LIT|
+PAGINA|Modulos|Tenant|Modulos/Tenant|ARQ_OK|NOME|
+PAGINA|Monitoramento|Alertas|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|Monitoramento|Erros|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Monitoramento|HealthChecks|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Monitoramento|Index|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Monitoramento|Performance|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Monitoramento|Tenants|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Notificacoes|Index|Notificacoes/Index|ARQ_OK|NOME|
+PAGINA|Notificacoes|Preferencias|Notificacoes/Preferencias|ARQ_OK|NOME|
+PAGINA|NotificacoesOperacionais|Index|V116/Notificacoes|ARQ_OK|LIT|
+PAGINA|Observabilidade|Acessos|Observabilidade/Acessos|ARQ_OK|NOME|
+PAGINA|Observabilidade|Erros|Observabilidade/Erros|ARQ_OK|NOME|
+PAGINA|Observabilidade|Eventos|Observabilidade/Eventos|ARQ_OK|NOME|
+PAGINA|Observabilidade|Index|Observabilidade/Index|ARQ_OK|NOME|
+PAGINA|Observabilidade|Performance|Observabilidade/Performance|ARQ_OK|NOME|
+PAGINA|Ocorrencias|Index|Ocorrencias/Index|ARQ_OK|NOME|
+PAGINA|Onboarding|Index|Onboarding/Index|ARQ_OK|NOME|
+PAGINA|Onboarding|NovoCliente|Onboarding/NovoCliente|ARQ_OK|NOME|
+PAGINA|Onboarding|Sucesso|Onboarding/Sucesso|ARQ_OK|NOME|
+PAGINA|Operacao|Index|V114/Produto|ARQ_OK|LIT|
+PAGINA|OperacaoAssistida|Checklist|OperacaoAssistida/Checklist|ARQ_OK|NOME|
+PAGINA|OperacaoAssistida|Details|OperacaoAssistida/Details|ARQ_OK|NOME|
+PAGINA|OperacaoAssistida|Index|OperacaoAssistida/Index|ARQ_OK|NOME|
+PAGINA|OperacaoAssistida|Ocorrencias|OperacaoAssistida/Ocorrencias|ARQ_OK|NOME|
+PAGINA|OperacaoAssistida|Treinamentos|OperacaoAssistida/Treinamentos|ARQ_OK|NOME|
+PAGINA|OperacaoInteligente|Index|OperacaoInteligente/Index|ARQ_OK|NOME|
+PAGINA|OperacaoSaas|Auditoria|OperacaoSaas/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|OperacaoSaas|Erros|OperacaoSaas/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|OperacaoSaas|Health|OperacaoSaas/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|OperacaoSaas|Performance|OperacaoSaas/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|OperacaoSaas|Uso|OperacaoSaas/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|OperacionalLaunch|Index|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Operacoes|Index|Operacoes/Index|ARQ_OK|NOME|
+PAGINA|Pacientes|Buscar|Pacientes/Buscar|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Pacientes|Create|Pacientes/Create|ARQ_OK|NOME|
+PAGINA|Pacientes|Details|Pacientes/Details|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Pacientes|Edit|Pacientes/Edit|ARQ_OK|NOME|
+PAGINA|Pacientes|Historico|Pacientes/Historico|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Pacientes|Index|Pacientes/Index|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Pacientes|Mesclar|Pacientes/Mesclar|ARQ_OK|NOME|
+PAGINA|Pacientes|Prontuario|Pacientes/Prontuario|ARQ_OK|NOME|
+PAGINA|Pacientes|ResumoClinico|Pacientes/ResumoClinico|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Pacientes|Salvar|Pacientes/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+PAGINA|Pacientes|Save|Pacientes/Save|ARQ_FALTA|NOME|
+PAGINA|Pagamentos|Index|Pagamentos/Index|ARQ_OK|NOME via RenderPaged|
+PAGINA|PainelChamada|Configuracoes|PainelChamada/Configuracoes|ARQ_OK|NOME via ModuloAsync|
+PAGINA|PainelChamada|Fila|PainelChamada/Fila|ARQ_OK|NOME via ModuloAsync|
+PAGINA|PainelChamada|Guiches|PainelChamada/Guiches|ARQ_OK|NOME via Configuracoes>ModuloAsync|
+PAGINA|PainelChamada|Historico|PainelChamada/Historico|ARQ_OK|NOME via ModuloAsync|
+PAGINA|PainelChamada|Index|PainelChamada/Index|ARQ_OK|NOME via ModuloAsync|
+PAGINA|PainelChamada|Salas|PainelChamada/Salas|ARQ_OK|NOME via Configuracoes>ModuloAsync|
+PAGINA|PainelChamada|Salvar|PainelChamada/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+PAGINA|PainelChamada|Setores|PainelChamada/Setores|ARQ_OK|NOME via Configuracoes>ModuloAsync|
+PAGINA|PainelChamada|Tv|PainelChamada/Tv|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Parametrizacoes|Financeiro|Parametrizacoes/Financeiro|ARQ_OK|LIT|
+PAGINA|Parametrizacoes|Index|Parametrizacoes/Index|ARQ_OK|LIT|
+PAGINA|Parametrizacoes|Lgpd|Parametrizacoes/Lgpd|ARQ_OK|LIT|
+PAGINA|Parametrizacoes|Notificacoes|Parametrizacoes/Notificacoes|ARQ_OK|LIT|
+PAGINA|Parametrizacoes|Operacional|Parametrizacoes/Operacional|ARQ_OK|LIT|
+PAGINA|Parametrizacoes|WhiteLabel|Parametrizacoes/WhiteLabel|ARQ_OK|LIT|
+PAGINA|ParceiroPortal|Clientes|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ParceiroPortal|Comissoes|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ParceiroPortal|Index|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ParceiroPortal|Leads|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ParceiroPortal|Materiais|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ParceiroPortal|Propostas|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ParceiroPortal|Repasses|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|ParceiroPortal|Suporte|Fase2Operational/Dashboard|ARQ_OK|LIT via Render|
+PAGINA|Pendencias|Index|Pendencias/Index|ARQ_OK|NOME|
+PAGINA|PendenciasClinicas|Index|PendenciasClinicas/Index|ARQ_OK|NOME via ModuloAsync|
+PAGINA|PendenciasClinicas|Salvar|PendenciasClinicas/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+PAGINA|Perfis|Create|Perfis/Form|ARQ_OK|LIT|
+PAGINA|Perfis|Edit|Perfis/Form|ARQ_OK|LIT via SaveAsync|
+PAGINA|Perfis|Index|Perfis/Index|ARQ_OK|LIT|
+PAGINA|Perfis|Permissoes|Perfis/Permissoes|ARQ_OK|LIT|
+PAGINA|Permissoes|Index|Permissoes/Matriz|ARQ_OK|LIT|
+PAGINA|Permissoes|Matriz|Permissoes/Matriz|ARQ_OK|NOME|
+PAGINA|Permissoes|PorPerfil|Permissoes/Matriz|ARQ_OK|LIT|
+PAGINA|Permissoes|PorUsuario|Permissoes/Matriz|ARQ_OK|LIT|
+PAGINA|Permissoes|TestarAcesso|Permissoes/TestarAcesso|ARQ_OK|NOME|
+PAGINA|Piloto|Bugs|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Piloto|Checklist|Piloto/Checklist|ARQ_OK|NOME|
+PAGINA|Piloto|ClienteDetails|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Piloto|Clientes|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|Piloto|Feedbacks|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|Piloto|Index|Piloto/Index|ARQ_OK|NOME|
+PAGINA|Piloto|Indicadores|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Piloto|Ocorrencias|Piloto/Ocorrencias|ARQ_OK|NOME|
+PAGINA|Piloto|ProgramaDetails|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Piloto|Programas|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|Planos|Comparativo|Planos/Comparativo|ARQ_OK|NOME|
+PAGINA|Planos|Create|Planos/Create|ARQ_OK|NOME|
+PAGINA|Planos|Details|Planos/Details|ARQ_OK|NOME|
+PAGINA|Planos|Edit|Planos/Edit|ARQ_OK|NOME|
+PAGINA|Planos|Index|Planos/Index|ARQ_OK|NOME|
+PAGINA|Planos|Recursos|Planos/Recursos|ARQ_OK|NOME|
+PAGINA|PlanosPublicos|Comparar|PlanosPublicos/Comparar|ARQ_OK|NOME|
+PAGINA|PlanosPublicos|Duvidas|PlanosPublicos/Duvidas|ARQ_OK|NOME|
+PAGINA|PlanosPublicos|Index|PlanosPublicos/Index|ARQ_OK|NOME|
+PAGINA|PlanosSaude|Autorizacoes|PlanosSaude/Autorizacoes|ARQ_OK|NOME via ModuloAsync|
+PAGINA|PlanosSaude|Coberturas|PlanosSaude/Coberturas|ARQ_OK|NOME via ModuloAsync|
+PAGINA|PlanosSaude|Create|PlanosSaude/Create|ARQ_OK|NOME via Formulario|
+PAGINA|PlanosSaude|Details|PlanosSaude/Details|ARQ_OK|NOME via ModuloAsync|
+PAGINA|PlanosSaude|Edit|PlanosSaude/Edit|ARQ_OK|NOME via Formulario|
+PAGINA|PlanosSaude|Index|PlanosSaude/Index|ARQ_OK|NOME via ModuloAsync|
+PAGINA|PlanosSaude|Pacientes|PlanosSaude/Pacientes|ARQ_OK|NOME via ModuloAsync|
+PAGINA|PlanosSaude|Salvar|PlanosSaude/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+PAGINA|Plantoes|Calendario|Plantoes/Calendario|ARQ_OK|NOME|
+PAGINA|Plantoes|Create|Plantoes/Create|ARQ_OK|NOME|
+PAGINA|Plantoes|Details|Plantoes/Details|ARQ_OK|NOME|
+PAGINA|Plantoes|Edit|Plantoes/Edit|ARQ_OK|NOME|
+PAGINA|Plantoes|Index|Plantoes/Index|ARQ_OK|NOME via RenderPaged|
+PAGINA|Prescricoes|Create|Prescricoes/Create|ARQ_OK|NOME via Formulario|
+PAGINA|Prescricoes|Details|Prescricoes/Details|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Prescricoes|Edit|Prescricoes/Edit|ARQ_OK|NOME via Formulario|
+PAGINA|Prescricoes|Editor|Prescricoes/Edit|ARQ_OK|LIT|
+PAGINA|Prescricoes|HistoricoPaciente|Prescricoes/HistoricoPaciente|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Prescricoes|Imprimir|Prescricoes/Imprimir|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Prescricoes|Index|Prescricoes/Index|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Prescricoes|Modelos|Prescricoes/Modelos|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Prescricoes|Salvar|Prescricoes/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+PAGINA|PrimeirosPassos|Index|PrimeirosPassos/Index|ARQ_OK|NOME|
+PAGINA|PropostasComerciais|Create|PropostasComerciais/PropostaForm|ARQ_OK|LIT|
+PAGINA|PropostasComerciais|Details|PropostasComerciais/Dashboard|ARQ_OK|LIT via Index|
+PAGINA|PropostasComerciais|Edit|PropostasComerciais/PropostaForm|ARQ_OK|LIT via Create|
+PAGINA|PropostasComerciais|Enviar|PropostasComerciais/Dashboard|ARQ_OK|LIT via Index|
+PAGINA|PropostasComerciais|Index|PropostasComerciais/Dashboard|ARQ_OK|LIT|
+PAGINA|PropostasComerciais|Preview|PropostasComerciais/Preview|ARQ_OK|LIT|
+PAGINA|Recebimentos|Index|V114/Produto|ARQ_OK|LIT|
+PAGINA|Relatorios|Apuracao|Relatorios/Operacional|ARQ_OK|LIT via OperacionalAsync|
+PAGINA|Relatorios|Clinico|Relatorios/Index|ARQ_OK|LIT|
+PAGINA|Relatorios|Cobertura|Relatorios/Operacional|ARQ_OK|LIT via OperacionalAsync|
+PAGINA|Relatorios|Convenios|Relatorios/Index|ARQ_OK|LIT|
+PAGINA|Relatorios|Convites|Relatorios/Convites|ARQ_OK|NOME|
+PAGINA|Relatorios|Execucao|Relatorios/Operacional|ARQ_OK|LIT via OperacionalAsync|
+PAGINA|Relatorios|Execucoes|Relatorios/Index|ARQ_OK|LIT|
+PAGINA|Relatorios|Executivo|Relatorios/Index|ARQ_OK|LIT|
+PAGINA|Relatorios|Exportacoes|Relatorios/Index|ARQ_OK|LIT|
+PAGINA|Relatorios|FaturamentoSaas|Relatorios/FaturamentoSaas|ARQ_OK|NOME|
+PAGINA|Relatorios|FiltrosSalvos|Relatorios/Index|ARQ_OK|LIT|
+PAGINA|Relatorios|Financeiro|Relatorios/Index|ARQ_OK|LIT|
+PAGINA|Relatorios|FinanceiroClinica|Relatorios/Index|ARQ_OK|LIT|
+PAGINA|Relatorios|Index|Relatorios/Index|ARQ_OK|NOME|
+PAGINA|Relatorios|OperacaoClinica|Relatorios/Index|ARQ_OK|LIT|
+PAGINA|Relatorios|Operacional|Relatorios/Index|ARQ_OK|LIT|
+PAGINA|Relatorios|Plantoes|Relatorios/Index|ARQ_OK|LIT|
+PAGINA|Relatorios|Produtividade|Relatorios/Index|ARQ_OK|LIT|
+PAGINA|Relatorios|ProdutividadeMedica|Relatorios/ProdutividadeMedica|ARQ_OK|NOME|
+PAGINA|Relatorios|Saas|Relatorios/Saas|ARQ_OK|LIT via RelatorioSaasAsync|
+PAGINA|Relatorios|SaasClientesRisco|Relatorios/Saas|ARQ_OK|LIT via RelatorioSaasAsync|
+PAGINA|Relatorios|SaasFaturamento|Relatorios/Saas|ARQ_OK|LIT via RelatorioSaasAsync|
+PAGINA|Relatorios|SaasUsoPlanos|Relatorios/Saas|ARQ_OK|LIT via RelatorioSaasAsync|
+PAGINA|Relatorios|Sla|Relatorios/Sla|ARQ_OK|NOME|
+PAGINA|RelatoriosExecutivos|Index|V116/Relatorios|ARQ_OK|LIT|
+PAGINA|Renovacoes|Details|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Renovacoes|Index|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Renovacoes|Risco|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|RepassesMedicos|Index|V114/Produto|ARQ_OK|LIT|
+PAGINA|SaasClientes|Create|SaasClientes/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|SaasClientes|Details|SaasClientes/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|SaasClientes|Edit|SaasClientes/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|SaasClientes|Index|SaasClientes/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|SaasDashboard|Index|SaasDashboard/Index|ARQ_OK|NOME|
+PAGINA|SaasPlanos|Create|SaasPlanos/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|SaasPlanos|Edit|SaasPlanos/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|SaasPlanos|Index|SaasPlanos/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|SaasPlanos|Limites|SaasPlanos/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|SaasPlanos|Modulos|SaasPlanos/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|SaasTenants|Create|SaasTenants/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|SaasTenants|Details|SaasTenants/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|SaasTenants|Edit|SaasTenants/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|SaasTenants|Index|SaasTenants/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|SaasUso|Index|SaasUso/SaasComercialPage|ARQ_OK|LIT via Page|
+PAGINA|Seguranca|AcessosNegados|Seguranca/AcessosNegados|ARQ_OK|LIT|
+PAGINA|Seguranca|Auditoria|Seguranca/Auditoria|ARQ_OK|LIT|
+PAGINA|Seguranca|Index|Seguranca/Index|ARQ_OK|LIT|
+PAGINA|Seguranca|Matriz|Seguranca/Matriz|ARQ_OK|LIT|
+PAGINA|Seguranca|PerfilDetalhes|Seguranca/PerfilDetalhes|ARQ_OK|LIT|
+PAGINA|Seguranca|Perfis|Seguranca/Perfis|ARQ_OK|LIT|
+PAGINA|Seguranca|Permissoes|Seguranca/Permissoes|ARQ_OK|LIT|
+PAGINA|Seguranca|PoliticasSenha|Seguranca/PoliticasSenha|ARQ_OK|LIT|
+PAGINA|Seguranca|Sessoes|Seguranca/Sessoes|ARQ_OK|LIT|
+PAGINA|Seguranca|TentativasLogin|Seguranca/TentativasLogin|ARQ_OK|LIT|
+PAGINA|Seguranca|UsuarioDetalhes|Seguranca/UsuarioDetalhes|ARQ_OK|LIT|
+PAGINA|Seguranca|Usuarios|Seguranca/Usuarios|ARQ_OK|LIT|
+PAGINA|Sla|Incidentes|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|Sla|Index|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Sla|Indicadores|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Suporte|BaseConhecimento|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Suporte|Create|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|Suporte|Details|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Suporte|Index|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Suporte|MeusChamados|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Suporte|Sla|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|TemplatesOperacionais|Index|V114/Produto|ARQ_OK|LIT|
+PAGINA|Timelines|Details|V116/Timeline|ARQ_OK|LIT|
+PAGINA|Treinamento|Artigos|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Treinamento|Busca|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Treinamento|Index|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Treinamento|MeuProgresso|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Treinamento|TrilhaDetails|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Treinamento|Trilhas|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|Triagem|ClassificacaoRisco|Triagem/ClassificacaoRisco|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Triagem|Create|Triagem/Create|ARQ_OK|NOME via Formulario|
+PAGINA|Triagem|Details|Triagem/Details|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Triagem|Edit|Triagem/Edit|ARQ_OK|NOME via Formulario|
+PAGINA|Triagem|Fila|Triagem/Fila|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Triagem|Finalizar|Saude360/Formulario|ARQ_OK|LIT|
+PAGINA|Triagem|HistoricoPaciente|Triagem/HistoricoPaciente|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Triagem|Index|Triagem/Index|ARQ_OK|NOME via ModuloAsync|
+PAGINA|Triagem|Salvar|Triagem/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+PAGINA|Usuario|Admin|Usuario/Admin|ARQ_OK|NOME|
+PAGINA|Usuario|AlterarSenha|Usuario/AlterarSenha|ARQ_OK|NOME|
+PAGINA|Usuario|Edit|Usuario/Edit|ARQ_OK|NOME|
+PAGINA|Usuario|Index|Usuario/Index|ARQ_OK|NOME|
+PAGINA|Usuarios|Create|Usuarios/Form|ARQ_OK|LIT|
+PAGINA|Usuarios|Edit|Usuarios/Form|ARQ_OK|LIT|
+PAGINA|Usuarios|Index|Usuarios/Index|ARQ_OK|NOME|
+PAGINA|Usuarios|Save|Usuarios/Form|ARQ_OK|LIT|
+PAGINA|V112Web|Activities|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
+PAGINA|V112Web|Billing|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
+PAGINA|V112Web|Customers|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
+PAGINA|V112Web|Dashboard|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
+PAGINA|V112Web|Demo|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
+PAGINA|V112Web|Homologation|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
+PAGINA|V112Web|Inventory|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
+PAGINA|V112Web|Journey|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
+PAGINA|V112Web|Orders|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
+PAGINA|V112Web|Outbox|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
+PAGINA|V112Web|Products|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
+PAGINA|V112Web|Tasks|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
+PAGINA|V112Web|Templates|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
+PAGINA|WhiteLabel|Assets|WhiteLabel/Assets|ARQ_OK|LIT|
+PAGINA|WhiteLabel|Edit|WhiteLabel/Index|ARQ_OK|LIT|
+PAGINA|WhiteLabel|Emails|WhiteLabel/Emails|ARQ_OK|LIT|
+PAGINA|WhiteLabel|Index|WhiteLabel/Index|ARQ_OK|LIT|
+PAGINA|WhiteLabel|Preview|WhiteLabel/Preview|ARQ_OK|LIT|
+PAGINA|WhiteLabelTemplates|Aplicar|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|WhiteLabelTemplates|Create|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|WhiteLabelTemplates|Details|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|WhiteLabelTemplates|Edit|B2BLaunch/Form|ARQ_OK|LIT|
+PAGINA|WhiteLabelTemplates|Index|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|WhiteLabelTemplates|Preview|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|WorkflowSaude360|Index|WorkflowSaude360/Index|ARQ_FALTA|NOME via ModuloAsync|
+PAGINA|WorkflowSaude360|ProximaAcao|WorkflowSaude360/ProximaAcao|ARQ_FALTA|NOME via ModuloAsync|
+PAGINA|WorkflowSaude360|Salvar|WorkflowSaude360/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+
+ARTIGO|id=admin-cliente|Clientes/Index|titulo=Como cadastrar cliente
+ARTIGO|id=admin-plano|Planos/Index|titulo=Como criar plano
+ARTIGO|id=admin-assinatura|Assinaturas/Index|titulo=Como criar assinatura
+ARTIGO|id=admin-fatura|FaturamentoSaas/Index|titulo=Como gerar fatura
+ARTIGO|id=admin-risco|SaasDashboard/Index|titulo=Como acompanhar clientes em risco
+ARTIGO|id=coord-plantao|Plantoes/Create|titulo=Como criar plantão
+ARTIGO|id=coord-publicar|Plantoes/Index|titulo=Como publicar plantão
+ARTIGO|id=coord-convite|CentralEscala/Index|titulo=Como convidar médico
+ARTIGO|id=medico-disponiveis|MinhaAgenda/PlantoesDisponiveis|titulo=Como acessar plantões disponíveis
+ARTIGO|id=medico-pagamentos|Financeiro/Index|titulo=Como consultar pagamentos
+ARTIGO|id=financeiro-pagamento|Financeiro/Index|titulo=Como confirmar pagamento
+ARTIGO|id=hospital-escalas|Escalas/Index|titulo=Como consultar escalas
+ARTIGO|id=lgpd-direitos|Lgpd/MinhaPrivacidade|titulo=Como usar Minha Privacidade
+ARTIGO|id=adm-orcamento|Administrativo360/Orcamentos|titulo=Como criar orçamento
+ARTIGO|id=adm-compras|Administrativo360/PedidosCompra|titulo=Como registrar pedido de compra
+ARTIGO|id=adm-estoque|Administrativo360/Estoque|titulo=Como acompanhar estoque e inventário
+ARTIGO|id=adm-titulos|Administrativo360/TitulosReceber|titulo=Como controlar títulos a receber e a pagar
+ARTIGO|id=adm-relatorio|Administrativo360/RelatoriosFinanceiros|titulo=Como consultar relatórios financeiros
+ARTIGO|id=central-fatura|MinhaCentral/Index|titulo=Como resolver fatura vencida
+ARTIGO|id=central-notificacoes|Notificacoes/Preferencias|titulo=Como configurar notificações
+ARTIGO|id=recep-paciente|Pacientes/Create|titulo=Como cadastrar paciente
+ARTIGO|id=recep-agendamento|Agendamentos/CheckIn|titulo=Como agendar e fazer o check-in
+ARTIGO|id=recep-chamada|PainelChamada/Index|titulo=Como operar a sala de espera
+ARTIGO|id=parceiro-propostas|ParceiroPortal/Propostas|titulo=Como acompanhar propostas
+ARTIGO|id=parceiro-comissoes|ParceiroPortal/Comissoes|titulo=Como acompanhar comissões e repasses
+
+SEM_ARTIGO|Account|AccessDenied
+SEM_ARTIGO|Account|ForgotPassword
+SEM_ARTIGO|Account|Login
+SEM_ARTIGO|Account|NoEligibleContext
+SEM_ARTIGO|Account|ResetPassword
+SEM_ARTIGO|Adm360CotacoesWeb|ContasPortal
+SEM_ARTIGO|Adm360CotacoesWeb|Detalhes
+SEM_ARTIGO|Adm360CotacoesWeb|Estabelecimentos
+SEM_ARTIGO|Adm360CotacoesWeb|Index
+SEM_ARTIGO|Adm360CotacoesWeb|Relacionamento
+SEM_ARTIGO|Adm360DocumentosXmlWeb|Detalhes
+SEM_ARTIGO|Adm360DocumentosXmlWeb|Importar
+SEM_ARTIGO|Adm360DocumentosXmlWeb|Index
+SEM_ARTIGO|Adm360DocumentosXmlWeb|Sincronizacao
+SEM_ARTIGO|Adm360DocumentosXmlWeb|Triagens
+SEM_ARTIGO|Adm360FiscalWeb|Configurar
+SEM_ARTIGO|Adm360FiscalWeb|Detalhes
+SEM_ARTIGO|Adm360FiscalWeb|Notas
+SEM_ARTIGO|Adm360FiscalWeb|Nova
+SEM_ARTIGO|Adm360GestaoWeb|Dashboard
+SEM_ARTIGO|Adm360GestaoWeb|Monitor
+ACO_AUX|Administrativo360|AtivarCargo|Administrativo360/AtivarCargo|submissao dinamica ou helper herdado
+ACO_AUX|Administrativo360|AtivarDepartamento|Administrativo360/AtivarDepartamento|submissao dinamica ou helper herdado
+ACO_AUX|Administrativo360|AtualizarCargo|Administrativo360/AtualizarCargo|submissao dinamica ou helper herdado
+ACO_AUX|Administrativo360|AtualizarColaborador|Administrativo360/AtualizarColaborador|submissao dinamica ou helper herdado
+ACO_AUX|Administrativo360|AtualizarDepartamento|Administrativo360/AtualizarDepartamento|submissao dinamica ou helper herdado
+SEM_ARTIGO|Administrativo360|Cadastros
+ACO_AUX|Administrativo360|CancelarContrato|Administrativo360/CancelarContrato|submissao dinamica ou helper herdado
+ACO_AUX|Administrativo360|Cargo|Administrativo360/Cargo|submissao dinamica ou helper herdado
+SEM_ARTIGO|Administrativo360|Cargos
+SEM_ARTIGO|Administrativo360|CirurgiaDetalhes
+SEM_ARTIGO|Administrativo360|CirurgiaNova
+SEM_ARTIGO|Administrativo360|Cirurgias
+ACO_AUX|Administrativo360|Colaborador|Administrativo360/Colaborador|submissao dinamica ou helper herdado
+SEM_ARTIGO|Administrativo360|Colaboradores
+SEM_ARTIGO|Administrativo360|Coleta
+SEM_ARTIGO|Administrativo360|ComissoesPendentes
+SEM_ARTIGO|Administrativo360|ContasFinanceiras
+SEM_ARTIGO|Administrativo360|Contrato
+SEM_ARTIGO|Administrativo360|ContratoDetalhes
+SEM_ARTIGO|Administrativo360|Contratos
+ACO_AUX|Administrativo360|Departamento|Administrativo360/Departamento|submissao dinamica ou helper herdado
+SEM_ARTIGO|Administrativo360|Departamentos
+SEM_ARTIGO|Administrativo360|EncerrarContrato
+COBERTA|Administrativo360|Estoque|artigo adm-estoque
+SEM_ARTIGO|Administrativo360|FechamentoCaixa
+SEM_ARTIGO|Administrativo360|FluxoCaixa
+ACO_AUX|Administrativo360|InativarCargo|Administrativo360/InativarCargo|submissao dinamica ou helper herdado
+ACO_AUX|Administrativo360|InativarDepartamento|Administrativo360/InativarDepartamento|submissao dinamica ou helper herdado
+SEM_ARTIGO|Administrativo360|Index
+SEM_ARTIGO|Administrativo360|Inspecoes
+SEM_ARTIGO|Administrativo360|Inventarios
+SEM_ARTIGO|Administrativo360|Locais
+SEM_ARTIGO|Administrativo360|Lotes
+SEM_ARTIGO|Administrativo360|Movimentacoes
+SEM_ARTIGO|Administrativo360|NovaDespesa
+SEM_ARTIGO|Administrativo360|Ocorrencias
+SEM_ARTIGO|Administrativo360|OrcamentoDetalhes
+SEM_ARTIGO|Administrativo360|OrcamentoEditar
+SEM_ARTIGO|Administrativo360|OrcamentoImprimir
+SEM_ARTIGO|Administrativo360|OrcamentoNovo
+SEM_ARTIGO|Administrativo360|OrcamentoReserva
+COBERTA|Administrativo360|Orcamentos|artigo adm-orcamento
+SEM_ARTIGO|Administrativo360|Parceiros
+COBERTA|Administrativo360|PedidosCompra|artigo adm-compras
+SEM_ARTIGO|Administrativo360|Produtos
+SEM_ARTIGO|Administrativo360|Recebimentos
+SEM_ARTIGO|Administrativo360|Relatorios
+COBERTA|Administrativo360|RelatoriosFinanceiros|artigo adm-relatorio
+ACO_AUX|Administrativo360|StatusColaborador|Administrativo360/StatusColaborador|submissao dinamica ou helper herdado
+SEM_ARTIGO|Administrativo360|TituloDetalhes
+SEM_ARTIGO|Administrativo360|TituloPagarDetalhes
+SEM_ARTIGO|Administrativo360|TitulosPagar
+COBERTA|Administrativo360|TitulosReceber|artigo adm-titulos
+SEM_ARTIGO|Administrativo360|ValeDetalhes
+SEM_ARTIGO|Administrativo360|ValeImprimir
+SEM_ARTIGO|Administrativo360|ValeNovo
+SEM_ARTIGO|Administrativo360|Vales
+SEM_ARTIGO|Administrativo360|Valorizacao
+SEM_ARTIGO|Administrativo360|ValorizacaoPrevia
+SEM_ARTIGO|Administrativo360|VendaDetalhes
+SEM_ARTIGO|Administrativo360|Vendas
+SEM_ARTIGO|AdminSaas|Alertas
+SEM_ARTIGO|AdminSaas|Assinaturas
+SEM_ARTIGO|AdminSaas|Billing
+SEM_ARTIGO|AdminSaas|Clientes
+SEM_ARTIGO|AdminSaas|Implantacoes
+SEM_ARTIGO|AdminSaas|Index
+SEM_ARTIGO|AdminSaas|Leads
+SEM_ARTIGO|AdminSaas|Monitoramento
+SEM_ARTIGO|AdminSaas|Parceiros
+SEM_ARTIGO|AdminSaas|Planos
+SEM_ARTIGO|AdminSaas|Propostas
+SEM_ARTIGO|AdminSaas|Tenants
+POTE_QUEBRA|Agenda|Calendario|Agenda/Calendario|pagina GET sem arquivo resolvido
+POTE_QUEBRA|Agenda|Conflitos|Agenda/Conflitos|pagina GET sem arquivo resolvido
+POTE_QUEBRA|Agenda|Dia|Agenda/Dia|pagina GET sem arquivo resolvido
+POTE_QUEBRA|Agenda|Hospitais|Agenda/Hospitais|pagina GET sem arquivo resolvido
+SEM_ARTIGO|Agenda|Index
+POTE_QUEBRA|Agenda|Medicos|Agenda/Medicos|pagina GET sem arquivo resolvido
+POTE_QUEBRA|Agenda|Mes|Agenda/Mes|pagina GET sem arquivo resolvido
+POTE_QUEBRA|Agenda|Semana|Agenda/Semana|pagina GET sem arquivo resolvido
+SEM_ARTIGO|Agendamentos|AgendaDia
+SEM_ARTIGO|Agendamentos|AgendaMedico
+SEM_ARTIGO|Agendamentos|Calendario
+SEM_ARTIGO|Agendamentos|Cancelamentos
+COBERTA|Agendamentos|CheckIn|artigo recep-agendamento
+SEM_ARTIGO|Agendamentos|Create
+SEM_ARTIGO|Agendamentos|Details
+SEM_ARTIGO|Agendamentos|Edit
+SEM_ARTIGO|Agendamentos|Index
+ACO_AUX|Agendamentos|Salvar|Agendamentos/Salvar|submissao dinamica ou helper herdado
+ACO_AUX|Agendamentos|Save|Agendamentos/Save|submissao dinamica ou helper herdado
+FORA_ESCOPO|Ajuda|Artigo|superficie do proprio manual
+FORA_ESCOPO|Ajuda|Busca|superficie do proprio manual
+FORA_ESCOPO|Ajuda|Checklist|superficie do proprio manual
+FORA_ESCOPO|Ajuda|FluxoAtendimento|superficie do proprio manual
+FORA_ESCOPO|Ajuda|Index|superficie do proprio manual
+FORA_ESCOPO|Ajuda|Modulo|superficie do proprio manual
+FORA_ESCOPO|Ajuda|PerguntasFrequentes|superficie do proprio manual
+FORA_ESCOPO|Ajuda|PrimeirosPassos|superficie do proprio manual
+SEM_ARTIGO|Assinaturas|AlterarPlano
+SEM_ARTIGO|Assinaturas|Create
+SEM_ARTIGO|Assinaturas|Details
+SEM_ARTIGO|Assinaturas|Edit
+COBERTA|Assinaturas|Index|artigo admin-assinatura
+SEM_ARTIGO|Assinaturas|Uso
+SEM_ARTIGO|AssistenteIa|Index
+SEM_ARTIGO|Auditoria|Details
+SEM_ARTIGO|Auditoria|Index
+SEM_ARTIGO|Beta|Clientes
+SEM_ARTIGO|Beta|Feedbacks
+SEM_ARTIGO|Beta|Index
+SEM_ARTIGO|Beta|Indicadores
+SEM_ARTIGO|Beta|Programas
+SEM_ARTIGO|Bi|Alertas
+SEM_ARTIGO|Bi|Clientes
+SEM_ARTIGO|Bi|Clinico
+SEM_ARTIGO|Bi|Convenios
+SEM_ARTIGO|Bi|Financeiro
+SEM_ARTIGO|Bi|Index
+SEM_ARTIGO|Bi|Medicos
+SEM_ARTIGO|Bi|Operacional
+SEM_ARTIGO|Bi|Saas
+SEM_ARTIGO|Bi|Sla
+SEM_ARTIGO|Bi|Widgets
+SEM_ARTIGO|Cadastro|Confirmacao
+SEM_ARTIGO|Cadastro|Confirmar
+SEM_ARTIGO|Cadastro|Empresa
+SEM_ARTIGO|Cadastro|Plano
+SEM_ARTIGO|Cadastro|Sucesso
+SEM_ARTIGO|Cadastro|Usuario
+SEM_ARTIGO|Caixa|Index
+SEM_ARTIGO|CentralAtendimento|Index
+SEM_ARTIGO|CentralEscala|Calendario
+SEM_ARTIGO|CentralEscala|ConvitesPendentes
+COBERTA|CentralEscala|Index|artigo coord-convite
+SEM_ARTIGO|CentralEscala|IndexLegacy
+SEM_ARTIGO|CentralEscala|MedicosDisponiveis
+SEM_ARTIGO|CentralEscala|MedicosSugeridos
+SEM_ARTIGO|CentralEscala|Plantao
+SEM_ARTIGO|CentralEscala|PlantaoDescoberto
+SEM_ARTIGO|CentralEscala|Risco
+SEM_ARTIGO|CentralEscala|Substituicoes
+SEM_ARTIGO|CentralEscala|Sugestoes
+SEM_ARTIGO|Cid|Create
+SEM_ARTIGO|Cid|Details
+SEM_ARTIGO|Cid|Edit
+SEM_ARTIGO|Cid|Favoritos
+SEM_ARTIGO|Cid|Importar
+SEM_ARTIGO|Cid|Index
+SEM_ARTIGO|Cid|MaisUsados
+ACO_AUX|Cid|Salvar|Cid/Salvar|submissao dinamica ou helper herdado
+SEM_ARTIGO|ClientePortal|Faturas
+SEM_ARTIGO|ClientePortal|Index
+SEM_ARTIGO|ClientePortal|MeuPlano
+SEM_ARTIGO|ClientePortal|Onboarding
+SEM_ARTIGO|ClientePortal|Parametrizacoes
+SEM_ARTIGO|ClientePortal|Perfis
+SEM_ARTIGO|ClientePortal|Suporte
+SEM_ARTIGO|ClientePortal|Treinamento
+SEM_ARTIGO|ClientePortal|Uso
+SEM_ARTIGO|ClientePortal|Usuarios
+SEM_ARTIGO|ClientePortal|WhiteLabel
+SEM_ARTIGO|Clientes|Details
+COBERTA|Clientes|Index|artigo admin-cliente
+SEM_ARTIGO|Clientes|Inteligencia
+SEM_ARTIGO|Clientes|Jornada
+SEM_ARTIGO|ClinicaDashboard|FluxoAtendimento
+SEM_ARTIGO|ClinicaDashboard|Index
+ACO_AUX|ClinicaDashboard|Salvar|ClinicaDashboard/Salvar|submissao dinamica ou helper herdado
+SEM_ARTIGO|ClinicaFinanceiro|Caixa
+SEM_ARTIGO|ClinicaFinanceiro|ContasReceber
+SEM_ARTIGO|ClinicaFinanceiro|FechamentoCaixa
+SEM_ARTIGO|ClinicaFinanceiro|Glosas
+SEM_ARTIGO|ClinicaFinanceiro|Index
+SEM_ARTIGO|ClinicaFinanceiro|Receber
+SEM_ARTIGO|ClinicaFinanceiro|Relatorios
+SEM_ARTIGO|ClinicaFinanceiro|Repasses
+ACO_AUX|ClinicaFinanceiro|Salvar|ClinicaFinanceiro/Salvar|submissao dinamica ou helper herdado
+SEM_ARTIGO|ClinicaUnidades|Create
+SEM_ARTIGO|ClinicaUnidades|Edit
+SEM_ARTIGO|ClinicaUnidades|Index
+ACO_AUX|ClinicaUnidades|Salvar|ClinicaUnidades/Salvar|submissao dinamica ou helper herdado
+SEM_ARTIGO|Cobertura|Criticos
+SEM_ARTIGO|Cobertura|Details
+SEM_ARTIGO|Cobertura|Index
+SEM_ARTIGO|Cobertura|Sugestoes
+SEM_ARTIGO|Comercial|Funil
+SEM_ARTIGO|Comercial|Leads
+SEM_ARTIGO|Comercial|Oportunidades
+SEM_ARTIGO|Comercial|PrevisaoReceita
+SEM_ARTIGO|Comercial|Propostas
+SEM_ARTIGO|CommandCenter|Index
+SEM_ARTIGO|CommercialDemoWeb|CasosUso
+SEM_ARTIGO|CommercialDemoWeb|Contato
+SEM_ARTIGO|CommercialDemoWeb|Demo
+SEM_ARTIGO|CommercialDemoWeb|Landing
+SEM_ARTIGO|CommercialDemoWeb|Simulador
+SEM_ARTIGO|CommercialDemoWeb|SimuladorResultado
+SEM_ARTIGO|Comunicacao|Details
+SEM_ARTIGO|Comunicacao|Index
+SEM_ARTIGO|Comunicacao|NovaConversa
+SEM_ARTIGO|Comunicacao|Templates
+SEM_ARTIGO|ConferenciaExecucao|Index
+SEM_ARTIGO|Configuracoes|Index
+SEM_ARTIGO|Configuracoes|Saude
+SEM_ARTIGO|ConfiguracoesFinanceiras|Index
+SEM_ARTIGO|Consultas|Atendimento
+SEM_ARTIGO|Consultas|Create
+SEM_ARTIGO|Consultas|Details
+SEM_ARTIGO|Consultas|Edit
+SEM_ARTIGO|Consultas|HistoricoPaciente
+SEM_ARTIGO|Consultas|Imprimir
+SEM_ARTIGO|Consultas|Index
+SEM_ARTIGO|Consultas|Resumo
+ACO_AUX|Consultas|Salvar|Consultas/Salvar|submissao dinamica ou helper herdado
+SEM_ARTIGO|Contratos|Aceites
+SEM_ARTIGO|Contratos|Create
+SEM_ARTIGO|Contratos|Details
+SEM_ARTIGO|Contratos|Edit
+SEM_ARTIGO|Contratos|Index
+SEM_ARTIGO|Contratos|Sla
+SEM_ARTIGO|ConvenioAutorizacoes|Index
+SEM_ARTIGO|Convenios|Autorizacoes
+SEM_ARTIGO|Convenios|Contratos
+SEM_ARTIGO|Convenios|Create
+SEM_ARTIGO|Convenios|Dashboard
+SEM_ARTIGO|Convenios|Details
+SEM_ARTIGO|Convenios|Edit
+SEM_ARTIGO|Convenios|Faturamento
+SEM_ARTIGO|Convenios|Glosas
+SEM_ARTIGO|Convenios|Index
+SEM_ARTIGO|Convenios|Planos
+ACO_AUX|Convenios|Salvar|Convenios/Salvar|submissao dinamica ou helper herdado
+SEM_ARTIGO|Convenios|Tabelas
+SEM_ARTIGO|ConvitePublicoWeb|Aceitar
+SEM_ARTIGO|ConvitePublicoWeb|ConfirmarAceite
+SEM_ARTIGO|Convites|Index
+SEM_ARTIGO|ConvitesEquipe|Index
+SEM_ARTIGO|Coordenacao|Index
+SEM_ARTIGO|CustomerSuccess|Alertas
+SEM_ARTIGO|CustomerSuccess|ContaDetails
+SEM_ARTIGO|CustomerSuccess|Contas
+SEM_ARTIGO|CustomerSuccess|Details
+SEM_ARTIGO|CustomerSuccess|Index
+SEM_ARTIGO|CustomerSuccess|Nps
+SEM_ARTIGO|CustomerSuccess|Oportunidades
+SEM_ARTIGO|CustomerSuccess|PlanosAcao
+SEM_ARTIGO|CustomerSuccess|Playbooks
+SEM_ARTIGO|CustomerSuccess|Recomendacoes
+SEM_ARTIGO|CustomerSuccess|Riscos
+SEM_ARTIGO|DashboardsPremium|AdminGlobal
+SEM_ARTIGO|DashboardsPremium|AdministradorCliente
+SEM_ARTIGO|DashboardsPremium|Coordenacao
+SEM_ARTIGO|DashboardsPremium|Financeiro
+SEM_ARTIGO|DashboardsPremium|Medico
+SEM_ARTIGO|DashboardsPremium|Saude360
+POTE_QUEBRA|DemoAdmin|GerarDados|DemoAdmin/Dashboard|pagina GET sem arquivo resolvido
+POTE_QUEBRA|DemoAdmin|Index|DemoAdmin/Dashboard|pagina GET sem arquivo resolvido
+POTE_QUEBRA|DemoAdmin|Roteiros|DemoAdmin/Dashboard|pagina GET sem arquivo resolvido
+POTE_QUEBRA|DemoAdmin|Status|DemoAdmin/Dashboard|pagina GET sem arquivo resolvido
+SEM_ARTIGO|Developer|ApiKeys
+SEM_ARTIGO|Developer|Autenticacao
+SEM_ARTIGO|Developer|Endpoints
+SEM_ARTIGO|Developer|Exemplos
+SEM_ARTIGO|Developer|Index
+SEM_ARTIGO|Developer|RateLimits
+SEM_ARTIGO|Developer|Uso
+SEM_ARTIGO|Developer|Webhooks
+SEM_ARTIGO|Error|Error
+SEM_ARTIGO|Escalas|Details
+COBERTA|Escalas|Index|artigo hospital-escalas
+SEM_ARTIGO|Escalas|Substituir
+SEM_ARTIGO|Especialidades|Create
+SEM_ARTIGO|Especialidades|Details
+SEM_ARTIGO|Especialidades|Edit
+SEM_ARTIGO|Especialidades|Index
+SEM_ARTIGO|Executivo|Alertas
+SEM_ARTIGO|Executivo|Clientes
+SEM_ARTIGO|Executivo|Comercial
+SEM_ARTIGO|Executivo|Index
+SEM_ARTIGO|Executivo|Metas
+SEM_ARTIGO|Executivo|Operacao
+SEM_ARTIGO|Executivo|Produto
+SEM_ARTIGO|Executivo|Receita
+SEM_ARTIGO|Expansoes|Details
+SEM_ARTIGO|Expansoes|Index
+SEM_ARTIGO|FaturamentoClinico|Configuracoes
+POTE_QUEBRA|FaturamentoClinico|ContasReceber|FaturamentoClinico/ContasReceber|pagina GET sem arquivo resolvido
+SEM_ARTIGO|FaturamentoClinico|DemoBoleto
+SEM_ARTIGO|FaturamentoClinico|Glosas
+SEM_ARTIGO|FaturamentoClinico|Index
+POTE_QUEBRA|FaturamentoClinico|Recebimentos|FaturamentoClinico/Recebimentos|pagina GET sem arquivo resolvido
+SEM_ARTIGO|FaturamentoClinico|Regras
+SEM_ARTIGO|FaturamentoClinico|RepassesMedicos
+SEM_ARTIGO|FaturamentoClinico|Titulos
+SEM_ARTIGO|FaturamentoRegras|Index
+SEM_ARTIGO|FaturamentoSaas|Details
+SEM_ARTIGO|FaturamentoSaas|GerarMensal
+SEM_ARTIGO|FaturamentoSaas|Inadimplencia
+COBERTA|FaturamentoSaas|Index|artigo admin-fatura
+SEM_ARTIGO|Favoritos|Index
+SEM_ARTIGO|FeatureFlags|Index
+SEM_ARTIGO|Fechamentos|Conferencia
+SEM_ARTIGO|Fechamentos|Details
+SEM_ARTIGO|Fechamentos|Index
+SEM_ARTIGO|Fechamentos|Pendentes
+SEM_ARTIGO|Financeiro|Confirmados
+SEM_ARTIGO|Financeiro|Contestacoes
+SEM_ARTIGO|Financeiro|Details
+SEM_ARTIGO|Financeiro|Exportacoes
+COBERTA|Financeiro|Index|artigo financeiro-pagamento
+SEM_ARTIGO|Financeiro|Pagamentos
+SEM_ARTIGO|Financeiro|Pendentes
+SEM_ARTIGO|Financeiro|Relatorios
+POTE_QUEBRA|GestorDashboard|Index|GestorDashboard/Index|pagina GET sem arquivo resolvido
+ACO_AUX|GestorDashboard|Salvar|GestorDashboard/Salvar|submissao dinamica ou helper herdado
+SEM_ARTIGO|Glosas|Index
+SEM_ARTIGO|GoToMarket|Campanhas
+SEM_ARTIGO|GoToMarket|CasosUso
+SEM_ARTIGO|GoToMarket|Decisores
+SEM_ARTIGO|GoToMarket|Index
+SEM_ARTIGO|GoToMarket|Materiais
+SEM_ARTIGO|GuiasConvenio|Index
+SEM_ARTIGO|HistoricoAcoes|Index
+SEM_ARTIGO|Home|Dashboard
+SEM_ARTIGO|Home|Produto
+SEM_ARTIGO|Hospitais|Create
+SEM_ARTIGO|Hospitais|Details
+SEM_ARTIGO|Hospitais|Edit
+SEM_ARTIGO|Hospitais|Index
+SEM_ARTIGO|HospitalArea|Escalas
+SEM_ARTIGO|HospitalArea|Index
+SEM_ARTIGO|HospitalArea|NovaSolicitacao
+SEM_ARTIGO|HospitalArea|Plantoes
+SEM_ARTIGO|Implantacao|Index
+SEM_ARTIGO|Integracoes|ApiKeys
+SEM_ARTIGO|Integracoes|Index
+SEM_ARTIGO|Integracoes|Logs
+SEM_ARTIGO|Integracoes|WebhookDetails
+SEM_ARTIGO|Integracoes|Webhooks
+SEM_ARTIGO|Inteligencia|Dashboard
+SEM_ARTIGO|ItensFaturaveis|Create
+SEM_ARTIGO|ItensFaturaveis|Details
+SEM_ARTIGO|ItensFaturaveis|Edit
+SEM_ARTIGO|ItensFaturaveis|Index
+SEM_ARTIGO|Jornada|Index
+SEM_ARTIGO|JornadaClientes|Details
+SEM_ARTIGO|JornadaClientes|Funil
+SEM_ARTIGO|JornadaClientes|Index
+SEM_ARTIGO|JornadaClientes|Tarefas
+SEM_ARTIGO|Lgpd|Consentimentos
+SEM_ARTIGO|Lgpd|Eventos
+SEM_ARTIGO|Lgpd|ExportarDados
+SEM_ARTIGO|Lgpd|Index
+COBERTA|Lgpd|MinhaPrivacidade|artigo lgpd-direitos
+SEM_ARTIGO|Lgpd|Politica
+SEM_ARTIGO|Lgpd|Retencao
+SEM_ARTIGO|Lgpd|Solicitacoes
+SEM_ARTIGO|LotesFaturamento|Index
+FORA_ESCOPO|Manual|AdminClinica|superficie do proprio manual
+FORA_ESCOPO|Manual|AdminSaas|superficie do proprio manual
+FORA_ESCOPO|Manual|Auditor|superficie do proprio manual
+FORA_ESCOPO|Manual|Convenios|superficie do proprio manual
+FORA_ESCOPO|Manual|Financeiro|superficie do proprio manual
+FORA_ESCOPO|Manual|Index|superficie do proprio manual
+FORA_ESCOPO|Manual|Medico|superficie do proprio manual
+FORA_ESCOPO|Manual|Parceiro|superficie do proprio manual
+FORA_ESCOPO|Manual|Perfil|superficie do proprio manual
+FORA_ESCOPO|Manual|Recepcao|superficie do proprio manual
+FORA_ESCOPO|Manual|Triagem|superficie do proprio manual
+SEM_ARTIGO|Marketplace|Details
+SEM_ARTIGO|Marketplace|Index
+SEM_ARTIGO|MedicoArea|Agenda
+SEM_ARTIGO|MedicoArea|Convites
+SEM_ARTIGO|MedicoArea|Disponibilidade
+SEM_ARTIGO|MedicoArea|Index
+SEM_ARTIGO|MedicoArea|Indisponibilidades
+SEM_ARTIGO|MedicoArea|Pagamentos
+SEM_ARTIGO|MedicoArea|Perfil
+SEM_ARTIGO|MedicoArea|Preferencias
+SEM_ARTIGO|MedicoArea|SolicitarSubstituicao
+SEM_ARTIGO|MedicoArea|Substituicoes
+SEM_ARTIGO|Medicos|Create
+SEM_ARTIGO|Medicos|Details
+SEM_ARTIGO|Medicos|Edit
+SEM_ARTIGO|Medicos|Index
+SEM_ARTIGO|MeuDia|Index
+SEM_ARTIGO|MinhaAgenda|Agenda
+SEM_ARTIGO|MinhaAgenda|Detalhe
+SEM_ARTIGO|MinhaAgenda|Index
+SEM_ARTIGO|MinhaAgenda|MeusPagamentos
+COBERTA|MinhaAgenda|PlantoesDisponiveis|artigo medico-disponiveis
+SEM_ARTIGO|MinhaAgenda|Presencas
+SEM_ARTIGO|MinhaAssinatura|Cancelamento
+SEM_ARTIGO|MinhaAssinatura|Downgrade
+SEM_ARTIGO|MinhaAssinatura|Faturas
+SEM_ARTIGO|MinhaAssinatura|Index
+SEM_ARTIGO|MinhaAssinatura|Limites
+SEM_ARTIGO|MinhaAssinatura|Modulos
+SEM_ARTIGO|MinhaAssinatura|RevisarModulos
+SEM_ARTIGO|MinhaAssinatura|Upgrade
+SEM_ARTIGO|MinhaAssinatura|Uso
+COBERTA|MinhaCentral|Index|artigo central-fatura
+SEM_ARTIGO|Modulos|Create
+SEM_ARTIGO|Modulos|Index
+SEM_ARTIGO|Modulos|Save
+SEM_ARTIGO|Modulos|Tenant
+SEM_ARTIGO|Monitoramento|Alertas
+SEM_ARTIGO|Monitoramento|Erros
+SEM_ARTIGO|Monitoramento|HealthChecks
+SEM_ARTIGO|Monitoramento|Index
+SEM_ARTIGO|Monitoramento|Performance
+SEM_ARTIGO|Monitoramento|Tenants
+SEM_ARTIGO|Notificacoes|Index
+COBERTA|Notificacoes|Preferencias|artigo central-notificacoes
+SEM_ARTIGO|NotificacoesOperacionais|Index
+SEM_ARTIGO|Observabilidade|Acessos
+SEM_ARTIGO|Observabilidade|Erros
+SEM_ARTIGO|Observabilidade|Eventos
+SEM_ARTIGO|Observabilidade|Index
+SEM_ARTIGO|Observabilidade|Performance
+SEM_ARTIGO|Ocorrencias|Index
+SEM_ARTIGO|Onboarding|Index
+SEM_ARTIGO|Onboarding|NovoCliente
+SEM_ARTIGO|Onboarding|Sucesso
+SEM_ARTIGO|Operacao|Index
+SEM_ARTIGO|OperacaoAssistida|Checklist
+SEM_ARTIGO|OperacaoAssistida|Details
+SEM_ARTIGO|OperacaoAssistida|Index
+SEM_ARTIGO|OperacaoAssistida|Ocorrencias
+SEM_ARTIGO|OperacaoAssistida|Treinamentos
+SEM_ARTIGO|OperacaoInteligente|Index
+SEM_ARTIGO|OperacaoSaas|Auditoria
+SEM_ARTIGO|OperacaoSaas|Erros
+SEM_ARTIGO|OperacaoSaas|Health
+SEM_ARTIGO|OperacaoSaas|Performance
+SEM_ARTIGO|OperacaoSaas|Uso
+SEM_ARTIGO|OperacionalLaunch|Index
+SEM_ARTIGO|Operacoes|Index
+SEM_ARTIGO|Pacientes|Buscar
+COBERTA|Pacientes|Create|artigo recep-paciente
+SEM_ARTIGO|Pacientes|Details
+SEM_ARTIGO|Pacientes|Edit
+SEM_ARTIGO|Pacientes|Historico
+SEM_ARTIGO|Pacientes|Index
+SEM_ARTIGO|Pacientes|Mesclar
+SEM_ARTIGO|Pacientes|Prontuario
+SEM_ARTIGO|Pacientes|ResumoClinico
+ACO_AUX|Pacientes|Salvar|Pacientes/Salvar|submissao dinamica ou helper herdado
+ACO_AUX|Pacientes|Save|Pacientes/Save|submissao dinamica ou helper herdado
+SEM_ARTIGO|Pagamentos|Index
+SEM_ARTIGO|PainelChamada|Configuracoes
+SEM_ARTIGO|PainelChamada|Fila
+SEM_ARTIGO|PainelChamada|Guiches
+SEM_ARTIGO|PainelChamada|Historico
+COBERTA|PainelChamada|Index|artigo recep-chamada
+SEM_ARTIGO|PainelChamada|Salas
+ACO_AUX|PainelChamada|Salvar|PainelChamada/Salvar|submissao dinamica ou helper herdado
+SEM_ARTIGO|PainelChamada|Setores
+SEM_ARTIGO|PainelChamada|Tv
+SEM_ARTIGO|Parametrizacoes|Financeiro
+SEM_ARTIGO|Parametrizacoes|Index
+SEM_ARTIGO|Parametrizacoes|Lgpd
+SEM_ARTIGO|Parametrizacoes|Notificacoes
+SEM_ARTIGO|Parametrizacoes|Operacional
+SEM_ARTIGO|Parametrizacoes|WhiteLabel
+SEM_ARTIGO|ParceiroPortal|Clientes
+COBERTA|ParceiroPortal|Comissoes|artigo parceiro-comissoes
+SEM_ARTIGO|ParceiroPortal|Index
+SEM_ARTIGO|ParceiroPortal|Leads
+SEM_ARTIGO|ParceiroPortal|Materiais
+COBERTA|ParceiroPortal|Propostas|artigo parceiro-propostas
+SEM_ARTIGO|ParceiroPortal|Repasses
+SEM_ARTIGO|ParceiroPortal|Suporte
+SEM_ARTIGO|Pendencias|Index
+SEM_ARTIGO|PendenciasClinicas|Index
+ACO_AUX|PendenciasClinicas|Salvar|PendenciasClinicas/Salvar|submissao dinamica ou helper herdado
+SEM_ARTIGO|Perfis|Create
+SEM_ARTIGO|Perfis|Edit
+SEM_ARTIGO|Perfis|Index
+SEM_ARTIGO|Perfis|Permissoes
+SEM_ARTIGO|Permissoes|Index
+SEM_ARTIGO|Permissoes|Matriz
+SEM_ARTIGO|Permissoes|PorPerfil
+SEM_ARTIGO|Permissoes|PorUsuario
+SEM_ARTIGO|Permissoes|TestarAcesso
+SEM_ARTIGO|Piloto|Bugs
+SEM_ARTIGO|Piloto|Checklist
+SEM_ARTIGO|Piloto|ClienteDetails
+SEM_ARTIGO|Piloto|Clientes
+SEM_ARTIGO|Piloto|Feedbacks
+SEM_ARTIGO|Piloto|Index
+SEM_ARTIGO|Piloto|Indicadores
+SEM_ARTIGO|Piloto|Ocorrencias
+SEM_ARTIGO|Piloto|ProgramaDetails
+SEM_ARTIGO|Piloto|Programas
+SEM_ARTIGO|Planos|Comparativo
+SEM_ARTIGO|Planos|Create
+SEM_ARTIGO|Planos|Details
+SEM_ARTIGO|Planos|Edit
+COBERTA|Planos|Index|artigo admin-plano
+SEM_ARTIGO|Planos|Recursos
+SEM_ARTIGO|PlanosPublicos|Comparar
+SEM_ARTIGO|PlanosPublicos|Duvidas
+SEM_ARTIGO|PlanosPublicos|Index
+SEM_ARTIGO|PlanosSaude|Autorizacoes
+SEM_ARTIGO|PlanosSaude|Coberturas
+SEM_ARTIGO|PlanosSaude|Create
+SEM_ARTIGO|PlanosSaude|Details
+SEM_ARTIGO|PlanosSaude|Edit
+SEM_ARTIGO|PlanosSaude|Index
+SEM_ARTIGO|PlanosSaude|Pacientes
+ACO_AUX|PlanosSaude|Salvar|PlanosSaude/Salvar|submissao dinamica ou helper herdado
+SEM_ARTIGO|Plantoes|Calendario
+COBERTA|Plantoes|Create|artigo coord-plantao
+SEM_ARTIGO|Plantoes|Details
+SEM_ARTIGO|Plantoes|Edit
+COBERTA|Plantoes|Index|artigo coord-publicar
+SEM_ARTIGO|Prescricoes|Create
+SEM_ARTIGO|Prescricoes|Details
+SEM_ARTIGO|Prescricoes|Edit
+SEM_ARTIGO|Prescricoes|Editor
+SEM_ARTIGO|Prescricoes|HistoricoPaciente
+SEM_ARTIGO|Prescricoes|Imprimir
+SEM_ARTIGO|Prescricoes|Index
+SEM_ARTIGO|Prescricoes|Modelos
+ACO_AUX|Prescricoes|Salvar|Prescricoes/Salvar|submissao dinamica ou helper herdado
+SEM_ARTIGO|PrimeirosPassos|Index
+SEM_ARTIGO|PropostasComerciais|Create
+SEM_ARTIGO|PropostasComerciais|Details
+SEM_ARTIGO|PropostasComerciais|Edit
+SEM_ARTIGO|PropostasComerciais|Enviar
+SEM_ARTIGO|PropostasComerciais|Index
+SEM_ARTIGO|PropostasComerciais|Preview
+SEM_ARTIGO|Recebimentos|Index
+SEM_ARTIGO|Relatorios|Apuracao
+SEM_ARTIGO|Relatorios|Clinico
+SEM_ARTIGO|Relatorios|Cobertura
+SEM_ARTIGO|Relatorios|Convenios
+SEM_ARTIGO|Relatorios|Convites
+SEM_ARTIGO|Relatorios|Execucao
+SEM_ARTIGO|Relatorios|Execucoes
+SEM_ARTIGO|Relatorios|Executivo
+SEM_ARTIGO|Relatorios|Exportacoes
+SEM_ARTIGO|Relatorios|FaturamentoSaas
+SEM_ARTIGO|Relatorios|FiltrosSalvos
+SEM_ARTIGO|Relatorios|Financeiro
+SEM_ARTIGO|Relatorios|FinanceiroClinica
+SEM_ARTIGO|Relatorios|Index
+SEM_ARTIGO|Relatorios|OperacaoClinica
+SEM_ARTIGO|Relatorios|Operacional
+SEM_ARTIGO|Relatorios|Plantoes
+SEM_ARTIGO|Relatorios|Produtividade
+SEM_ARTIGO|Relatorios|ProdutividadeMedica
+SEM_ARTIGO|Relatorios|Saas
+SEM_ARTIGO|Relatorios|SaasClientesRisco
+SEM_ARTIGO|Relatorios|SaasFaturamento
+SEM_ARTIGO|Relatorios|SaasUsoPlanos
+SEM_ARTIGO|Relatorios|Sla
+SEM_ARTIGO|RelatoriosExecutivos|Index
+SEM_ARTIGO|Renovacoes|Details
+SEM_ARTIGO|Renovacoes|Index
+SEM_ARTIGO|Renovacoes|Risco
+SEM_ARTIGO|RepassesMedicos|Index
+SEM_ARTIGO|SaasClientes|Create
+SEM_ARTIGO|SaasClientes|Details
+SEM_ARTIGO|SaasClientes|Edit
+SEM_ARTIGO|SaasClientes|Index
+COBERTA|SaasDashboard|Index|artigo admin-risco
+SEM_ARTIGO|SaasPlanos|Create
+SEM_ARTIGO|SaasPlanos|Edit
+SEM_ARTIGO|SaasPlanos|Index
+SEM_ARTIGO|SaasPlanos|Limites
+SEM_ARTIGO|SaasPlanos|Modulos
+SEM_ARTIGO|SaasTenants|Create
+SEM_ARTIGO|SaasTenants|Details
+SEM_ARTIGO|SaasTenants|Edit
+SEM_ARTIGO|SaasTenants|Index
+SEM_ARTIGO|SaasUso|Index
+SEM_ARTIGO|Seguranca|AcessosNegados
+SEM_ARTIGO|Seguranca|Auditoria
+SEM_ARTIGO|Seguranca|Index
+SEM_ARTIGO|Seguranca|Matriz
+SEM_ARTIGO|Seguranca|PerfilDetalhes
+SEM_ARTIGO|Seguranca|Perfis
+SEM_ARTIGO|Seguranca|Permissoes
+SEM_ARTIGO|Seguranca|PoliticasSenha
+SEM_ARTIGO|Seguranca|Sessoes
+SEM_ARTIGO|Seguranca|TentativasLogin
+SEM_ARTIGO|Seguranca|UsuarioDetalhes
+SEM_ARTIGO|Seguranca|Usuarios
+SEM_ARTIGO|Sla|Incidentes
+SEM_ARTIGO|Sla|Index
+SEM_ARTIGO|Sla|Indicadores
+SEM_ARTIGO|Suporte|BaseConhecimento
+SEM_ARTIGO|Suporte|Create
+SEM_ARTIGO|Suporte|Details
+SEM_ARTIGO|Suporte|Index
+SEM_ARTIGO|Suporte|MeusChamados
+SEM_ARTIGO|Suporte|Sla
+SEM_ARTIGO|TemplatesOperacionais|Index
+SEM_ARTIGO|Timelines|Details
+SEM_ARTIGO|Treinamento|Artigos
+SEM_ARTIGO|Treinamento|Busca
+SEM_ARTIGO|Treinamento|Index
+SEM_ARTIGO|Treinamento|MeuProgresso
+SEM_ARTIGO|Treinamento|TrilhaDetails
+SEM_ARTIGO|Treinamento|Trilhas
+SEM_ARTIGO|Triagem|ClassificacaoRisco
+SEM_ARTIGO|Triagem|Create
+SEM_ARTIGO|Triagem|Details
+SEM_ARTIGO|Triagem|Edit
+SEM_ARTIGO|Triagem|Fila
+SEM_ARTIGO|Triagem|Finalizar
+SEM_ARTIGO|Triagem|HistoricoPaciente
+SEM_ARTIGO|Triagem|Index
+ACO_AUX|Triagem|Salvar|Triagem/Salvar|submissao dinamica ou helper herdado
+SEM_ARTIGO|Usuario|Admin
+SEM_ARTIGO|Usuario|AlterarSenha
+SEM_ARTIGO|Usuario|Edit
+SEM_ARTIGO|Usuario|Index
+SEM_ARTIGO|Usuarios|Create
+SEM_ARTIGO|Usuarios|Edit
+SEM_ARTIGO|Usuarios|Index
+SEM_ARTIGO|Usuarios|Save
+POTE_QUEBRA|V112Web|Activities|V112Web/OperationalPage|pagina GET sem arquivo resolvido
+POTE_QUEBRA|V112Web|Billing|V112Web/OperationalPage|pagina GET sem arquivo resolvido
+POTE_QUEBRA|V112Web|Customers|V112Web/OperationalPage|pagina GET sem arquivo resolvido
+POTE_QUEBRA|V112Web|Dashboard|V112Web/OperationalPage|pagina GET sem arquivo resolvido
+POTE_QUEBRA|V112Web|Demo|V112Web/OperationalPage|pagina GET sem arquivo resolvido
+POTE_QUEBRA|V112Web|Homologation|V112Web/OperationalPage|pagina GET sem arquivo resolvido
+POTE_QUEBRA|V112Web|Inventory|V112Web/OperationalPage|pagina GET sem arquivo resolvido
+POTE_QUEBRA|V112Web|Journey|V112Web/OperationalPage|pagina GET sem arquivo resolvido
+POTE_QUEBRA|V112Web|Orders|V112Web/OperationalPage|pagina GET sem arquivo resolvido
+POTE_QUEBRA|V112Web|Outbox|V112Web/OperationalPage|pagina GET sem arquivo resolvido
+POTE_QUEBRA|V112Web|Products|V112Web/OperationalPage|pagina GET sem arquivo resolvido
+POTE_QUEBRA|V112Web|Tasks|V112Web/OperationalPage|pagina GET sem arquivo resolvido
+POTE_QUEBRA|V112Web|Templates|V112Web/OperationalPage|pagina GET sem arquivo resolvido
+SEM_ARTIGO|WhiteLabel|Assets
+SEM_ARTIGO|WhiteLabel|Edit
+SEM_ARTIGO|WhiteLabel|Emails
+SEM_ARTIGO|WhiteLabel|Index
+SEM_ARTIGO|WhiteLabel|Preview
+SEM_ARTIGO|WhiteLabelTemplates|Aplicar
+SEM_ARTIGO|WhiteLabelTemplates|Create
+SEM_ARTIGO|WhiteLabelTemplates|Details
+SEM_ARTIGO|WhiteLabelTemplates|Edit
+SEM_ARTIGO|WhiteLabelTemplates|Index
+SEM_ARTIGO|WhiteLabelTemplates|Preview
+POTE_QUEBRA|WorkflowSaude360|Index|WorkflowSaude360/Index|pagina GET sem arquivo resolvido
+POTE_QUEBRA|WorkflowSaude360|ProximaAcao|WorkflowSaude360/ProximaAcao|pagina GET sem arquivo resolvido
+ACO_AUX|WorkflowSaude360|Salvar|WorkflowSaude360/Salvar|submissao dinamica ou helper herdado
+
+RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=674|FILE_OK=616|ARTIGOS=25|COBERTAS=24|FORA_ESCOPO=19|GAP_SEM_ARTIGO=573|ACO_AUX=29|POTE_QUEBRA=29
+ARTIGOS_ORFAOS=NENHUM

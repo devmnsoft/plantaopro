@@ -1,0 +1,11 @@
+R70 varredura responsiva — tag=final-super
+chrome: Chrome/155.0.8059.84
+base: http://localhost:52976 (Web http://localhost:52976)
+largo(larguras): 360/480/768/1024 px; paginas: 22
+
+[360px] medido=22 comFalha=0
+[480px] medido=22 comFalha=0
+[768px] medido=22 comFalha=0
+[1024px] medido=22 comFalha=0
+
+R70_SWEEP_DONE FALHAS=0 medicoes=88

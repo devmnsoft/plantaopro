@@ -1,0 +1,14 @@
+R70 varredura responsiva — tag=baseline
+chrome: Chrome/155.0.8059.84
+base: http://localhost:52976 (Web http://localhost:52976)
+largo(larguras): 360/480/768/1024 px; paginas: 21
+
+[360px] medido=21 comFalha=0
+[480px] medido=21 comFalha=0
+[768px] medido=21 comFalha=0
+[1024px] medido=21 comFalha=1
+  FALHA /Pendencias -> final=/Pendencias docOv=0
+     estouro: <label.> right=1145 over=136 (clip)
+     estouro: <input.> right=1145 over=136 (clip)
+
+R70_SWEEP_DONE FALHAS=1

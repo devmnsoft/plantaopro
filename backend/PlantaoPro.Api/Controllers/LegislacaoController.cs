@@ -16,8 +16,13 @@ namespace PlantaoPro.Api.Controllers;
 public sealed class LegislacaoController : ControllerBase
 {
     private readonly IParametrosLegaisRepository repository;
+    private readonly ITributacaoPfService tributacao;
 
-    public LegislacaoController(IParametrosLegaisRepository repository) => this.repository = repository;
+    public LegislacaoController(IParametrosLegaisRepository repository, ITributacaoPfService tributacao)
+    {
+        this.repository = repository;
+        this.tributacao = tributacao;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Listar([FromQuery] int? ano, CancellationToken ct) =>
@@ -30,5 +35,21 @@ public sealed class LegislacaoController : ControllerBase
         return item is null
             ? NotFound(new { erro = "Parâmetro legal não encontrado para o filtro informado." })
             : Ok(item);
+    }
+
+    // R81: nucleo de tributacao PF com vetores oficiais da fonte unica.
+    [HttpGet("tributacao-pf/tabela")]
+    public async Task<IActionResult> TabelaTributacaoPf([FromQuery] int? ano, CancellationToken ct) =>
+        Ok(await tributacao.ObterTabelaAsync(ano, ct));
+
+    [HttpPost("tributacao-pf/calcular")]
+    public async Task<IActionResult> CalcularTributacaoPf([FromBody] CalcularTributacaoPfCommand comando, CancellationToken ct)
+    {
+        try
+        {
+            return Ok(await tributacao.CalcularAsync(comando.Ano, comando.SalarioBruto, ct));
+        }
+        catch (ArgumentException ex) { return BadRequest(new { erro = ex.Message }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { erro = ex.Message }); }
     }
 }

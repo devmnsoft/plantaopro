@@ -1424,6 +1424,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2364_r81_tabelas_pf_2026",
+                            "source":  "database/migrations/2026_10_v2364_r81_tabelas_pf_2026.sql",
+                            "checksum":  "5a180a7250f1b04f3cc8b1455ee2bb1492b8940857964b5539e11b05f2d997ae",
+                            "dependsOn":  [
+                                              "2026_10_v2363_r80_parametros_legais"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

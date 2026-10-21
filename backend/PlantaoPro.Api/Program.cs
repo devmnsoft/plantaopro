@@ -233,6 +233,7 @@ builder.Services.AddScoped<ICotacoesRepository>(sp => new CotacoesRepository(Get
 builder.Services.AddScoped<IDocumentosXmlRepository>(sp => new DocumentosXmlRepository(GetConn(sp)));
 builder.Services.AddScoped<IAnexosArquivosRepository>(sp => new AnexosArquivosRepository(GetConn(sp)));
 builder.Services.AddScoped<IParametrosLegaisRepository>(sp => new ParametrosLegaisRepository(GetConn(sp)));
+builder.Services.AddScoped<ITributacaoPfService>(sp => new TributacaoPfService(sp.GetRequiredService<IParametrosLegaisRepository>()));
 builder.Services.AddScoped<IGestaoDashboardRepository>(sp => new GestaoDashboardRepository(GetConn(sp)));
 builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();

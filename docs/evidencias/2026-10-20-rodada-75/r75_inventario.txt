@@ -678,6 +678,7 @@ ARTIGO|id=admin-plano|Planos/Index|titulo=Como criar plano
 ARTIGO|id=admin-assinatura|Assinaturas/Index|titulo=Como criar assinatura
 ARTIGO|id=admin-fatura|FaturamentoSaas/Index|titulo=Como gerar fatura
 ARTIGO|id=admin-risco|SaasDashboard/Index|titulo=Como acompanhar clientes em risco
+ARTIGO|id=adm-inadimplencia|FaturamentoSaas/Inadimplencia|titulo=Como acompanhar a inadimplência dos clientes
 ARTIGO|id=coord-plantao|Plantoes/Create|titulo=Como criar plantão
 ARTIGO|id=coord-publicar|Plantoes/Index|titulo=Como publicar plantão
 ARTIGO|id=coord-convite|CentralEscala/Index|titulo=Como convidar médico
@@ -715,8 +716,25 @@ ARTIGO|id=fiscal-importacao-xml|Adm360DocumentosXmlWeb/Importar|titulo=Como impo
 ARTIGO|id=fiscal-notas|Adm360FiscalWeb/Notas|titulo=Como preparar a pré-emissão de NF-e
 ARTIGO|id=fech-apuracao|Fechamentos/Index|titulo=Como acompanhar a apuração de plantões
 ARTIGO|id=fech-conferencia|Fechamentos/Conferencia|titulo=Como conferir e aprovar um fechamento
+ARTIGO|id=adm-assinatura|MinhaAssinatura/Index|titulo=Como consultar a sua assinatura
+ARTIGO|id=adm-faturas|MinhaAssinatura/Faturas|titulo=Como pagar as faturas da assinatura
+ARTIGO|id=adm-uso-plano|MinhaAssinatura/Uso|titulo=Como acompanhar o uso contra os limites do plano
+ARTIGO|id=adm-modulos|MinhaAssinatura/Modulos|titulo=Como contratar módulos à parte do plano
+ARTIGO|id=adm-usuarios|Usuarios/Index|titulo=Como gerenciar usuários da instituição
+ARTIGO|id=adm-novo-usuario|Usuarios/Create|titulo=Como criar um usuário com perfis
+ARTIGO|id=adm-minha-conta|Usuario/Index|titulo=Como revisar sua conta pessoal
+ARTIGO|id=adm-alterar-senha|Usuario/AlterarSenha|titulo=Como alterar a senha da sua conta
+ARTIGO|id=adm-perfis|Perfis/Index|titulo=Como gerir perfis de acesso
+ARTIGO|id=adm-matriz-permissoes|Permissoes/Matriz|titulo=Como consultar a matriz de permissões
 ARTIGO|id=central-fatura|MinhaCentral/Index|titulo=Como resolver fatura vencida
 ARTIGO|id=central-notificacoes|Notificacoes/Preferencias|titulo=Como configurar notificações
+ARTIGO|id=cad-empresa|Cadastro/Empresa|titulo=Como começar o cadastro da instituição
+ARTIGO|id=cad-plano|Cadastro/Plano|titulo=Como escolher o plano no cadastro
+ARTIGO|id=cad-administrador|Cadastro/Usuario|titulo=Como informar o administrador responsável
+ARTIGO|id=cad-envio|Cadastro/Confirmacao|titulo=Como revisar e enviar o cadastro
+ARTIGO|id=cad-conclusao|Cadastro/Sucesso|titulo=Como concluir o cadastro self-service
+ARTIGO|id=cent-notificacoes|Notificacoes/Index|titulo=Como usar a central de notificações
+ARTIGO|id=ajuda-guia|Ajuda/Index|titulo=Como usar a central de ajuda
 ARTIGO|id=recep-paciente|Pacientes/Create|titulo=Como cadastrar paciente
 ARTIGO|id=recep-agendamento|Agendamentos/CheckIn|titulo=Como agendar e fazer o check-in
 ARTIGO|id=recep-chamada|PainelChamada/Index|titulo=Como operar a sala de espera
@@ -884,12 +902,12 @@ SEM_ARTIGO|Bi|Operacional
 SEM_ARTIGO|Bi|Saas
 SEM_ARTIGO|Bi|Sla
 SEM_ARTIGO|Bi|Widgets
-SEM_ARTIGO|Cadastro|Confirmacao
+COBERTA|Cadastro|Confirmacao|artigo cad-envio
 SEM_ARTIGO|Cadastro|Confirmar
-SEM_ARTIGO|Cadastro|Empresa
-SEM_ARTIGO|Cadastro|Plano
-SEM_ARTIGO|Cadastro|Sucesso
-SEM_ARTIGO|Cadastro|Usuario
+COBERTA|Cadastro|Empresa|artigo cad-empresa
+COBERTA|Cadastro|Plano|artigo cad-plano
+COBERTA|Cadastro|Sucesso|artigo cad-conclusao
+COBERTA|Cadastro|Usuario|artigo cad-administrador
 SEM_ARTIGO|Caixa|Index
 SEM_ARTIGO|CentralAtendimento|Index
 SEM_ARTIGO|CentralEscala|Calendario
@@ -1058,7 +1076,7 @@ COBERTA|FaturamentoClinico|Titulos|artigo fat-titulos
 SEM_ARTIGO|FaturamentoRegras|Index
 SEM_ARTIGO|FaturamentoSaas|Details
 SEM_ARTIGO|FaturamentoSaas|GerarMensal
-SEM_ARTIGO|FaturamentoSaas|Inadimplencia
+COBERTA|FaturamentoSaas|Inadimplencia|artigo adm-inadimplencia
 COBERTA|FaturamentoSaas|Index|artigo admin-fatura
 SEM_ARTIGO|Favoritos|Index
 SEM_ARTIGO|FeatureFlags|Index
@@ -1155,13 +1173,13 @@ COBERTA|MinhaAgenda|PlantoesDisponiveis|artigo medico-disponiveis
 SEM_ARTIGO|MinhaAgenda|Presencas
 SEM_ARTIGO|MinhaAssinatura|Cancelamento
 SEM_ARTIGO|MinhaAssinatura|Downgrade
-SEM_ARTIGO|MinhaAssinatura|Faturas
-SEM_ARTIGO|MinhaAssinatura|Index
+COBERTA|MinhaAssinatura|Faturas|artigo adm-faturas
+COBERTA|MinhaAssinatura|Index|artigo adm-assinatura
 SEM_ARTIGO|MinhaAssinatura|Limites
-SEM_ARTIGO|MinhaAssinatura|Modulos
+COBERTA|MinhaAssinatura|Modulos|artigo adm-modulos
 SEM_ARTIGO|MinhaAssinatura|RevisarModulos
 SEM_ARTIGO|MinhaAssinatura|Upgrade
-SEM_ARTIGO|MinhaAssinatura|Uso
+COBERTA|MinhaAssinatura|Uso|artigo adm-uso-plano
 COBERTA|MinhaCentral|Index|artigo central-fatura
 SEM_ARTIGO|Modulos|Create
 SEM_ARTIGO|Modulos|Index
@@ -1173,7 +1191,7 @@ SEM_ARTIGO|Monitoramento|HealthChecks
 SEM_ARTIGO|Monitoramento|Index
 SEM_ARTIGO|Monitoramento|Performance
 SEM_ARTIGO|Monitoramento|Tenants
-SEM_ARTIGO|Notificacoes|Index
+COBERTA|Notificacoes|Index|artigo cent-notificacoes
 COBERTA|Notificacoes|Preferencias|artigo central-notificacoes
 SEM_ARTIGO|NotificacoesOperacionais|Index
 SEM_ARTIGO|Observabilidade|Acessos
@@ -1239,10 +1257,10 @@ SEM_ARTIGO|PendenciasClinicas|Index
 ACO_AUX|PendenciasClinicas|Salvar|PendenciasClinicas/Salvar|submissao dinamica ou helper herdado
 SEM_ARTIGO|Perfis|Create
 SEM_ARTIGO|Perfis|Edit
-SEM_ARTIGO|Perfis|Index
+COBERTA|Perfis|Index|artigo adm-perfis
 SEM_ARTIGO|Perfis|Permissoes
 SEM_ARTIGO|Permissoes|Index
-SEM_ARTIGO|Permissoes|Matriz
+COBERTA|Permissoes|Matriz|artigo adm-matriz-permissoes
 SEM_ARTIGO|Permissoes|PorPerfil
 SEM_ARTIGO|Permissoes|PorUsuario
 SEM_ARTIGO|Permissoes|TestarAcesso
@@ -1378,12 +1396,12 @@ SEM_ARTIGO|Triagem|HistoricoPaciente
 SEM_ARTIGO|Triagem|Index
 ACO_AUX|Triagem|Salvar|Triagem/Salvar|submissao dinamica ou helper herdado
 SEM_ARTIGO|Usuario|Admin
-SEM_ARTIGO|Usuario|AlterarSenha
+COBERTA|Usuario|AlterarSenha|artigo adm-alterar-senha
 SEM_ARTIGO|Usuario|Edit
-SEM_ARTIGO|Usuario|Index
-SEM_ARTIGO|Usuarios|Create
+COBERTA|Usuario|Index|artigo adm-minha-conta
+COBERTA|Usuarios|Create|artigo adm-novo-usuario
 SEM_ARTIGO|Usuarios|Edit
-SEM_ARTIGO|Usuarios|Index
+COBERTA|Usuarios|Index|artigo adm-usuarios
 SEM_ARTIGO|Usuarios|Save
 POTE_QUEBRA|V112Web|Activities|V112Web/OperationalPage|pagina GET sem arquivo resolvido
 POTE_QUEBRA|V112Web|Billing|V112Web/OperationalPage|pagina GET sem arquivo resolvido
@@ -1413,5 +1431,5 @@ POTE_QUEBRA|WorkflowSaude360|Index|WorkflowSaude360/Index|pagina GET sem arquivo
 POTE_QUEBRA|WorkflowSaude360|ProximaAcao|WorkflowSaude360/ProximaAcao|pagina GET sem arquivo resolvido
 ACO_AUX|WorkflowSaude360|Salvar|WorkflowSaude360/Salvar|submissao dinamica ou helper herdado
 
-RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=674|FILE_OK=616|ARTIGOS=64|COBERTAS=63|FORA_ESCOPO=19|GAP_SEM_ARTIGO=534|ACO_AUX=29|POTE_QUEBRA=29
+RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=674|FILE_OK=616|ARTIGOS=82|COBERTAS=80|FORA_ESCOPO=19|GAP_SEM_ARTIGO=517|ACO_AUX=29|POTE_QUEBRA=29
 ARTIGOS_ORFAOS=NENHUM

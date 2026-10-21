@@ -151,6 +151,7 @@ PAGINA|Cadastro|Plano|Cadastro/Cadastro|ARQ_OK|LIT|
 PAGINA|Cadastro|Sucesso|Cadastro/Sucesso|ARQ_OK|NOME|
 PAGINA|Cadastro|Usuario|Cadastro/Cadastro|ARQ_OK|LIT|
 PAGINA|Caixa|Index|V116/Caixa|ARQ_OK|LIT|
+PAGINA|CalendarioFiscalWeb|Index|CalendarioFiscalWeb/Index|ARQ_OK|NOME|
 PAGINA|CentralAtendimento|Index|CentralAtendimento/Index|ARQ_OK|NOME|
 PAGINA|CentralEscala|Calendario|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
 PAGINA|CentralEscala|ConvitesPendentes|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
@@ -730,6 +731,7 @@ ARTIGO|id=adm-perfis|Perfis/Index|titulo=Como gerir perfis de acesso
 ARTIGO|id=adm-matriz-permissoes|Permissoes/Matriz|titulo=Como consultar a matriz de permissões
 ARTIGO|id=adm-folha-calculos|FolhaWeb/Index|titulo=Como simular folha, 13º, férias e rescisão em linguagem simples
 ARTIGO|id=adm-simples-nacional|SimplesWeb/Index|titulo=Como prever o DAS do Simples Nacional com as tabelas oficiais
+ARTIGO|id=adm-calendario-fiscal|CalendarioFiscalWeb/Index|titulo=Como acompanhar as obrigações fiscais do mês no calendário
 ARTIGO|id=central-fatura|MinhaCentral/Index|titulo=Como resolver fatura vencida
 ARTIGO|id=central-notificacoes|Notificacoes/Preferencias|titulo=Como configurar notificações
 ARTIGO|id=cad-empresa|Cadastro/Empresa|titulo=Como começar o cadastro da instituição
@@ -913,6 +915,7 @@ COBERTA|Cadastro|Plano|artigo cad-plano
 COBERTA|Cadastro|Sucesso|artigo cad-conclusao
 COBERTA|Cadastro|Usuario|artigo cad-administrador
 SEM_ARTIGO|Caixa|Index
+COBERTA|CalendarioFiscalWeb|Index|artigo adm-calendario-fiscal
 SEM_ARTIGO|CentralAtendimento|Index
 SEM_ARTIGO|CentralEscala|Calendario
 SEM_ARTIGO|CentralEscala|ConvitesPendentes
@@ -1437,5 +1440,5 @@ POTE_QUEBRA|WorkflowSaude360|Index|WorkflowSaude360/Index|pagina GET sem arquivo
 POTE_QUEBRA|WorkflowSaude360|ProximaAcao|WorkflowSaude360/ProximaAcao|pagina GET sem arquivo resolvido
 ACO_AUX|WorkflowSaude360|Salvar|WorkflowSaude360/Salvar|submissao dinamica ou helper herdado
 
-RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=676|FILE_OK=618|ARTIGOS=84|COBERTAS=82|FORA_ESCOPO=19|GAP_SEM_ARTIGO=517|ACO_AUX=29|POTE_QUEBRA=29
+RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=677|FILE_OK=619|ARTIGOS=85|COBERTAS=83|FORA_ESCOPO=19|GAP_SEM_ARTIGO=517|ACO_AUX=29|POTE_QUEBRA=29
 ARTIGOS_ORFAOS=NENHUM

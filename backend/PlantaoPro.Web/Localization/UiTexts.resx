@@ -319,6 +319,9 @@
   <data name="Nav.SimplesNacional" xml:space="preserve">
     <value>Simples Nacional</value>
   </data>
+  <data name="Nav.ObrigacoesFiscais" xml:space="preserve">
+    <value>Calendário Fiscal</value>
+  </data>
   <data name="Nav.Relatorios" xml:space="preserve">
     <value>Relatórios</value>
   </data>

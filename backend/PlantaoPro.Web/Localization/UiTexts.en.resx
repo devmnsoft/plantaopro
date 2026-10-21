@@ -319,6 +319,9 @@
   <data name="Nav.SimplesNacional" xml:space="preserve">
     <value>Simplified Tax Regime</value>
   </data>
+  <data name="Nav.ObrigacoesFiscais" xml:space="preserve">
+    <value>Tax Calendar</value>
+  </data>
   <data name="Nav.Relatorios" xml:space="preserve">
     <value>Reports</value>
   </data>

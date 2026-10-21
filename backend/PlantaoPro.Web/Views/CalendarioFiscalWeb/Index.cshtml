@@ -1,0 +1,254 @@
+@{
+    ViewData["Title"] = "Calendário Fiscal";
+}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h4 class="mb-1 text-light">Calendário fiscal em linguagem simples</h4>
+            <p class="text-secondary small mb-0">Acompanhe as obrigações legais do período (DAS, FGTS, DCTFWeb, eSocial, EFD e livros contábeis) com avisos antecipados e marque o que já foi entregue.</p>
+        </div>
+        <a asp-action="Index" asp-controller="Administrativo360" class="btn btn-sm btn-outline-secondary">Voltar ao Administrativo 360</a>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xxl-9 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Obrigações do período</div>
+                <div class="card-body">
+                    <div class="row g-2 mb-3">
+                        <div class="col-sm-4">
+                            <label class="form-label small" for="calMes">Mês do calendário</label>
+                            <select class="form-select form-select-sm" id="calMes"></select>
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="calAno">Ano do calendário</label>
+                            <input type="number" min="2000" max="2100" step="1" class="form-control form-control-sm" id="calAno" placeholder="2026" />
+                        </div>
+                        <div class="col-sm-5 d-flex align-items-end gap-2 flex-wrap">
+                            <button type="button" class="btn btn-primary btn-sm" id="calCarregarBtn">Carregar calendário</button>
+                            <span class="small text-secondary" id="calLegenda"></span>
+                        </div>
+                    </div>
+                    <div class="cal-status alert alert-sm py-2 d-none" role="status" id="calStatus"></div>
+                    <div class="cal-tabela table-responsive d-none mt-3" data-alvo="calendario"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xxl-3 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Em linguagem simples</div>
+                <div class="card-body small text-secondary">
+                    <p class="mb-2">Cada linha é uma obrigação legal com data oficial de vencimento. Os nomes e as fontes saem da fonte única de parâmetros legais.</p>
+                    <ul class="ps-3 mb-2">
+                        <li><strong>Competência</strong> — mês ao qual a obrigação se refere (para as mensais, o mês anterior ao do vencimento).</li>
+                        <li><strong>Vencimento</strong> — data em que a entrega/recolhimento deve ser feita no órgão responsável.</li>
+                        <li><strong>Dias restantes</strong> — tempo até o vencimento; fica negativo quando passou do prazo.</li>
+                        <li><strong>Estados</strong> — Agendada (prazo confortável), Vencendo em curto prazo (dentro da janela de alerta oficial de dias), Vence hoje, Atrasada e Concluída (você marcou como entregue).</li>
+                        <li><strong>Ativa para este período</strong> — desmarque quando uma obrigação não se aplicar à sua empresa no período (por exemplo, sem contratos CLT no mês, o FGTS não se aplica).</li>
+                        <li><strong>Marcar concluída</strong> — registre que a entrega foi feita; o estado vira Concluída e pode ser desfeito.</li>
+                    </ul>
+                    <p class="mb-0"><em>Calendário de planejamento com datas oficiais consolidadas. Alguns prazos variam por estado ou órgão (o eSocial usa dias úteis e a EFD segue as regras da Sefaz do estado): confirme sempre o calendário oficial antes de entregar. O registro de conclusões serve para o controle interno da equipe.</em></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    var MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    var MESES_ABREV = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    var ESTADOS = {
+        'CONCLUIDA': { rotulo: 'Concluída', classe: 'text-bg-success' },
+        'NAO_SE_APLICA': { rotulo: 'Não se aplica', classe: 'text-bg-secondary' },
+        'ATRASADA': { rotulo: 'Atrasada', classe: 'text-bg-danger' },
+        'VENCE_HOJE': { rotulo: 'Vence hoje', classe: 'text-bg-warning' },
+        'VENCE_EM_CURTO_PRAZO': { rotulo: 'Vence em curto prazo', classe: 'text-bg-info' },
+        'AGENDADA': { rotulo: 'Agendada', classe: 'text-bg-dark' }
+    };
+    var calendarioAtual = null;
+
+    function sel(id) { return document.getElementById(id); }
+
+    function status(texto, tipo) {
+        var bar = sel('calStatus');
+        bar.classList.remove('d-none', 'alert-success', 'alert-danger');
+        bar.classList.add(tipo === 'erro' ? 'alert-danger' : 'alert-success');
+        bar.textContent = texto;
+    }
+
+    function fmtData(iso) {
+        if (!iso) return '-';
+        var p = String(iso).split('-');
+        return p[2] + '/' + p[1] + '/' + p[0];
+    }
+
+    function fmtDataHora(iso) {
+        if (!iso) return '';
+        var d = String(iso).substring(0, 10);
+        var h = String(iso).substring(11, 16);
+        return fmtData(d) + (h && h !== '00:00' ? ' às ' + h : '');
+    }
+
+    function linhaTextoDias(item) {
+        if (item.concluida || !item.ativa) return '-';
+        if (item.diasRestantes === 0) return 'hoje';
+        return item.diasRestantes > 0 ? String(item.diasRestantes) + ' dia(s)' : String(-item.diasRestantes) + ' dia(s) atraso';
+    }
+
+    function renderTabela() {
+        var alcance = document.querySelector('[data-alvo="calendario"]');
+        var tb = document.createElement('table');
+        tb.className = 'table table-sm table-dark table-hover align-middle mb-0';
+        tb.setAttribute('role', 'table');
+        var cab = tb.createTHead();
+        var trh = document.createElement('tr');
+        ['Obrigação', 'Competência', 'Vencimento', 'Dias', 'Estado', 'Ativa para este período', 'Ação'].forEach(function (txt) {
+            var th = document.createElement('th');
+            th.scope = 'col';
+            th.className = 'small' + (txt === 'Competência' || txt === 'Vencimento' || txt === 'Dias' ? ' text-center' : '');
+            th.textContent = txt;
+            trh.appendChild(th);
+        });
+        cab.appendChild(trh);
+        var corpo = tb.createTBody();
+        calendarioAtual.itens.forEach(function (item) {
+            var tr = document.createElement('tr');
+            if (!item.ativa) { tr.classList.add('table-secondary'); }
+            if (item.estado === 'CONCLUIDA') { tr.classList.add('table-success'); }
+
+            var th = document.createElement('th');
+            th.scope = 'row';
+            th.className = 'fw-normal small';
+            var nome = document.createElement('div');
+            nome.textContent = item.nome;
+            var fonte = document.createElement('div');
+            fonte.className = 'text-secondary fw-normal';
+            fonte.textContent = item.descricao;
+            th.appendChild(nome);
+            th.appendChild(fonte);
+            tr.appendChild(th);
+
+            var tdRef = document.createElement('td');
+            tdRef.className = 'text-center small';
+            tdRef.textContent = MESES_ABREV[item.mesReferencia - 1] + '/' + item.anoReferencia;
+            tr.appendChild(tdRef);
+
+            var tdVenc = document.createElement('td');
+            tdVenc.className = 'text-center small';
+            tdVenc.textContent = fmtData(item.dataVencimento);
+            tr.appendChild(tdVenc);
+
+            var tdDias = document.createElement('td');
+            tdDias.className = 'text-center small';
+            tdDias.textContent = linhaTextoDias(item);
+            tr.appendChild(tdDias);
+
+            var tdEstado = document.createElement('td');
+            tdEstado.className = 'small';
+            var badge = document.createElement('span');
+            var estado = ESTADOS[item.estado] || ESTADOS['AGENDADA'];
+            badge.className = 'badge ' + estado.classe;
+            badge.textContent = estado.rotulo;
+            tdEstado.appendChild(badge);
+            tr.appendChild(tdEstado);
+
+            var tdAtiva = document.createElement('td');
+            tdAtiva.className = 'text-center';
+            var chk = document.createElement('input');
+            chk.type = 'checkbox';
+            chk.className = 'form-check-input';
+            chk.checked = item.ativa;
+            chk.setAttribute('aria-label', 'Ativa para este período: ' + item.nome);
+            chk.addEventListener('change', function () { mudarAtiva(item.codigo, chk.checked); });
+            tdAtiva.appendChild(chk);
+            tr.appendChild(tdAtiva);
+
+            var tdAcao = document.createElement('td');
+            tdAcao.className = 'text-center';
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-outline-secondary btn-sm';
+            btn.textContent = item.concluida ? 'Desmarcar conclusão' : 'Marcar concluída';
+            btn.setAttribute('aria-label', btn.textContent + ': ' + item.nome);
+            btn.addEventListener('click', function () { alternarConclusao(item.codigo); });
+            tdAcao.appendChild(btn);
+            tr.appendChild(tdAcao);
+
+            corpo.appendChild(tr);
+        });
+        tb.appendChild(corpo);
+        alcance.textContent = '';
+        alcance.appendChild(tb);
+        alcance.classList.remove('d-none');
+    }
+
+    function atualizarItemRetornado(item) {
+        var idx = -1;
+        calendarioAtual.itens.forEach(function (x, i) { if (x.codigo === item.codigo) { idx = i; } });
+        if (idx >= 0) { calendarioAtual.itens[idx] = item; renderTabela(); }
+    }
+
+    function mudarAtiva(codigo, ativa) {
+        fetch('/CalendarioFiscalWeb/AlterarAtiva', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ codigo: codigo, mesPeriodo: calendarioAtual.mesExibicao, anoPeriodo: calendarioAtual.anoExibicao, ativa: ativa })
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (!res || res.ok !== true) { status((res && res.erro) || 'Não foi possível salvar a alteração.', 'erro'); carregar(true); return; }
+                atualizarItemRetornado(res.data);
+            })
+            .catch(function () { status('Falha de conexão. Tente novamente.', 'erro'); carregar(true); });
+    }
+
+    function alternarConclusao(codigo) {
+        fetch('/CalendarioFiscalWeb/AlternarConclusao', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ codigo: codigo, mesPeriodo: calendarioAtual.mesExibicao, anoPeriodo: calendarioAtual.anoExibicao })
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (!res || res.ok !== true) { status((res && res.erro) || 'Não foi possível registrar a conclusão.', 'erro'); carregar(true); return; }
+                var item = res.data;
+                var info = item.concluida ? ' às ' + fmtDataHora(item.concluidaEm) : '';
+                status(item.concluida ? 'Obrigação registrada como concluída' + info + '.' : 'Conclusão desmarcada.', 'ok');
+                atualizarItemRetornado(item);
+            })
+            .catch(function () { status('Falha de conexão. Tente novamente.', 'erro'); });
+    }
+
+    function carregar(silencioso) {
+        var mes = Number(sel('calMes').value || 0);
+        var ano = Number(sel('calAno').value || 0);
+        if (!mes || !ano) { if (!silencioso) { status('Informe o mês e o ano do calendário.', 'erro'); } return; }
+        fetch('/CalendarioFiscalWeb/Calendario?mes=' + mes + '&ano=' + ano)
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (!res || res.ok !== true) { status((res && res.erro) || 'Calendário fiscal indisponível agora.', 'erro'); return; }
+                calendarioAtual = res.data;
+                sel('calStatus').classList.add('d-none');
+                sel('calLegenda').textContent = 'Janela de alerta oficial: ' + calendarioAtual.janelaAlertaDias + ' dia(s) antes do vencimento.';
+                renderTabela();
+            })
+            .catch(function () { status('Falha de conexão ao carregar o calendário.', 'erro'); });
+    }
+
+    MESES.forEach(function (nome, i) {
+        var opt = document.createElement('option');
+        opt.value = String(i + 1);
+        opt.textContent = nome;
+        sel('calMes').appendChild(opt);
+    });
+    var agora = new Date();
+    sel('calMes').value = String(agora.getMonth() + 1);
+    sel('calAno').value = String(agora.getFullYear());
+    sel('calCarregarBtn').addEventListener('click', function () { carregar(false); });
+    carregar(false);
+})();
+</script>
+}

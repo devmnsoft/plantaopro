@@ -238,6 +238,8 @@ builder.Services.AddScoped<IParametrosLegaisRepository>(sp => new ParametrosLega
 builder.Services.AddScoped<ITributacaoPfService>(sp => new TributacaoPfService(sp.GetRequiredService<IParametrosLegaisRepository>()));
 builder.Services.AddScoped<IFolhaPfService>(sp => new FolhaPfService(sp.GetRequiredService<IParametrosLegaisRepository>(), sp.GetRequiredService<ITributacaoPfService>()));
 builder.Services.AddScoped<ISimplesNacionalService>(sp => new SimplesNacionalService(sp.GetRequiredService<IParametrosLegaisRepository>()));
+builder.Services.AddScoped<ObrigacoesFiscaisRepository>(sp => new ObrigacoesFiscaisRepository(GetConn(sp)));
+builder.Services.AddScoped<ICalendarioFiscalService>(sp => new CalendarioFiscalService(sp.GetRequiredService<IParametrosLegaisRepository>(), sp.GetRequiredService<ObrigacoesFiscaisRepository>()));
 builder.Services.AddScoped<IGestaoDashboardRepository>(sp => new GestaoDashboardRepository(GetConn(sp)));
 builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();

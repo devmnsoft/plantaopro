@@ -1454,6 +1454,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2367_r84_calendario_fiscal_2026",
+                            "source":  "database/migrations/2026_10_v2367_r84_calendario_fiscal_2026.sql",
+                            "checksum":  "0e29e71008c4ca5871afe4cc0df09bb4d6cc8afe12885d8bf837c02f7d31fab3",
+                            "dependsOn":  [
+                                              "2026_10_v2366_r83_simples_nacional_2026"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

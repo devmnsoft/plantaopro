@@ -237,6 +237,7 @@ builder.Services.AddScoped<IAnexosArquivosRepository>(sp => new AnexosArquivosRe
 builder.Services.AddScoped<IParametrosLegaisRepository>(sp => new ParametrosLegaisRepository(GetConn(sp)));
 builder.Services.AddScoped<ITributacaoPfService>(sp => new TributacaoPfService(sp.GetRequiredService<IParametrosLegaisRepository>()));
 builder.Services.AddScoped<IFolhaPfService>(sp => new FolhaPfService(sp.GetRequiredService<IParametrosLegaisRepository>(), sp.GetRequiredService<ITributacaoPfService>()));
+builder.Services.AddScoped<ISimplesNacionalService>(sp => new SimplesNacionalService(sp.GetRequiredService<IParametrosLegaisRepository>()));
 builder.Services.AddScoped<IGestaoDashboardRepository>(sp => new GestaoDashboardRepository(GetConn(sp)));
 builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();

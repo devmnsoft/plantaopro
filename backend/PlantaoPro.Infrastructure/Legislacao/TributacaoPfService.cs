@@ -66,7 +66,8 @@ public sealed class TributacaoPfService : ITributacaoPfService
             Redondo(salarioBruto - total));
     }
 
-    private static int ResolveAno(List<ParametroLegalDto> linhas, int? pedido)
+    // internal para o servico do Simples Nacional (R83) reutilizar o mesmo padrao da fonte unica.
+    internal static int ResolveAno(List<ParametroLegalDto> linhas, int? pedido)
     {
         if (pedido is not null)
         {
@@ -78,14 +79,16 @@ public sealed class TributacaoPfService : ITributacaoPfService
         return linhas.Select(l => l.Ano).Max();
     }
 
-    private static decimal ValorObrigatorio(List<ParametroLegalDto> linhas, string codigo)
+    // internal para o servico do Simples Nacional (R83) reutilizar o mesmo padrao da fonte unica.
+    internal static decimal ValorObrigatorio(List<ParametroLegalDto> linhas, string codigo)
     {
         var linha = linhas.FirstOrDefault(l => string.Equals(l.Codigo, codigo, StringComparison.OrdinalIgnoreCase));
         if (linha is null) throw new InvalidOperationException($"Parametro legal {codigo} ausente da fonte unica.");
         return decimal.Parse(linha.Valor, Decimais);
     }
 
-    private static List<FaixaTributoLegalDto> Faixas(List<ParametroLegalDto> linhas, string prefixoCodigo)
+    // internal para o servico do Simples Nacional (R83) reutilizar o mesmo padrao da fonte unica.
+    internal static List<FaixaTributoLegalDto> Faixas(List<ParametroLegalDto> linhas, string prefixoCodigo)
     {
         return linhas
             .Where(l => l.Codigo.StartsWith(prefixoCodigo, StringComparison.OrdinalIgnoreCase))

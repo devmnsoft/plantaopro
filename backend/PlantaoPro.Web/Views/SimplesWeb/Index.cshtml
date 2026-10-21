@@ -1,0 +1,275 @@
+@{
+    ViewData["Title"] = "Simples Nacional";
+}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h4 class="mb-1 text-light">Simples Nacional em linguagem simples</h4>
+            <p class="text-secondary small mb-0">Consulte as tabelas oficiais vigentes por atividade e gere a prévia do DAS com um exemplo real, explicado campo a campo.</p>
+        </div>
+        <a asp-action="Index" asp-controller="Administrativo360" class="btn btn-sm btn-outline-secondary">Voltar ao Administrativo 360</a>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xxl-5 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Tabelas oficiais por atividade</div>
+                <div class="card-body">
+                    <p class="small text-secondary">Faixas cumulativas dos anexos I a V da LC 123/2006 (redação da LC 155/2016, gov.br/planalto). A faixa que vale para a sua empresa é escolhida pela receita bruta acumulada nos 12 meses anteriores ao mês declarado.</p>
+                    <label class="form-label small" for="tblAnexo">Atividade (anexo)</label>
+                    <select class="form-select form-select-sm mb-2" id="tblAnexo"></select>
+                    <div class="simples-status alert alert-sm py-2 d-none" role="status" id="tblStatus"></div>
+                    <div class="simples-tabela table-responsive d-none mt-3" data-alvo="tabela"></div>
+                    <p class="small text-secondary mt-3 mb-0" id="tblLimites"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xxl-7 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Prévia do DAS com exemplo real</div>
+                <div class="card-body">
+                    <p class="small text-secondary">Informe a receita acumulada em 12 meses e a receita do mês que você quer declarar. O sistema escolhe a faixa oficial, calcula a alíquota efetiva e o valor do DAS — cada campo do resultado vem explicado em linguagem simples abaixo.</p>
+                    <div class="row g-2">
+                        <div class="col-sm-6">
+                            <label class="form-label small" for="dasAnexo">Atividade (anexo do Simples)</label>
+                            <select class="form-select form-select-sm" id="dasAnexo"><option value="">Selecione a atividade</option></select>
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="dasMes">Mês de competência</label>
+                            <select class="form-select form-select-sm" id="dasMes">
+                                <option value="">Selecione</option>
+                                <option value="1">Janeiro</option>
+                                <option value="2">Fevereiro</option>
+                                <option value="3">Março</option>
+                                <option value="4">Abril</option>
+                                <option value="5">Maio</option>
+                                <option value="6">Junho</option>
+                                <option value="7">Julho</option>
+                                <option value="8">Agosto</option>
+                                <option value="9">Setembro</option>
+                                <option value="10">Outubro</option>
+                                <option value="11">Novembro</option>
+                                <option value="12">Dezembro</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="dasAno">Ano de competência</label>
+                            <input type="number" min="2000" max="2100" step="1" class="form-control form-control-sm" id="dasAno" placeholder="2026" />
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label small" for="dasAcumulado">Receita bruta acumulada nos 12 meses anteriores (R$)</label>
+                            <input type="number" min="0" step="0.01" class="form-control form-control-sm" id="dasAcumulado" placeholder="Sem histórico? Deixe vazio: usamos 12x o mês" />
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label small" for="dasMensal">Receita bruta do mês de competência (R$)</label>
+                            <input type="number" min="0" step="0.01" class="form-control form-control-sm" id="dasMensal" placeholder="60000,00" />
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mt-3 flex-wrap">
+                        <button type="button" class="btn btn-primary btn-sm" id="dasGerarBtn">Gerar prévia do DAS</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="dasExemploBtn">Carregar exemplo real</button>
+                        <div class="simples-status alert alert-sm py-2 d-none" role="status" id="dasStatus"></div>
+                    </div>
+                    <div class="simples-resultado table-responsive d-none mt-3" data-alvo="das"></div>
+                    <p class="small text-secondary mt-3 mb-1"><strong class="text-light">Em linguagem simples — o que cada campo significa:</strong></p>
+                    <ul class="small text-secondary ps-3 mb-2">
+                        <li><strong>Regime / enquadramento</strong> — o tipo de negócio principal define qual tabela de tributos vale: revenda, indústria, serviços (incluindo saúde e educação), construção/limpeza/vigilância/advocacia ou consultoria/auditoria/engenharia.</li>
+                        <li><strong>Classe por receita (ME/EPP)</strong> — os tetos de receita anual saem da fonte única: microempresa até o teto menor, pequeno porte até o teto maior. Acima do teto maior, a empresa não cabe mais no Simples.</li>
+                        <li><strong>Receita acumulada em 12 meses</strong> — é ela que escolhe a faixa. Empresa com menos de um ano? Deixe o campo vazio: a prévia estima o acumulado como 12 vezes a receita do mês e avisa quando o valor é estimado.</li>
+                        <li><strong>Faixa e alíquota nominal</strong> — o teto de receita da faixa oficial aplicada e a alíquota escrita nela.</li>
+                        <li><strong>Parcela a deduzir</strong> — valor que a lei permite subtrair para chegar à carga real das faixas mais altas.</li>
+                        <li><strong>Alíquota efetiva</strong> — a porcentagem que realmente incide sobre a receita: (acumulado × alíquota da faixa − parcela) ÷ acumulado, fórmula oficial do art. 18 da LC 123.</li>
+                        <li><strong>Valor do DAS</strong> — alíquota efetiva × receita do mês. Um único documento arrecada os tributos do regime (IRPJ, CSLL, PIS, COFINS, CPP e ICMS/ISS conforme a atividade).</li>
+                        <li><strong>Vencimento</strong> — padrão de recolhimento do Simples: dia fixo do mês seguinte ao da competência (valor oficial da fonte única).</li>
+                    </ul>
+                    <p class="small text-secondary mb-0"><em>Prévia para planejamento com as tabelas oficiais vigentes. O DAS definitivo com código de barras é emitido mensalmente pelo PGDAS-D após a declaração; a transição para o novo sistema tributário (CBS/IBS) está fora do escopo desta tela.</em></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    var dinheiro = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+    function moeda(v) { return dinheiro.format(Number(v || 0)); }
+    function pct(v, casas) { return Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: casas || 2 }) + '%'; }
+    var ROMANO = ['I', 'II', 'III', 'IV', 'V'];
+    var MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    var tabelas = null;
+
+    function status(idBarra, texto, tipo) {
+        var bar = document.getElementById(idBarra);
+        bar.classList.remove('d-none', 'alert-success', 'alert-danger');
+        bar.classList.add(tipo === 'erro' ? 'alert-danger' : 'alert-success');
+        bar.textContent = texto;
+    }
+
+    function preencherOpcoes(anexos, idSeletor) {
+        var el = document.getElementById(idSeletor);
+        anexos.forEach(function (a) {
+            var opt = document.createElement('option');
+            opt.value = String(a.numero);
+            opt.textContent = 'Anexo ' + ROMANO[a.numero - 1] + ' — ' + a.nome;
+            el.appendChild(opt);
+        });
+    }
+
+    function renderTabela(numero) {
+        var anexo = null;
+        tabelas.anexos.forEach(function (a) { if (a.numero === Number(numero)) { anexo = a; } });
+        if (!anexo) return;
+        var alcance = document.querySelector('[data-alvo="tabela"]');
+        var tb = document.createElement('table');
+        tb.className = 'table table-sm table-dark table-hover align-middle mb-0';
+        tb.setAttribute('role', 'table');
+        var cab = tb.createTHead();
+        var trh = document.createElement('tr');
+        ['Faixa', 'Receita acumulada (12m) até', 'Alíquota', 'Parcela a deduzir'].forEach(function (txt, i) {
+            var th = document.createElement('th');
+            th.scope = 'col';
+            th.className = 'small' + (i > 0 ? ' text-end' : '');
+            th.textContent = txt;
+            trh.appendChild(th);
+        });
+        cab.appendChild(trh);
+        var corpo = tb.createTBody();
+        anexo.faixas.forEach(function (f, i) {
+            var tr = document.createElement('tr');
+            var th = document.createElement('th');
+            th.scope = 'row';
+            th.className = 'fw-normal small';
+            th.textContent = 'Faixa ' + (i + 1);
+            tr.appendChild(th);
+            var td1 = document.createElement('td');
+            td1.className = 'text-end';
+            td1.textContent = moeda(f.limiteSuperior);
+            tr.appendChild(td1);
+            var td2 = document.createElement('td');
+            td2.className = 'text-end';
+            td2.textContent = pct(f.aliquotaPercentual);
+            tr.appendChild(td2);
+            var td3 = document.createElement('td');
+            td3.className = 'text-end';
+            td3.textContent = moeda(f.parcelaADeduzir);
+            tr.appendChild(td3);
+            corpo.appendChild(tr);
+        });
+        tb.appendChild(corpo);
+        alcance.textContent = '';
+        alcance.appendChild(tb);
+        alcance.classList.remove('d-none');
+    }
+
+    function renderLimites() {
+        document.getElementById('tblLimites').textContent = 'Teto microempresa (ME): ' + moeda(tabelas.limiteMeReceitaAnual) + ' por ano · Teto pequeno porte (EPP): ' + moeda(tabelas.limiteEppReceitaAnual) + ' · Vencimento padrão do DAS: dia ' + tabelas.dasDiaVencimento + ' do mês seguinte à competência.';
+    }
+
+    function carregarTabelas() {
+        fetch('/SimplesWeb/Tabelas')
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (!res || res.ok !== true) { status('tblStatus', (res && res.erro) || 'Tabelas oficiais indisponíveis agora.', 'erro'); return; }
+                tabelas = res.data;
+                preencherOpcoes(tabelas.anexos, 'tblAnexo');
+                preencherOpcoes(tabelas.anexos, 'dasAnexo');
+                document.getElementById('tblStatus').classList.add('d-none');
+                renderTabela(document.getElementById('tblAnexo').value);
+                renderLimites();
+            })
+            .catch(function () { status('tblStatus', 'Falha de conexão ao carregar as tabelas oficiais.', 'erro'); });
+    }
+
+    function linhasResultado(alcance, pares) {
+        var tb = document.createElement('table');
+        tb.className = 'table table-sm table-dark table-hover align-middle mb-0';
+        tb.setAttribute('role', 'table');
+        pares.forEach(function (par) {
+            var rotulo = (typeof par === 'object' && par.l) ? par.l : par[0];
+            var valorTexto = (typeof par === 'object' && par.v) ? par.v : par[1];
+            var forte = (typeof par === 'object' && par.strong) || false;
+            var tr = document.createElement('tr');
+            if (forte) { tr.classList.add('table-warning'); }
+            var th = document.createElement('th');
+            th.scope = 'row';
+            th.className = 'fw-normal small';
+            th.textContent = rotulo;
+            var td = document.createElement('td');
+            td.className = 'text-end';
+            td.textContent = valorTexto;
+            tr.appendChild(th); tr.appendChild(td);
+            tb.appendChild(tr);
+        });
+        alcance.textContent = '';
+        alcance.appendChild(tb);
+        alcance.classList.remove('d-none');
+    }
+
+    window.renderDas = function (d) {
+        var pares = new Array();
+        pares.push(['Regime / enquadramento', 'Simples Nacional — Anexo ' + ROMANO[d.anexo - 1] + ' (' + d.anexoNome + ')']);
+        pares.push(['Classe por receita anual', d.classeReceita === 'ME' ? 'Microempresa (ME)' : 'Empresa de pequeno porte (EPP)']);
+        pares.push(['Período de competência', MESES[d.mesCompetencia - 1] + '/' + d.anoCompetencia]);
+        pares.push(['Receita bruta do mês', moeda(d.receitaBrutaMensal)]);
+        pares.push(['Receita acumulada nos 12 meses', moeda(d.receitaBrutaAcumulada12Meses) + (d.receitaAcumuladaEstimada ? ' (estimada: 12 x o mês)' : '')]);
+        pares.push(['Faixa oficial aplicada', 'Faixa ' + d.faixaNumero + ' (acumulado até ' + moeda(d.faixaLimiteSuperior) + ')']);
+        pares.push(['Alíquota nominal da faixa', pct(d.aliquotaFaixaPct)]);
+        pares.push(['Parcela a deduzir', '-' + moeda(d.parcelaADeduzir)]);
+        pares.push(['Alíquota efetiva aplicada', pct(d.aliquotaEfetivaPct, 4)]);
+        pares.push(['Valor do DAS (tributos juntos num documento só)', moeda(d.valorDas), true]);
+        pares.push(['Vencimento padrão', d.dasDiaVencimento + '/' + MESES[d.vencimentoMes - 1].toLowerCase() + '/' + d.vencimentoAno]);
+        linhasResultado(document.querySelector('[data-alvo="das"]'), pares);
+    };
+
+    function valorCampo(id) {
+        var v = document.getElementById(id).value.trim();
+        return v === '' ? null : Number(v.replace(',', '.'));
+    }
+
+    function gerarPrevias() {
+        var anexo = Number(document.getElementById('dasAnexo').value || 0);
+        var mes = Number(document.getElementById('dasMes').value || 0);
+        var ano = Number(document.getElementById('dasAno').value || 0);
+        var mensal = valorCampo('dasMensal');
+        if (!anexo) { status('dasStatus', 'Selecione a atividade (anexo do Simples).', 'erro'); return; }
+        if (!mes) { status('dasStatus', 'Informe o mês de competência.', 'erro'); return; }
+        if (!ano) { status('dasStatus', 'Informe o ano de competência.', 'erro'); return; }
+        if (mensal === null || mensal <= 0) { status('dasStatus', 'Informe a receita bruta do mês.', 'erro'); return; }
+        fetch('/SimplesWeb/CalcularDas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                anexo: anexo,
+                mesCompetencia: mes,
+                anoCompetencia: ano,
+                receitaBrutaAcumulada12Meses: valorCampo('dasAcumulado'),
+                receitaBrutaMensal: mensal,
+                ano: null
+            })
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (!res || res.ok !== true) { status('dasStatus', (res && res.erro) || 'Não foi possível concluir o cálculo.', 'erro'); return; }
+                renderDas(res.data);
+                status('dasStatus', 'Prévia gerada com as tabelas oficiais vigentes.', 'ok');
+            })
+            .catch(function () { status('dasStatus', 'Falha de conexão. Tente novamente.', 'erro'); });
+    }
+
+    document.getElementById('tblAnexo').addEventListener('change', function () { renderTabela(this.value); });
+    document.getElementById('dasGerarBtn').addEventListener('click', function () { gerarPrevias(); });
+    document.getElementById('dasExemploBtn').addEventListener('click', function () {
+        document.getElementById('dasAnexo').value = '3';
+        document.getElementById('dasMes').value = String(new Date().getMonth() + 1);
+        document.getElementById('dasAno').value = String(new Date().getFullYear());
+        document.getElementById('dasAcumulado').value = '720000,00';
+        document.getElementById('dasMensal').value = '60000,00';
+        gerarPrevias();
+    });
+
+    carregarTabelas();
+})();
+</script>
+}

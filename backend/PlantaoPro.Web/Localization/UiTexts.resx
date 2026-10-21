@@ -316,6 +316,9 @@
   <data name="Nav.FolhaCalculos" xml:space="preserve">
     <value>Folha e Rescisões</value>
   </data>
+  <data name="Nav.SimplesNacional" xml:space="preserve">
+    <value>Simples Nacional</value>
+  </data>
   <data name="Nav.Relatorios" xml:space="preserve">
     <value>Relatórios</value>
   </data>

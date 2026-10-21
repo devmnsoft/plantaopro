@@ -1444,6 +1444,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2366_r83_simples_nacional_2026",
+                            "source":  "database/migrations/2026_10_v2366_r83_simples_nacional_2026.sql",
+                            "checksum":  "a2b37131e45d1f531777209d75301b3b79283c76e157e0361f8f9166dc9297c5",
+                            "dependsOn":  [
+                                              "2026_10_v2365_r82_parametros_folha_2026"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

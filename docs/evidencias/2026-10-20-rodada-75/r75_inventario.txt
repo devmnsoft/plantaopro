@@ -683,6 +683,8 @@ ARTIGO|id=coord-publicar|Plantoes/Index|titulo=Como publicar plantão
 ARTIGO|id=coord-convite|CentralEscala/Index|titulo=Como convidar médico
 ARTIGO|id=medico-disponiveis|MinhaAgenda/PlantoesDisponiveis|titulo=Como acessar plantões disponíveis
 ARTIGO|id=medico-pagamentos|Financeiro/Index|titulo=Como consultar pagamentos
+ARTIGO|id=medico-agenda|MinhaAgenda/Agenda|titulo=Como consultar sua agenda de plantões
+ARTIGO|id=medico-meuspagamentos|MinhaAgenda/MeusPagamentos|titulo=Como consultar seus demonstrativos de pagamento
 ARTIGO|id=financeiro-pagamento|Financeiro/Index|titulo=Como confirmar pagamento
 ARTIGO|id=hospital-escalas|Escalas/Index|titulo=Como consultar escalas
 ARTIGO|id=lgpd-direitos|Lgpd/MinhaPrivacidade|titulo=Como usar Minha Privacidade
@@ -696,6 +698,21 @@ ARTIGO|id=central-notificacoes|Notificacoes/Preferencias|titulo=Como configurar 
 ARTIGO|id=recep-paciente|Pacientes/Create|titulo=Como cadastrar paciente
 ARTIGO|id=recep-agendamento|Agendamentos/CheckIn|titulo=Como agendar e fazer o check-in
 ARTIGO|id=recep-chamada|PainelChamada/Index|titulo=Como operar a sala de espera
+ARTIGO|id=clin-triagem-fila|Triagem/Fila|titulo=Como acompanhar a fila de triagem
+ARTIGO|id=clin-triagem-nova|Triagem/Create|titulo=Como registrar a triagem do paciente
+ARTIGO|id=clin-triagem-finalizar|Triagem/Finalizar|titulo=Como finalizar a triagem e encaminhar à consulta
+ARTIGO|id=clin-agendamento-agenda|Agendamentos/Index|titulo=Como acompanhar a agenda clínica do dia
+ARTIGO|id=clin-agendamento-novo|Agendamentos/Create|titulo=Como criar um agendamento
+ARTIGO|id=clin-agendamento-cancelar|Agendamentos/Cancelamentos|titulo=Como cancelar um agendamento com trilha de auditoria
+ARTIGO|id=clin-agenda-operacional|Agenda/Index|titulo=Como visualizar a agenda operacional de plantões
+ARTIGO|id=clin-consulta-lista|Consultas/Index|titulo=Como acessar a lista de consultas
+ARTIGO|id=clin-consulta-atendimento|Consultas/Atendimento|titulo=Como conduzir o atendimento da consulta
+ARTIGO|id=clin-paciente-ficha|Pacientes/Details|titulo=Como consultar a ficha do paciente
+ARTIGO|id=clin-paciente-prontuario|Pacientes/Prontuario|titulo=Como consultar o prontuário longitudinal do paciente
+ARTIGO|id=clin-paciente-busca|Pacientes/Buscar|titulo=Como localizar um paciente
+ARTIGO|id=clin-prescricao-modulo|Prescricoes/Index|titulo=Como acessar o módulo de prescrições
+ARTIGO|id=clin-prescricao-editor|Prescricoes/Editor|titulo=Como abrir a prescrição de uma consulta
+ARTIGO|id=clin-prescricao-imprimir|Prescricoes/Imprimir|titulo=Como imprimir a prescrição com auditoria
 ARTIGO|id=parceiro-propostas|ParceiroPortal/Propostas|titulo=Como acompanhar propostas
 ARTIGO|id=parceiro-comissoes|ParceiroPortal/Comissoes|titulo=Como acompanhar comissões e repasses
 
@@ -797,19 +814,19 @@ POTE_QUEBRA|Agenda|Calendario|Agenda/Calendario|pagina GET sem arquivo resolvido
 POTE_QUEBRA|Agenda|Conflitos|Agenda/Conflitos|pagina GET sem arquivo resolvido
 POTE_QUEBRA|Agenda|Dia|Agenda/Dia|pagina GET sem arquivo resolvido
 POTE_QUEBRA|Agenda|Hospitais|Agenda/Hospitais|pagina GET sem arquivo resolvido
-SEM_ARTIGO|Agenda|Index
+COBERTA|Agenda|Index|artigo clin-agenda-operacional
 POTE_QUEBRA|Agenda|Medicos|Agenda/Medicos|pagina GET sem arquivo resolvido
 POTE_QUEBRA|Agenda|Mes|Agenda/Mes|pagina GET sem arquivo resolvido
 POTE_QUEBRA|Agenda|Semana|Agenda/Semana|pagina GET sem arquivo resolvido
 SEM_ARTIGO|Agendamentos|AgendaDia
 SEM_ARTIGO|Agendamentos|AgendaMedico
 SEM_ARTIGO|Agendamentos|Calendario
-SEM_ARTIGO|Agendamentos|Cancelamentos
+COBERTA|Agendamentos|Cancelamentos|artigo clin-agendamento-cancelar
 COBERTA|Agendamentos|CheckIn|artigo recep-agendamento
-SEM_ARTIGO|Agendamentos|Create
+COBERTA|Agendamentos|Create|artigo clin-agendamento-novo
 SEM_ARTIGO|Agendamentos|Details
 SEM_ARTIGO|Agendamentos|Edit
-SEM_ARTIGO|Agendamentos|Index
+COBERTA|Agendamentos|Index|artigo clin-agendamento-agenda
 ACO_AUX|Agendamentos|Salvar|Agendamentos/Salvar|submissao dinamica ou helper herdado
 ACO_AUX|Agendamentos|Save|Agendamentos/Save|submissao dinamica ou helper herdado
 FORA_ESCOPO|Ajuda|Artigo|superficie do proprio manual
@@ -927,13 +944,13 @@ SEM_ARTIGO|ConferenciaExecucao|Index
 SEM_ARTIGO|Configuracoes|Index
 SEM_ARTIGO|Configuracoes|Saude
 SEM_ARTIGO|ConfiguracoesFinanceiras|Index
-SEM_ARTIGO|Consultas|Atendimento
+COBERTA|Consultas|Atendimento|artigo clin-consulta-atendimento
 SEM_ARTIGO|Consultas|Create
 SEM_ARTIGO|Consultas|Details
 SEM_ARTIGO|Consultas|Edit
 SEM_ARTIGO|Consultas|HistoricoPaciente
 SEM_ARTIGO|Consultas|Imprimir
-SEM_ARTIGO|Consultas|Index
+COBERTA|Consultas|Index|artigo clin-consulta-lista
 SEM_ARTIGO|Consultas|Resumo
 ACO_AUX|Consultas|Salvar|Consultas/Salvar|submissao dinamica ou helper herdado
 SEM_ARTIGO|Contratos|Aceites
@@ -1108,10 +1125,10 @@ SEM_ARTIGO|Medicos|Details
 SEM_ARTIGO|Medicos|Edit
 SEM_ARTIGO|Medicos|Index
 SEM_ARTIGO|MeuDia|Index
-SEM_ARTIGO|MinhaAgenda|Agenda
+COBERTA|MinhaAgenda|Agenda|artigo medico-agenda
 SEM_ARTIGO|MinhaAgenda|Detalhe
 SEM_ARTIGO|MinhaAgenda|Index
-SEM_ARTIGO|MinhaAgenda|MeusPagamentos
+COBERTA|MinhaAgenda|MeusPagamentos|artigo medico-meuspagamentos
 COBERTA|MinhaAgenda|PlantoesDisponiveis|artigo medico-disponiveis
 SEM_ARTIGO|MinhaAgenda|Presencas
 SEM_ARTIGO|MinhaAssinatura|Cancelamento
@@ -1160,14 +1177,14 @@ SEM_ARTIGO|OperacaoSaas|Performance
 SEM_ARTIGO|OperacaoSaas|Uso
 SEM_ARTIGO|OperacionalLaunch|Index
 SEM_ARTIGO|Operacoes|Index
-SEM_ARTIGO|Pacientes|Buscar
+COBERTA|Pacientes|Buscar|artigo clin-paciente-busca
 COBERTA|Pacientes|Create|artigo recep-paciente
-SEM_ARTIGO|Pacientes|Details
+COBERTA|Pacientes|Details|artigo clin-paciente-ficha
 SEM_ARTIGO|Pacientes|Edit
 SEM_ARTIGO|Pacientes|Historico
 SEM_ARTIGO|Pacientes|Index
 SEM_ARTIGO|Pacientes|Mesclar
-SEM_ARTIGO|Pacientes|Prontuario
+COBERTA|Pacientes|Prontuario|artigo clin-paciente-prontuario
 SEM_ARTIGO|Pacientes|ResumoClinico
 ACO_AUX|Pacientes|Salvar|Pacientes/Salvar|submissao dinamica ou helper herdado
 ACO_AUX|Pacientes|Save|Pacientes/Save|submissao dinamica ou helper herdado
@@ -1242,10 +1259,10 @@ COBERTA|Plantoes|Index|artigo coord-publicar
 SEM_ARTIGO|Prescricoes|Create
 SEM_ARTIGO|Prescricoes|Details
 SEM_ARTIGO|Prescricoes|Edit
-SEM_ARTIGO|Prescricoes|Editor
+COBERTA|Prescricoes|Editor|artigo clin-prescricao-editor
 SEM_ARTIGO|Prescricoes|HistoricoPaciente
-SEM_ARTIGO|Prescricoes|Imprimir
-SEM_ARTIGO|Prescricoes|Index
+COBERTA|Prescricoes|Imprimir|artigo clin-prescricao-imprimir
+COBERTA|Prescricoes|Index|artigo clin-prescricao-modulo
 SEM_ARTIGO|Prescricoes|Modelos
 ACO_AUX|Prescricoes|Salvar|Prescricoes/Salvar|submissao dinamica ou helper herdado
 SEM_ARTIGO|PrimeirosPassos|Index
@@ -1330,11 +1347,11 @@ SEM_ARTIGO|Treinamento|MeuProgresso
 SEM_ARTIGO|Treinamento|TrilhaDetails
 SEM_ARTIGO|Treinamento|Trilhas
 SEM_ARTIGO|Triagem|ClassificacaoRisco
-SEM_ARTIGO|Triagem|Create
+COBERTA|Triagem|Create|artigo clin-triagem-nova
 SEM_ARTIGO|Triagem|Details
 SEM_ARTIGO|Triagem|Edit
-SEM_ARTIGO|Triagem|Fila
-SEM_ARTIGO|Triagem|Finalizar
+COBERTA|Triagem|Fila|artigo clin-triagem-fila
+COBERTA|Triagem|Finalizar|artigo clin-triagem-finalizar
 SEM_ARTIGO|Triagem|HistoricoPaciente
 SEM_ARTIGO|Triagem|Index
 ACO_AUX|Triagem|Salvar|Triagem/Salvar|submissao dinamica ou helper herdado
@@ -1374,5 +1391,5 @@ POTE_QUEBRA|WorkflowSaude360|Index|WorkflowSaude360/Index|pagina GET sem arquivo
 POTE_QUEBRA|WorkflowSaude360|ProximaAcao|WorkflowSaude360/ProximaAcao|pagina GET sem arquivo resolvido
 ACO_AUX|WorkflowSaude360|Salvar|WorkflowSaude360/Salvar|submissao dinamica ou helper herdado
 
-RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=674|FILE_OK=616|ARTIGOS=25|COBERTAS=24|FORA_ESCOPO=19|GAP_SEM_ARTIGO=573|ACO_AUX=29|POTE_QUEBRA=29
+RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=674|FILE_OK=616|ARTIGOS=42|COBERTAS=41|FORA_ESCOPO=19|GAP_SEM_ARTIGO=556|ACO_AUX=29|POTE_QUEBRA=29
 ARTIGOS_ORFAOS=NENHUM

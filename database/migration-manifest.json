@@ -1414,6 +1414,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2363_r80_parametros_legais",
+                            "source":  "database/migrations/2026_10_v2363_r80_parametros_legais.sql",
+                            "checksum":  "8e8f9c4857ee9355546533db900477e0c366f1fad47ed3e3ed250758c9e556a0",
+                            "dependsOn":  [
+                                              "2026_10_v2362_r72_anexos_arquivos"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

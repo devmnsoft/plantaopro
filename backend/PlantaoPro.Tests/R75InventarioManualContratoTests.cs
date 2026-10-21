@@ -19,9 +19,10 @@ public sealed class R75InventarioManualContratoTests
     private const string AjudaRelativo = "backend/PlantaoPro.Web/Controllers/AjudaController.cs";
 
     // Baseline do gap: 573 na R75; 556 apos o lote do nucleo clinico (R76); 534 apos o
-    // lote do administrativo 360 (R77, 22 artigos). Crescer exige reexecutar r75_gap.ps1
-    // e revisar se nova pagina ficou sem artigo.
-    private const int GapMaximoTravado = 534;
+    // lote do administrativo 360 (R77); 517 apos o lote SaaS/Centrais (R78, 18 artigos,
+    // sendo 1 apontando para a superficie da propria ajuda, fora do gap). Crescer exige
+    // reexecutar r75_gap.ps1 e revisar se nova pagina ficou sem artigo.
+    private const int GapMaximoTravado = 517;
 
     private static string Read(string relativo) => File.ReadAllText(Path.Combine(Root, relativo.Replace('/', Path.DirectorySeparatorChar)));
 

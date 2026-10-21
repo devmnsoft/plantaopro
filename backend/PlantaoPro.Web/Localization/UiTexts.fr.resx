@@ -397,6 +397,9 @@
   <data name="Nav.TopbarHelp" xml:space="preserve">
     <value>Aide contextuelle</value>
   </data>
+  <data name="Nav.TopbarManual" xml:space="preserve">
+    <value>Voir le manuel</value>
+  </data>
   <data name="Nav.TopbarLiveContext" xml:space="preserve">
     <value>Environnement opérationnel</value>
   </data>

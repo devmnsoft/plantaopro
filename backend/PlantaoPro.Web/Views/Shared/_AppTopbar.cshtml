@@ -64,6 +64,9 @@
         <a class="btn btn-light btn-icon" asp-controller="Ajuda" asp-action="Index" title="@UiText.L("Nav.TopbarHelp")" aria-label="@UiText.L("Nav.TopbarHelp")">
             <app-icon name="Help" size="20" />
         </a>
+        <a class="btn btn-outline-secondary btn-sm d-none d-md-inline-flex" asp-controller="Ajuda" asp-action="Index" title="@UiText.L("Nav.TopbarManual")">
+            <app-icon name="Document" size="18" /> @UiText.L("Nav.TopbarManual")
+        </a>
         <partial name="_NotificationMenu" />
         @if (canUpgrade)
         {

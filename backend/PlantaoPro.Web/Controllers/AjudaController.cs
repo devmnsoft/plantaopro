@@ -161,7 +161,8 @@ public sealed class AjudaController : Controller
             query = query.Where(a => a.Titulo.Contains(termo, StringComparison.OrdinalIgnoreCase)
                 || a.Resumo.Contains(termo, StringComparison.OrdinalIgnoreCase)
                 || a.Conteudo.Contains(termo, StringComparison.OrdinalIgnoreCase)
-                || a.Passos.Any(p => p.Contains(termo, StringComparison.OrdinalIgnoreCase)));
+                || a.Passos.Any(p => p.Contains(termo, StringComparison.OrdinalIgnoreCase))
+                || PaginaDoArtigo(a).Contains(termo, StringComparison.OrdinalIgnoreCase));
         }
 
         return query.OrderBy(a => a.Ordem).ThenBy(a => a.Titulo).ToList();
@@ -171,6 +172,10 @@ public sealed class AjudaController : Controller
     {
         return string.Equals(perfil, "TODOS", StringComparison.OrdinalIgnoreCase) || string.Equals(artigo.Perfil, "TODOS", StringComparison.OrdinalIgnoreCase) || string.Equals(artigo.Perfil, perfil, StringComparison.OrdinalIgnoreCase);
     }
+
+    // R79: a busca cobre tambem os termos da tela que o artigo aponta (modulo + acao),
+    // para quem procura pelo nome da aba ou do modulo onde esta parado encontrar o artigo.
+    private static string PaginaDoArtigo(AjudaInterativaArtigoViewModel artigo) => artigo.Controller + " " + artigo.Action;
 
     private static List<AjudaInterativaTopicoViewModel> CriarTopicos()
     {

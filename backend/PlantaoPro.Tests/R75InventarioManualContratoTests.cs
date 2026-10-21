@@ -18,9 +18,9 @@ public sealed class R75InventarioManualContratoTests
     private const string InventarioRelativo = "docs/evidencias/2026-10-20-rodada-75/r75_inventario.txt";
     private const string AjudaRelativo = "backend/PlantaoPro.Web/Controllers/AjudaController.cs";
 
-    // Gap medido na R75 (pontos de partida dos lotes de artigos das R76-R78). Crescer exige
-    // reexecutar r75_gap.ps1 e revisar se nova pagina ficou sem artigo.
-    private const int GapMaximoTravado = 573;
+    // Baseline do gap: 573 na R75; 556 apos o lote do nucleo clinico (R76, 17 artigos).
+    // Crescer exige reexecutar r75_gap.ps1 e revisar se nova pagina ficou sem artigo.
+    private const int GapMaximoTravado = 556;
 
     private static string Read(string relativo) => File.ReadAllText(Path.Combine(Root, relativo.Replace('/', Path.DirectorySeparatorChar)));
 

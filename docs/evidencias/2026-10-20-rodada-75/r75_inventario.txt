@@ -693,6 +693,28 @@ ARTIGO|id=adm-compras|Administrativo360/PedidosCompra|titulo=Como registrar pedi
 ARTIGO|id=adm-estoque|Administrativo360/Estoque|titulo=Como acompanhar estoque e inventário
 ARTIGO|id=adm-titulos|Administrativo360/TitulosReceber|titulo=Como controlar títulos a receber e a pagar
 ARTIGO|id=adm-relatorio|Administrativo360/RelatoriosFinanceiros|titulo=Como consultar relatórios financeiros
+ARTIGO|id=adm-panorama|Administrativo360/Index|titulo=Como acompanhar o panorama organizacional
+ARTIGO|id=adm-cadastros|Administrativo360/Cadastros|titulo=Como manter parceiros, produtos e locais de armazenamento
+ARTIGO|id=adm-produtos|Administrativo360/Produtos|titulo=Como gerir o catálogo de produtos e OPME
+ARTIGO|id=adm-locais|Administrativo360/Locais|titulo=Como configurar locais de estoque internos e de consignação
+ARTIGO|id=adm-inventarios|Administrativo360/Inventarios|titulo=Como realizar a contagem física de inventário
+ARTIGO|id=adm-transferencias|Administrativo360/Movimentacoes|titulo=Como transferir estoque entre locais
+ARTIGO|id=adm-valorizacao|Administrativo360/Valorizacao|titulo=Como valorizar vales de consignação
+ARTIGO|id=adm-vendas|Administrativo360/Vendas|titulo=Como consultar as vendas internas
+ARTIGO|id=adm-venda-detalhes|Administrativo360/VendaDetalhes|titulo=Como revisar e cancelar uma venda interna
+ARTIGO|id=adm-fechamento-caixa|Administrativo360/FechamentoCaixa|titulo=Como fechar e conferir o caixa
+ARTIGO|id=adm-fluxo-caixa|Administrativo360/FluxoCaixa|titulo=Como acompanhar fluxo de caixa e contas bancárias
+ARTIGO|id=adm-contas-pagar|Administrativo360/TitulosPagar|titulo=Como gerenciar as contas a pagar
+ARTIGO|id=adm-despesa-manual|Administrativo360/NovaDespesa|titulo=Como registrar uma despesa manual
+ARTIGO|id=fat-contas-clinicas|FaturamentoClinico/Index|titulo=Como acompanhar as contas clínicas a receber
+ARTIGO|id=fat-titulos|FaturamentoClinico/Titulos|titulo=Como acompanhar os boletos das contas clínicas
+ARTIGO|id=fat-repasses|FaturamentoClinico/RepassesMedicos|titulo=Como acompanhar os repasses médicos
+ARTIGO|id=fat-relatorios|ClinicaFinanceiro/Relatorios|titulo=Como acessar os relatórios do financeiro clínico
+ARTIGO|id=fiscal-sincronizacao|Adm360DocumentosXmlWeb/Sincronizacao|titulo=Como sincronizar o DF-e da Sefaz
+ARTIGO|id=fiscal-importacao-xml|Adm360DocumentosXmlWeb/Importar|titulo=Como importar notas fiscais em XML manualmente
+ARTIGO|id=fiscal-notas|Adm360FiscalWeb/Notas|titulo=Como preparar a pré-emissão de NF-e
+ARTIGO|id=fech-apuracao|Fechamentos/Index|titulo=Como acompanhar a apuração de plantões
+ARTIGO|id=fech-conferencia|Fechamentos/Conferencia|titulo=Como conferir e aprovar um fechamento
 ARTIGO|id=central-fatura|MinhaCentral/Index|titulo=Como resolver fatura vencida
 ARTIGO|id=central-notificacoes|Notificacoes/Preferencias|titulo=Como configurar notificações
 ARTIGO|id=recep-paciente|Pacientes/Create|titulo=Como cadastrar paciente
@@ -727,13 +749,13 @@ SEM_ARTIGO|Adm360CotacoesWeb|Estabelecimentos
 SEM_ARTIGO|Adm360CotacoesWeb|Index
 SEM_ARTIGO|Adm360CotacoesWeb|Relacionamento
 SEM_ARTIGO|Adm360DocumentosXmlWeb|Detalhes
-SEM_ARTIGO|Adm360DocumentosXmlWeb|Importar
+COBERTA|Adm360DocumentosXmlWeb|Importar|artigo fiscal-importacao-xml
 SEM_ARTIGO|Adm360DocumentosXmlWeb|Index
-SEM_ARTIGO|Adm360DocumentosXmlWeb|Sincronizacao
+COBERTA|Adm360DocumentosXmlWeb|Sincronizacao|artigo fiscal-sincronizacao
 SEM_ARTIGO|Adm360DocumentosXmlWeb|Triagens
 SEM_ARTIGO|Adm360FiscalWeb|Configurar
 SEM_ARTIGO|Adm360FiscalWeb|Detalhes
-SEM_ARTIGO|Adm360FiscalWeb|Notas
+COBERTA|Adm360FiscalWeb|Notas|artigo fiscal-notas
 SEM_ARTIGO|Adm360FiscalWeb|Nova
 SEM_ARTIGO|Adm360GestaoWeb|Dashboard
 SEM_ARTIGO|Adm360GestaoWeb|Monitor
@@ -742,7 +764,7 @@ ACO_AUX|Administrativo360|AtivarDepartamento|Administrativo360/AtivarDepartament
 ACO_AUX|Administrativo360|AtualizarCargo|Administrativo360/AtualizarCargo|submissao dinamica ou helper herdado
 ACO_AUX|Administrativo360|AtualizarColaborador|Administrativo360/AtualizarColaborador|submissao dinamica ou helper herdado
 ACO_AUX|Administrativo360|AtualizarDepartamento|Administrativo360/AtualizarDepartamento|submissao dinamica ou helper herdado
-SEM_ARTIGO|Administrativo360|Cadastros
+COBERTA|Administrativo360|Cadastros|artigo adm-cadastros
 ACO_AUX|Administrativo360|CancelarContrato|Administrativo360/CancelarContrato|submissao dinamica ou helper herdado
 ACO_AUX|Administrativo360|Cargo|Administrativo360/Cargo|submissao dinamica ou helper herdado
 SEM_ARTIGO|Administrativo360|Cargos
@@ -761,17 +783,17 @@ ACO_AUX|Administrativo360|Departamento|Administrativo360/Departamento|submissao 
 SEM_ARTIGO|Administrativo360|Departamentos
 SEM_ARTIGO|Administrativo360|EncerrarContrato
 COBERTA|Administrativo360|Estoque|artigo adm-estoque
-SEM_ARTIGO|Administrativo360|FechamentoCaixa
-SEM_ARTIGO|Administrativo360|FluxoCaixa
+COBERTA|Administrativo360|FechamentoCaixa|artigo adm-fechamento-caixa
+COBERTA|Administrativo360|FluxoCaixa|artigo adm-fluxo-caixa
 ACO_AUX|Administrativo360|InativarCargo|Administrativo360/InativarCargo|submissao dinamica ou helper herdado
 ACO_AUX|Administrativo360|InativarDepartamento|Administrativo360/InativarDepartamento|submissao dinamica ou helper herdado
-SEM_ARTIGO|Administrativo360|Index
+COBERTA|Administrativo360|Index|artigo adm-panorama
 SEM_ARTIGO|Administrativo360|Inspecoes
-SEM_ARTIGO|Administrativo360|Inventarios
-SEM_ARTIGO|Administrativo360|Locais
+COBERTA|Administrativo360|Inventarios|artigo adm-inventarios
+COBERTA|Administrativo360|Locais|artigo adm-locais
 SEM_ARTIGO|Administrativo360|Lotes
-SEM_ARTIGO|Administrativo360|Movimentacoes
-SEM_ARTIGO|Administrativo360|NovaDespesa
+COBERTA|Administrativo360|Movimentacoes|artigo adm-transferencias
+COBERTA|Administrativo360|NovaDespesa|artigo adm-despesa-manual
 SEM_ARTIGO|Administrativo360|Ocorrencias
 SEM_ARTIGO|Administrativo360|OrcamentoDetalhes
 SEM_ARTIGO|Administrativo360|OrcamentoEditar
@@ -781,23 +803,23 @@ SEM_ARTIGO|Administrativo360|OrcamentoReserva
 COBERTA|Administrativo360|Orcamentos|artigo adm-orcamento
 SEM_ARTIGO|Administrativo360|Parceiros
 COBERTA|Administrativo360|PedidosCompra|artigo adm-compras
-SEM_ARTIGO|Administrativo360|Produtos
+COBERTA|Administrativo360|Produtos|artigo adm-produtos
 SEM_ARTIGO|Administrativo360|Recebimentos
 SEM_ARTIGO|Administrativo360|Relatorios
 COBERTA|Administrativo360|RelatoriosFinanceiros|artigo adm-relatorio
 ACO_AUX|Administrativo360|StatusColaborador|Administrativo360/StatusColaborador|submissao dinamica ou helper herdado
 SEM_ARTIGO|Administrativo360|TituloDetalhes
 SEM_ARTIGO|Administrativo360|TituloPagarDetalhes
-SEM_ARTIGO|Administrativo360|TitulosPagar
+COBERTA|Administrativo360|TitulosPagar|artigo adm-contas-pagar
 COBERTA|Administrativo360|TitulosReceber|artigo adm-titulos
 SEM_ARTIGO|Administrativo360|ValeDetalhes
 SEM_ARTIGO|Administrativo360|ValeImprimir
 SEM_ARTIGO|Administrativo360|ValeNovo
 SEM_ARTIGO|Administrativo360|Vales
-SEM_ARTIGO|Administrativo360|Valorizacao
+COBERTA|Administrativo360|Valorizacao|artigo adm-valorizacao
 SEM_ARTIGO|Administrativo360|ValorizacaoPrevia
-SEM_ARTIGO|Administrativo360|VendaDetalhes
-SEM_ARTIGO|Administrativo360|Vendas
+COBERTA|Administrativo360|VendaDetalhes|artigo adm-venda-detalhes
+COBERTA|Administrativo360|Vendas|artigo adm-vendas
 SEM_ARTIGO|AdminSaas|Alertas
 SEM_ARTIGO|AdminSaas|Assinaturas
 SEM_ARTIGO|AdminSaas|Billing
@@ -913,7 +935,7 @@ SEM_ARTIGO|ClinicaFinanceiro|FechamentoCaixa
 SEM_ARTIGO|ClinicaFinanceiro|Glosas
 SEM_ARTIGO|ClinicaFinanceiro|Index
 SEM_ARTIGO|ClinicaFinanceiro|Receber
-SEM_ARTIGO|ClinicaFinanceiro|Relatorios
+COBERTA|ClinicaFinanceiro|Relatorios|artigo fat-relatorios
 SEM_ARTIGO|ClinicaFinanceiro|Repasses
 ACO_AUX|ClinicaFinanceiro|Salvar|ClinicaFinanceiro/Salvar|submissao dinamica ou helper herdado
 SEM_ARTIGO|ClinicaUnidades|Create
@@ -1028,11 +1050,11 @@ SEM_ARTIGO|FaturamentoClinico|Configuracoes
 POTE_QUEBRA|FaturamentoClinico|ContasReceber|FaturamentoClinico/ContasReceber|pagina GET sem arquivo resolvido
 SEM_ARTIGO|FaturamentoClinico|DemoBoleto
 SEM_ARTIGO|FaturamentoClinico|Glosas
-SEM_ARTIGO|FaturamentoClinico|Index
+COBERTA|FaturamentoClinico|Index|artigo fat-contas-clinicas
 POTE_QUEBRA|FaturamentoClinico|Recebimentos|FaturamentoClinico/Recebimentos|pagina GET sem arquivo resolvido
 SEM_ARTIGO|FaturamentoClinico|Regras
-SEM_ARTIGO|FaturamentoClinico|RepassesMedicos
-SEM_ARTIGO|FaturamentoClinico|Titulos
+COBERTA|FaturamentoClinico|RepassesMedicos|artigo fat-repasses
+COBERTA|FaturamentoClinico|Titulos|artigo fat-titulos
 SEM_ARTIGO|FaturamentoRegras|Index
 SEM_ARTIGO|FaturamentoSaas|Details
 SEM_ARTIGO|FaturamentoSaas|GerarMensal
@@ -1040,9 +1062,9 @@ SEM_ARTIGO|FaturamentoSaas|Inadimplencia
 COBERTA|FaturamentoSaas|Index|artigo admin-fatura
 SEM_ARTIGO|Favoritos|Index
 SEM_ARTIGO|FeatureFlags|Index
-SEM_ARTIGO|Fechamentos|Conferencia
+COBERTA|Fechamentos|Conferencia|artigo fech-conferencia
 SEM_ARTIGO|Fechamentos|Details
-SEM_ARTIGO|Fechamentos|Index
+COBERTA|Fechamentos|Index|artigo fech-apuracao
 SEM_ARTIGO|Fechamentos|Pendentes
 SEM_ARTIGO|Financeiro|Confirmados
 SEM_ARTIGO|Financeiro|Contestacoes
@@ -1391,5 +1413,5 @@ POTE_QUEBRA|WorkflowSaude360|Index|WorkflowSaude360/Index|pagina GET sem arquivo
 POTE_QUEBRA|WorkflowSaude360|ProximaAcao|WorkflowSaude360/ProximaAcao|pagina GET sem arquivo resolvido
 ACO_AUX|WorkflowSaude360|Salvar|WorkflowSaude360/Salvar|submissao dinamica ou helper herdado
 
-RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=674|FILE_OK=616|ARTIGOS=42|COBERTAS=41|FORA_ESCOPO=19|GAP_SEM_ARTIGO=556|ACO_AUX=29|POTE_QUEBRA=29
+RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=674|FILE_OK=616|ARTIGOS=64|COBERTAS=63|FORA_ESCOPO=19|GAP_SEM_ARTIGO=534|ACO_AUX=29|POTE_QUEBRA=29
 ARTIGOS_ORFAOS=NENHUM

@@ -1434,6 +1434,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2365_r82_parametros_folha_2026",
+                            "source":  "database/migrations/2026_10_v2365_r82_parametros_folha_2026.sql",
+                            "checksum":  "6cb0856d048a68edee109704f78a4aaf6fbedfd700e2e09936bfa98d2a0d4d30",
+                            "dependsOn":  [
+                                              "2026_10_v2364_r81_tabelas_pf_2026"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

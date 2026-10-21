@@ -38,11 +38,14 @@ public sealed class TributacaoPfService : ITributacaoPfService
         return new TabelaTributacaoPfDto(anoEfetivo, Minimo(), Piso(), Teto(), faixasInss, faixasIrrf);
     }
 
-    public async Task<CalculoTributacaoPfDto> CalcularAsync(int? ano, decimal salarioBruto, CancellationToken ct = default)
+    public async Task<CalculoTributacaoPfDto> CalcularAsync(int? ano, decimal salarioBruto, decimal descontosDependentes = 0m, decimal deducaoSimplificada = 0m, CancellationToken ct = default)
     {
         // O desserializador canonico nao produz NaN; a validacao numerica basta aqui.
         if (salarioBruto <= 0m)
             throw new ArgumentException("Informe um salario bruto maior que zero.", nameof(salarioBruto));
+        if (descontosDependentes < 0m)
+            throw new ArgumentException("Deducoes de dependentes nao pode ser negativo.", nameof(descontosDependentes));;        if (deducaoSimplificada < 0m)
+            throw new ArgumentException("A deducao simplificada nao pode ser negativa.", nameof(deducaoSimplificada));
 
         var tabela = await ObterTabelaAsync(ano, ct);
 
@@ -50,14 +53,16 @@ public sealed class TributacaoPfService : ITributacaoPfService
         var baseInss = decimal.Min(salarioBruto, tabela.TetoInss);
         var inss = AplicarFaixa(tabela.FaixasInss, baseInss, clampNoLimiteFinal: true);
 
-        // IRRF mensal: base = bruto - INSS; isento ate o piso da fonte unica.
-        var baseIrrf = salarioBruto - inss;
+        // IRRF mensal: base = bruto - INSS - deducões do contribuinte; isento ate o piso.
+        var baseIrrfBruta = salarioBruto - inss - descontosDependentes - deducaoSimplificada;
+        var baseIrrf = baseIrrfBruta < 0m ? 0m : baseIrrfBruta;
         var irrf = baseIrrf <= tabela.PisoIrrfMensal ? 0m : AplicarFaixa(tabela.FaixasIrrf, baseIrrf, clampNoLimiteFinal: false);
 
         var total = Redondo(inss + irrf);
         return new CalculoTributacaoPfDto(
             tabela.Ano, salarioBruto, tabela.SalarioMinimo, tabela.TetoInss,
-            Redondo(baseInss), inss, Redondo(baseIrrf), tabela.PisoIrrfMensal, irrf, total,
+            Redondo(baseInss), inss, Redondo(descontosDependentes), Redondo(deducaoSimplificada),
+            Redondo(baseIrrf), tabela.PisoIrrfMensal, irrf, total,
             Redondo(salarioBruto - total));
     }
 
@@ -104,7 +109,8 @@ public sealed class TributacaoPfService : ITributacaoPfService
     /// = faixa final sem teto. No INSS (clamp) a base ja esta limitada ao teto, portanto
     /// a faixa final cobre; no IRRF a faixa final e ilimitada por definicao.
     /// </summary>
-    private static decimal AplicarFaixa(IReadOnlyList<FaixaTributoLegalDto> faixas, decimal baseCalculo, bool clampNoLimiteFinal)
+    // internal para o servico de folha (R82) reutilizar o mesmo metodo oficial.
+    internal static decimal AplicarFaixa(IReadOnlyList<FaixaTributoLegalDto> faixas, decimal baseCalculo, bool clampNoLimiteFinal)
     {
         foreach (var faixa in faixas)
         {

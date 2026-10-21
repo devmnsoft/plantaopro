@@ -22,6 +22,8 @@ using PlantaoPro.Application.Administrativo360;
 using PlantaoPro.Infrastructure.Administrativo360;
 using PlantaoPro.Application.Legislacao;
 using PlantaoPro.Infrastructure.Legislacao;
+using PlantaoPro.Application.Folha;
+using PlantaoPro.Infrastructure.Folha;
 
 // O Dapper não mapeia DateOnly em parâmetros; registro global antes de qualquer consulta.
 DapperTypeHandlerRegistrar.RegistrarTodos();
@@ -234,6 +236,7 @@ builder.Services.AddScoped<IDocumentosXmlRepository>(sp => new DocumentosXmlRepo
 builder.Services.AddScoped<IAnexosArquivosRepository>(sp => new AnexosArquivosRepository(GetConn(sp)));
 builder.Services.AddScoped<IParametrosLegaisRepository>(sp => new ParametrosLegaisRepository(GetConn(sp)));
 builder.Services.AddScoped<ITributacaoPfService>(sp => new TributacaoPfService(sp.GetRequiredService<IParametrosLegaisRepository>()));
+builder.Services.AddScoped<IFolhaPfService>(sp => new FolhaPfService(sp.GetRequiredService<IParametrosLegaisRepository>(), sp.GetRequiredService<ITributacaoPfService>()));
 builder.Services.AddScoped<IGestaoDashboardRepository>(sp => new GestaoDashboardRepository(GetConn(sp)));
 builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();

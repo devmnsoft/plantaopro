@@ -47,7 +47,7 @@ public sealed class LegislacaoController : ControllerBase
     {
         try
         {
-            return Ok(await tributacao.CalcularAsync(comando.Ano, comando.SalarioBruto, ct));
+            return Ok(await tributacao.CalcularAsync(comando.Ano, comando.SalarioBruto, 0m, 0m, ct));
         }
         catch (ArgumentException ex) { return BadRequest(new { erro = ex.Message }); }
         catch (InvalidOperationException ex) { return BadRequest(new { erro = ex.Message }); }

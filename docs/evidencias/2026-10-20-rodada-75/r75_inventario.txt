@@ -334,6 +334,7 @@ PAGINA|Financeiro|Index|Financeiro/Index|ARQ_OK|NOME via RenderPaged|
 PAGINA|Financeiro|Pagamentos|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
 PAGINA|Financeiro|Pendentes|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
 PAGINA|Financeiro|Relatorios|Fase2Operational/Dashboard|ARQ_OK|LIT via Operational|
+PAGINA|FolhaWeb|Index|FolhaWeb/Index|ARQ_OK|NOME|
 PAGINA|GestorDashboard|Index|GestorDashboard/Index|ARQ_FALTA|NOME via ModuloAsync|
 PAGINA|GestorDashboard|Salvar|GestorDashboard/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
 PAGINA|Glosas|Index|V114/Produto|ARQ_OK|LIT|
@@ -726,6 +727,7 @@ ARTIGO|id=adm-minha-conta|Usuario/Index|titulo=Como revisar sua conta pessoal
 ARTIGO|id=adm-alterar-senha|Usuario/AlterarSenha|titulo=Como alterar a senha da sua conta
 ARTIGO|id=adm-perfis|Perfis/Index|titulo=Como gerir perfis de acesso
 ARTIGO|id=adm-matriz-permissoes|Permissoes/Matriz|titulo=Como consultar a matriz de permissões
+ARTIGO|id=adm-folha-calculos|FolhaWeb/Index|titulo=Como simular folha, 13º, férias e rescisão em linguagem simples
 ARTIGO|id=central-fatura|MinhaCentral/Index|titulo=Como resolver fatura vencida
 ARTIGO|id=central-notificacoes|Notificacoes/Preferencias|titulo=Como configurar notificações
 ARTIGO|id=cad-empresa|Cadastro/Empresa|titulo=Como começar o cadastro da instituição
@@ -1092,6 +1094,7 @@ COBERTA|Financeiro|Index|artigo financeiro-pagamento
 SEM_ARTIGO|Financeiro|Pagamentos
 SEM_ARTIGO|Financeiro|Pendentes
 SEM_ARTIGO|Financeiro|Relatorios
+COBERTA|FolhaWeb|Index|artigo adm-folha-calculos
 POTE_QUEBRA|GestorDashboard|Index|GestorDashboard/Index|pagina GET sem arquivo resolvido
 ACO_AUX|GestorDashboard|Salvar|GestorDashboard/Salvar|submissao dinamica ou helper herdado
 SEM_ARTIGO|Glosas|Index
@@ -1431,5 +1434,5 @@ POTE_QUEBRA|WorkflowSaude360|Index|WorkflowSaude360/Index|pagina GET sem arquivo
 POTE_QUEBRA|WorkflowSaude360|ProximaAcao|WorkflowSaude360/ProximaAcao|pagina GET sem arquivo resolvido
 ACO_AUX|WorkflowSaude360|Salvar|WorkflowSaude360/Salvar|submissao dinamica ou helper herdado
 
-RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=674|FILE_OK=616|ARTIGOS=82|COBERTAS=80|FORA_ESCOPO=19|GAP_SEM_ARTIGO=517|ACO_AUX=29|POTE_QUEBRA=29
+RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=675|FILE_OK=617|ARTIGOS=83|COBERTAS=81|FORA_ESCOPO=19|GAP_SEM_ARTIGO=517|ACO_AUX=29|POTE_QUEBRA=29
 ARTIGOS_ORFAOS=NENHUM

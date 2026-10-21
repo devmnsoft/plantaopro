@@ -313,6 +313,9 @@
   <data name="Nav.Administrativo360" xml:space="preserve">
     <value>Administratif 360</value>
   </data>
+  <data name="Nav.FolhaCalculos" xml:space="preserve">
+    <value>Paie et Rupture</value>
+  </data>
   <data name="Nav.Relatorios" xml:space="preserve">
     <value>Rapports</value>
   </data>

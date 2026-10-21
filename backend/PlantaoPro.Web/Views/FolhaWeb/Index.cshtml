@@ -1,0 +1,288 @@
+@{
+    ViewData["Title"] = "Folha e Rescisões";
+}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h4 class="mb-1 text-light">Folha e Rescisões em linguagem simples</h4>
+            <p class="text-secondary small mb-0">Simule o mês do colaborador, o 13º, as férias e a rescisão sem justa causa com os valores oficiais do ano na fonte única de parâmetros legais.</p>
+        </div>
+        <a asp-action="Index" asp-controller="Administrativo360" class="btn btn-sm btn-outline-secondary">Voltar ao Administrativo 360</a>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xxl-6 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Simular o mês</div>
+                <div class="card-body">
+                    <p class="small text-secondary">Informe o salário base e o que varia no mês. A tela mostra quanto entra no contracheque, quanto sobra líquido e quanto é depositado de FGTS.</p>
+                    <div class="row g-2">
+                        <div class="col-sm-6">
+                            <label class="form-label small" for="mesSalarioBase">Salário base mensal (R$)</label>
+                            <input type="number" min="0" step="0.01" class="form-control form-control-sm" id="mesSalarioBase" placeholder="5000,00" />
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label small" for="mesHorasExtras">Horas extras no mês</label>
+                            <input type="number" min="0" step="0.5" class="form-control form-control-sm" id="mesHorasExtras" value="0" />
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label small" for="mesDependentes">Dependentes (dedução por dependente)</label>
+                            <input type="number" min="0" max="10" step="1" class="form-control form-control-sm" id="mesDependentes" value="0" />
+                        </div>
+                        <div class="col-sm-6 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="mesDeducaoSimplificada" />
+                                <label class="form-check-label small" for="mesDeducaoSimplificada">Usar dedução simplificada (não misture com dependentes)</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mt-3">
+                        <button type="button" class="btn btn-primary btn-sm" id="mesCalcularBtn">Calcular o mês</button>
+                        <div class="folha-status alert alert-sm py-2 d-none" role="status"></div>
+                    </div>
+                    <div class="folha-resultado table-responsive d-none mt-3" data-alvo="mes"></div>
+                    <p class="small text-secondary mt-3 mb-0"><strong class="text-light">Em linguagem simples:</strong> hora extra paga a mais de 50% sobre a hora normal (base ÷ 220h); INSS descontado em faixas até o teto; imposto de renda só acima do piso de isenção, com desconto dos dependentes ou da simplificação; FGTS é depositado pela empresa (8%) e não sai do seu bolso neste cálculo.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xxl-6 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Simular as férias + terço</div>
+                <div class="card-body">
+                    <p class="small text-secondary">O colaborador vai tirar férias? Veja o valor do período mais o terço constitucional e os descontos que incidem sobre esse pagamento avulso.</p>
+                    <div class="row g-2">
+                        <div class="col-sm-6">
+                            <label class="form-label small" for="feriasSalario">Salário mensal (R$)</label>
+                            <input type="number" min="0" step="0.01" class="form-control form-control-sm" id="feriasSalario" placeholder="3000,00" />
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label small" for="feriasDias">Dias de férias (1 a 30)</label>
+                            <input type="number" min="1" max="30" step="1" class="form-control form-control-sm" id="feriasDias" value="30" />
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mt-3">
+                        <button type="button" class="btn btn-primary btn-sm" id="feriasCalcularBtn">Calcular férias</button>
+                        <div class="folha-status alert alert-sm py-2 d-none" role="status"></div>
+                    </div>
+                    <div class="folha-resultado table-responsive d-none mt-3" data-alvo="ferias"></div>
+                    <p class="small text-secondary mt-3 mb-0"><strong class="text-light">Em linguagem simples:</strong> além do salário, a lei garante um terço a mais como descanso remunerado. Como as férias pagam junto, INSS e imposto de renda são calculados sobre esse valor avulso, no mesmo método do mês.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xxl-6 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Simular o 13º salário</div>
+                <div class="card-body">
+                    <p class="small text-secondary">Veja quanto será creditado a cada parcela com base nos meses trabalhados no ano (a partir de 15 dias, o mês conta como cheio).</p>
+                    <div class="row g-2">
+                        <div class="col-sm-5">
+                            <label class="form-label small" for="decimoSalario">Salário mensal (R$)</label>
+                            <input type="number" min="0" step="0.01" class="form-control form-control-sm" id="decimoSalario" placeholder="4500,00" />
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label small" for="decimoAdmissao">Admissão</label>
+                            <input type="date" class="form-control form-control-sm" id="decimoAdmissao" />
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="decimoParcela">Parcela</label>
+                            <select class="form-select form-select-sm" id="decimoParcela">
+                                <option value="1">1ª (até 30/jun)</option>
+                                <option value="2">2ª (até 20/dez)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mt-3">
+                        <button type="button" class="btn btn-primary btn-sm" id="decimoCalcularBtn">Calcular 13º</button>
+                        <div class="folha-status alert alert-sm py-2 d-none" role="status"></div>
+                    </div>
+                    <div class="folha-resultado table-responsive d-none mt-3" data-alvo="decimo"></div>
+                    <p class="small text-secondary mt-3 mb-0"><strong class="text-light">Em linguagem simples:</strong> quem trabalha pelo menos 15 dias num mês ganha direito a aquele mês de 13º; a primeira parcela paga metade do total proporcional. O imposto só incide sobre o que passar de dois salários mínimos, por lei.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xxl-6 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Simular rescisão sem justa causa</div>
+                <div class="card-body">
+                    <p class="small text-secondary">Monta a prévia completa do que o colaborador recebe ao sair: saldo do mês, 13º proporcional, férias vencidas e proporcionais (cada uma com o terço), aviso prévio e FGTS com multa de 40%.</p>
+                    <div class="row g-2">
+                        <div class="col-sm-5">
+                            <label class="form-label small" for="rescSalario">Salário mensal (R$)</label>
+                            <input type="number" min="0" step="0.01" class="form-control form-control-sm" id="rescSalario" placeholder="4000,00" />
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label small" for="rescAdmissao">Admissão</label>
+                            <input type="date" class="form-control form-control-sm" id="rescAdmissao" />
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="rescDemissao">Demissão</label>
+                            <input type="date" class="form-control form-control-sm" id="rescDemissao" />
+                        </div>
+                        <div class="col-12 d-flex align-items-center">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="rescAvisoPrevio" />
+                                <label class="form-check-label small" for="rescAvisoPrevio">Aviso prévio já foi dado (desmarca para pagar o aviso indenizado)</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mt-3">
+                        <button type="button" class="btn btn-primary btn-sm" id="rescCalcularBtn">Calcular rescisão</button>
+                        <div class="folha-status alert alert-sm py-2 d-none" role="status"></div>
+                    </div>
+                    <div class="folha-resultado d-none mt-3" data-alvo="rescisao"></div>
+                    <p class="small text-secondary mt-3 mb-0"><strong class="text-light">Em linguagem simples:</strong> cada verba aparece separada pelo nome que o colaborador entende. O desconto de INSS e imposto é feito sobre o total das verbas tributáveis, de uma vez. O FGTS e a multa de 40% vão direto para a conta do FGTS e somam ao total a receber.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    var dinheiro = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+    function moeda(v) { return dinheiro.format(Number(v || 0)); }
+
+    function barStatus(alvo, texto, tipo) {
+        var raiz = document.querySelector('[data-alvo="' + alvo + '"]').closest('.card-body');
+        var bar = raiz.querySelector('.folha-status');
+        bar.classList.remove('d-none', 'alert-success', 'alert-danger');
+        bar.classList.add(tipo === 'erro' ? 'alert-danger' : 'alert-success');
+        bar.textContent = texto;
+    }
+
+    function linhasTabela(alcance, pares) {
+        var tb = document.createElement('table');
+        tb.className = 'table table-sm table-dark table-hover align-middle mb-0';
+        tb.setAttribute('role', 'table');
+        pares.forEach(function (par) {
+            var tr = document.createElement('tr');
+            if (par.strong) { tr.classList.add('table-warning'); }
+            var th = document.createElement('th');
+            th.scope = 'row';
+            th.className = 'fw-normal small';
+            th.textContent = par[0];
+            var td = document.createElement('td');
+            td.className = 'text-end';
+            td.textContent = par[1];
+            tr.appendChild(th); tr.appendChild(td);
+            tb.appendChild(tr);
+        });
+        alcance.textContent = '';
+        alcance.appendChild(tb);
+        alcance.classList.remove('d-none');
+    }
+
+    function postJson(rota, corpo, alvo, okMsg) {
+        return fetch(rota, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(corpo)
+        }).then(function (r) { return r.json(); })
+          .then(function (res) {
+              if (!res || res.ok !== true) { barStatus(alvo, (res && res.erro) || 'Não foi possível concluir o cálculo.', 'erro'); return; }
+              window['render' + alvo.charAt(0).toUpperCase() + alvo.slice(1)](res.data);
+              barStatus(alvo, okMsg, 'ok');
+          })
+          .catch(function () { barStatus(alvo, 'Falha de conexão. Tente novamente.', 'erro'); });
+    }
+
+    window.renderMes = function (d) {
+        linhasTabela(document.querySelector('[data-alvo="mes"]'), [
+            ['Salário base', moeda(d.salarioBase)],
+            ['Horas extras (' + Number(d.horasExtras).toFixed(2).replace('.', ',') + 'h) com 50%', moeda(d.valorHorasExtras)],
+            ['Salário bruto', moeda(d.salarioBruto)],
+            ['INSS (faixas oficiais)', '-' + moeda(d.inss)],
+            ['Dedução usada', (Number(d.descontosDependentes) > 0 ? moeda(d.descontosDependentes) + ' dependente(s)' : (Number(d.deducaoSimplificada) > 0 ? moeda(d.deducaoSimplificada) + ' simplificada' : 'nenhuma'))],
+            ['Imposto de renda (IRRF)', '-' + moeda(d.irrf)],
+            ['Líquido do mês', moeda(d.salarioLiquido)],
+            ['FGTS depositado pela empresa (' + Number(d.aliquotaFgtsPct) + '%)', moeda(d.fgtsDepositado)]
+        ]);
+    };
+
+    window.renderFerias = function (d) {
+        linhasTabela(document.querySelector('[data-alvo="ferias"]'), [
+            ['Período de férias (' + d.dias + ' dias)', moeda(d.valorFerias)],
+            ['Terço constitucional (+1/3)', moeda(d.tercoFerias)],
+            ['Total pago nas férias', moeda(d.totalFerias)],
+            ['INSS sobre o pagamento', '-' + moeda(d.inss)],
+            ['Imposto de renda (IRRF)', '-' + moeda(d.irrf)],
+            ['Líquido das férias', moeda(d.liquido)]
+        ]);
+    };
+
+    window.renderDecimo = function (d) {
+        linhasTabela(document.querySelector('[data-alvo="decimo"]'), [
+            ['Meses trabalhados no ano (15+ dias contam cheios)', String(d.mesesCreditados) + ' de 12'],
+            ['Total proporcional do ano', moeda(d.proRataAnual)],
+            ['Valor desta parcela (' + (d.parcela === 1 ? '1ª' : '2ª') + ')', moeda(d.valorParcela)],
+            ['INSS sobre a parcela', '-' + moeda(d.inss)],
+            ['Parte isenta (até 2 salários mínimos)', moeda(d.valorParcela - Number(d.excedentePisoDoisMinimos || 0))],
+            ['Imposto de renda sobre o excedente', '-' + moeda(d.irrf)],
+            ['Líquido desta parcela', moeda(d.liquidoParcela)]
+        ]);
+    };
+
+    window.renderRescisao = function (d) {
+        var alcance = document.querySelector('[data-alvo="rescisao"]');
+        var pares = new Array();
+        (d.verbas || []).forEach(function (v) { pares.push([v.nomeLeigo, moeda(v.valor)]); });
+        pares.push(['Total das verbas tributáveis', moeda(d.totalVerbasTributaveis)]);
+        pares.push(['INSS retido', '-' + moeda(d.inssRetido)]);
+        pares.push(['Imposto de renda (IRRF) retido', '-' + moeda(d.irrfRetido)]);
+        pares.push(['Líquido das verbas (TRCT)', moeda(d.liquidoVerbas)]);
+        pares.push(['FGTS depositado (' + d.mesesFgtsDepositados + ' mês(es), ' + Number(d.aliquotaFgtsPct) + '%)', moeda(d.fgtsTotal)]);
+        pares.push(['Multa de 40% do FGTS', moeda(d.multa40)]);
+        pares.push(['Total a perceber (líquido + FGTS + multa)', moeda(d.totalParaPerceber)]);
+        linhasTabela(alcance, pares);
+    };
+
+    function valor(id) { var v = document.getElementById(id).value.trim(); return v === '' ? 0 : Number(v.replace(',', '.')); }
+
+    document.getElementById('mesCalcularBtn').addEventListener('click', function () {
+        postJson('/FolhaWeb/CalcularMes', {
+            salarioBase: valor('mesSalarioBase'),
+            horasExtras: valor('mesHorasExtras'),
+            dependentes: Math.max(0, Math.floor(valor('mesDependentes'))),
+            deducaoSimplificada: document.getElementById('mesDeducaoSimplificada').checked,
+            ano: null
+        }, 'mes', 'Mês calculado com os parâmetros oficiais.');
+    });
+
+    document.getElementById('feriasCalcularBtn').addEventListener('click', function () {
+        postJson('/FolhaWeb/CalcularFerias', {
+            salarioMensal: valor('feriasSalario'),
+            dias: Math.max(0, Math.floor(valor('feriasDias'))),
+            ano: null
+        }, 'ferias', 'Férias calculadas com o terço constitucional.');
+    });
+
+    document.getElementById('decimoCalcularBtn').addEventListener('click', function () {
+        var adm = document.getElementById('decimoAdmissao').value;
+        if (!adm) { barStatus('decimo', 'Informe a data de admissão.', 'erro'); return; }
+        postJson('/FolhaWeb/CalcularDecimoTerceiro', {
+            salarioMensal: valor('decimoSalario'),
+            admissao: adm,
+            parcela: Number(document.getElementById('decimoParcela').value),
+            ano: null
+        }, 'decimo', 'Parcela do 13º calculada.');
+    });
+
+    document.getElementById('rescCalcularBtn').addEventListener('click', function () {
+        var adm = document.getElementById('rescAdmissao').value;
+        var dem = document.getElementById('rescDemissao').value;
+        if (!adm || !dem) { barStatus('rescisao', 'Informe as datas de admissão e demissão.', 'erro'); return; }
+        postJson('/FolhaWeb/CalcularRescisao', {
+            salarioMensal: valor('rescSalario'),
+            admissao: adm,
+            demissao: dem,
+            avisoPrevio: document.getElementById('rescAvisoPrevio').checked,
+            ano: null
+        }, 'rescisao', 'Prévia da rescisão montada.');
+    });
+})();
+</script>
+}

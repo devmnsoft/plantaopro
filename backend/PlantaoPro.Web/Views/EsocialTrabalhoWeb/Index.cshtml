@@ -1,0 +1,568 @@
+@{
+    ViewData["Title"] = "eSocial Trabalhista";
+}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h4 class="mb-1 text-light">eSocial trabalhista em prévia</h4>
+            <p class="text-secondary small mb-0">Catálogo oficial dos eventos eSocial (S-1000 a S-1299), eventos por colaborador em prévia, horas contra a jornada contratual e o limite legal de 44h semanais, e o aviso prévio proporcional ao tempo de serviço.</p>
+        </div>
+        <a asp-action="Index" asp-controller="Administrativo360" class="btn btn-sm btn-outline-secondary">Voltar ao Administrativo 360</a>
+    </div>
+
+    <div class="alert alert-info py-2 small mb-3" role="note">
+        Os eventos registrados aqui ficam como <strong>prévia local</strong>: nesta etapa o produto documenta, por colaborador e por mês, quais eventos do ciclo eSocial a folha passa por. A transmissão ao ambiente eSocial será feita em integração futura, com base nestes registros.
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xxl-8 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Catálogo oficial de eventos (S-1000 a S-1299)</div>
+                <div class="card-body">
+                    <p class="small text-secondary mb-2">Leiaute eSocial S-1.3 (Nota Técnica 06/2026, rev. 09/04/2026) e MOS S-1.3 — gov.br/esocial. Tabelas do empregador configuram o contribuinte; os eventos periódicos formam o ciclo mensal da folha, cujo fechamento (S-1299) trava o mês até o dia 15 seguinte.</p>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr class="text-secondary">
+                                    <th scope="col">Código</th><th scope="col">Evento</th><th scope="col">Tipo</th><th scope="col">Vencimento</th><th scope="col" class="w-1">Descrição</th>
+                                </tr>
+                            </thead>
+                            <tbody id="catTbody">
+                                <tr><td colspan="5" class="text-secondary small py-3">Carregando catálogo…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-dark border-secondary text-light mt-3 h-100">
+                <div class="card-header bg-dark border-secondary">Horas e jornada semanal por colaborador</div>
+                <div class="card-body">
+                    <div class="row g-2 mb-2">
+                        <div class="col-sm-5">
+                            <label class="form-label small" for="jornColabSel">Colaborador</label>
+                            <select class="form-select form-select-sm" id="jornColabSel"><option value="">Carregando colaboradores…</option></select>
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="jornMes">Mês de referência</label>
+                            <input type="month" class="form-control form-control-sm" id="jornMes" />
+                        </div>
+                        <div class="col-sm-4 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary btn-sm w-100" id="jornCarregarBtn">Carregar mês</button>
+                        </div>
+                    </div>
+                    <div id="jornContratoInfo" class="alert alert-sm py-2 d-none small mb-2" role="status"></div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-2">
+                            <thead>
+                                <tr class="text-secondary">
+                                    <th scope="col">Semana</th><th scope="col">Normais</th><th scope="col">Extras</th><th scope="col">Total</th><th scope="col">Situação</th><th scope="col" class="text-end">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="jornTbody">
+                                <tr><td colspan="6" class="text-secondary small py-3">Selecione um colaborador e o mês para carregar as semanas.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="jornTotais" class="d-none small text-secondary mb-2"></div>
+
+                    <hr class="border-secondary" />
+                    <label class="form-label small">Declarar semana trabalhada</label>
+                    <div class="row g-2 mb-2">
+                        <div class="col-sm-4">
+                            <label class="form-label small" for="jdSemana">Data dentro da semana (normaliza à segunda-feira)</label>
+                            <input type="date" class="form-control form-control-sm" id="jdSemana" />
+                        </div>
+                        <div class="col-sm-2">
+                            <label class="form-label small" for="jdNormais">Horas normais</label>
+                            <input type="number" min="0" max="120" step="0.5" class="form-control form-control-sm" id="jdNormais" value="0" />
+                        </div>
+                        <div class="col-sm-2">
+                            <label class="form-label small" for="jdExtras">Horas extras</label>
+                            <input type="number" min="0" max="120" step="0.5" class="form-control form-control-sm" id="jdExtras" value="0" />
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label small" for="jdObs">Observação (opcional, até 400)</label>
+                            <input type="text" class="form-control form-control-sm" id="jdObs" maxlength="400" placeholder="Ex.: escala estendida no feriado" />
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm" id="jdSalvarBtn">Registrar semana</button>
+                    <div class="st-status alert alert-sm py-2 d-none mt-2" role="status" id="jornStatus"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xxl-4 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Aviso prévio proporcional</div>
+                <div class="card-body">
+                    <p class="small text-secondary">Base de 30 dias + 3 dias por ano completo de serviço na mesma empresa, limitado a 90 dias (Lei 12.506/2011).</p>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small" for="apAdmissao">Data de admissão</label>
+                            <input type="date" class="form-control form-control-sm" id="apAdmissao" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small" for="apDemissao">Data de demissão</label>
+                            <input type="date" class="form-control form-control-sm" id="apDemissao" />
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm w-100" id="apCalcBtn">Calcular aviso prévio</button>
+                    <div class="st-status alert alert-sm py-2 d-none mt-2" role="status" id="apStatus"></div>
+                    <div class="d-none mt-3" id="apResultado">
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-2">
+                                <tbody id="apTbody"></tbody>
+                            </table>
+                        </div>
+                        <p class="small text-secondary" id="apReducao"></p>
+                        <details class="small">
+                            <summary class="text-secondary">Fontes aplicadas</summary>
+                            <ul class="ps-3 mt-1 mb-0" id="apFontes"></ul>
+                        </details>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-dark border-secondary text-light mt-3 h-100">
+                <div class="card-header bg-dark border-secondary">Eventos por colaborador (prévia)</div>
+                <div class="card-body">
+                    <div class="row g-2 mb-2">
+                        <div class="col-12">
+                            <label class="form-label small" for="evColabSel">Colaborador (vazio = evento institucional)</label>
+                            <select class="form-select form-select-sm" id="evColabSel"><option value="">Carregando colaboradores…</option></select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small" for="evCodigoSel">Evento eSocial</label>
+                            <select class="form-select form-select-sm" id="evCodigoSel"><option value="">Carregando catálogo…</option></select>
+                        </div>
+                        <div class="col-6" id="evPeriodoWrap">
+                            <label class="form-label small" for="evPeriodo">Período de apuração (mês de competência)</label>
+                            <input type="month" class="form-control form-control-sm" id="evPeriodo" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small" for="evDataFato">Data do fato</label>
+                            <input type="date" class="form-control form-control-sm" id="evDataFato" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small" for="evDescr">Descrição (opcional, até 400)</label>
+                            <input type="text" class="form-control form-control-sm" id="evDescr" maxlength="400" placeholder="Ex.: folha de outubro transmitida" />
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm w-100" id="evSalvarBtn">Registrar evento em prévia</button>
+                    <div class="st-status alert alert-sm py-2 d-none mt-2" role="status" id="evStatus"></div>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr class="text-secondary">
+                                    <th scope="col">Evento</th><th scope="col">Colaborador</th><th scope="col">Período</th><th scope="col">Data fato</th><th scope="col" class="text-end">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="evTbody">
+                                <tr><td colspan="5" class="text-secondary small py-3">Nenhum evento registrado ainda.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalExcluir" tabindex="-1" aria-hidden="true" aria-labelledby="modalExcluirTitulo">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalExcluirTitulo">Confirmar remoção</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">Remover este registro da prévia? A ação não pode ser desfeita pela tela.</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger btn-sm" id="modalExcluirOk">Remover</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    function sel(id) { return document.getElementById(id); }
+
+    function status(id, texto, tipo) {
+        var bar = sel(id);
+        bar.classList.remove('d-none', 'alert-success', 'alert-danger');
+        bar.classList.add(tipo === 'erro' ? 'alert-danger' : 'alert-success');
+        bar.textContent = texto;
+    }
+
+    function limparStatus(id) { sel(id).classList.add('d-none'); sel(id).classList.remove('alert-success', 'alert-danger'); sel(id).textContent = ''; }
+
+    function fmtData(s) {
+        if (!s) return '';
+        var p = s.substring(0, 10).split('-');
+        if (p.length !== 3) return s;
+        return p[2] + '/' + p[1] + '/' + p[0];
+    }
+
+    function fmtMoeda(v) {
+        var p = (Math.round(Number(v) * 100) / 100).toFixed(2).split('.');
+        return 'R$ ' + p[0] + ',' + p[1];
+    }
+
+    function fmtHoras(v) {
+        var n = Number(v || 0);
+        var p = (Math.round(n * 100) / 100).toFixed(2).split('.');
+        if (p[1] === '00') return p[0];
+        return p[0] + ',' + p[1];
+    }
+
+    function postJson(url, payload) {
+        return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            .then(function (r) { return r.json(); });
+    }
+
+    // ---------------------------------------------------------------- catálogo
+    var catalogoMapa = {};
+    function carregarCatalogo() {
+        fetch('/EsocialTrabalhoWeb/Catalogo').then(function (r) { return r.json(); }).then(function (resp) {
+            var corpo = sel('catTbody');
+            corpo.textContent = '';
+            if (!resp.ok) {
+                var tr = document.createElement('tr');
+                var td = document.createElement('td');
+                td.colSpan = 5; td.className = 'text-warning small py-3';
+                td.textContent = resp.erro || 'Catálogo indisponível.';
+                tr.appendChild(td); corpo.appendChild(tr);
+                return;
+            }
+            resp.data.forEach(function (e) {
+                catalogoMapa[e.codigo] = e.categoria;
+                var tr = document.createElement('tr');
+                var tdC = document.createElement('td'); tdC.className = 'font-monospace'; tdC.textContent = e.codigo;
+                var tdN = document.createElement('td'); tdN.textContent = e.nome;
+                var tdT = document.createElement('td');
+                var badge = document.createElement('span');
+                badge.className = 'badge ' + (e.categoria === 'PERIODICO' ? 'text-info-emphasis' : 'text-secondary');
+                badge.textContent = e.categoria === 'PERIODICO' ? 'Periódico' : 'Tabela empregador';
+                tdT.appendChild(badge);
+                var tdV = document.createElement('td'); tdV.className = 'small text-secondary'; tdV.textContent = e.vencimento;
+                var tdD = document.createElement('td'); tdD.className = 'small'; tdD.title = e.descricao; tdD.textContent = e.descricao.length > 90 ? e.descricao.substring(0, 90) + '…' : e.descricao;
+                tr.appendChild(tdC); tr.appendChild(tdN); tr.appendChild(tdT); tr.appendChild(tdV); tr.appendChild(tdD);
+                corpo.appendChild(tr);
+            });
+            var optSel = sel('evCodigoSel');
+            optSel.textContent = '';
+            var vazio = document.createElement('option');
+            vazio.value = '';
+            vazio.textContent = 'Selecione o evento…';
+            optSel.appendChild(vazio);
+            resp.data.forEach(function (e) {
+                var opt = document.createElement('option');
+                opt.value = e.codigo;
+                opt.textContent = e.codigo + ' - ' + e.nome;
+                optSel.appendChild(opt);
+            });
+        }).catch(function () {
+            var corpo = sel('catTbody');
+            corpo.textContent = '';
+            var tr = document.createElement('tr');
+            var td = document.createElement('td');
+            td.colSpan = 5; td.className = 'text-warning small py-3';
+            td.textContent = 'Falha de conexão ao carregar o catálogo.';
+            tr.appendChild(td); corpo.appendChild(tr);
+        });
+    }
+
+    // ---------------------------------------------------------------- colaboradores
+    function carregarColaboradores() {
+        fetch('/EsocialTrabalhoWeb/Colaboradores').then(function (r) { return r.json(); }).then(function (resp) {
+            [sel('jornColabSel'), sel('evColabSel')].forEach(function (box) {
+                box.textContent = '';
+                var base = document.createElement('option');
+                if (box.id === 'evColabSel') {
+                    base.value = '';
+                    base.textContent = 'Institucional (sem colaborador específico)';
+                } else {
+                    base.value = '';
+                    base.textContent = 'Selecione um colaborador…';
+                }
+                box.appendChild(base);
+                if (resp.ok) {
+                    resp.data.forEach(function (c) {
+                        var opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.textContent = c.nome + ' (' + c.matricula + ')';
+                        box.appendChild(opt);
+                    });
+                } else {
+                    var falha = document.createElement('option');
+                    falha.value = '';
+                    falha.textContent = resp.erro || 'Colaboradores indisponíveis';
+                    falha.disabled = true;
+                    box.appendChild(falha);
+                }
+            });
+        }).catch(function () { });
+    }
+
+    // ---------------------------------------------------------------- jornada
+    var semanaAtual = null;
+
+    function carregarJornada() {
+        var colaboradorId = sel('jornColabSel').value;
+        var mes = sel('jornMes').value;
+        if (!colaboradorId) { limparStatus('jornStatus'); status('jornStatus', 'Selecione um colaborador.', 'erro'); return; }
+        if (!mes) { limparStatus('jornStatus'); status('jornStatus', 'Informe o mês de referência.', 'erro'); return; }
+        fetch('/EsocialTrabalhoWeb/Jornada?colaboradorId=' + encodeURIComponent(colaboradorId) + '&mes=' + encodeURIComponent(mes))
+            .then(function (r) { return r.json(); }).then(function (resp) {
+                var corpo = sel('jornTbody');
+                corpo.textContent = '';
+                var info = sel('jornContratoInfo');
+                var totais = sel('jornTotais');
+                if (!resp.ok) {
+                    var tr = document.createElement('tr');
+                    var td = document.createElement('td');
+                    td.colSpan = 6; td.className = 'text-warning small py-3';
+                    td.textContent = resp.erro || 'Jornada indisponível.';
+                    tr.appendChild(td); corpo.appendChild(tr);
+                    info.classList.add('d-none'); totais.classList.add('d-none');
+                    return;
+                }
+                var d = resp.data;
+                info.classList.remove('d-none');
+                info.classList.remove('alert-success', 'alert-warning');
+                if (d.contratoVigente) {
+                    info.classList.add('alert-success');
+                    info.textContent = 'Contrato vigente: ' + d.tipoContrato + ' - carga ' + fmtHoras(d.cargaHorariaSemanal) + ' h/semana - salário ' + fmtMoeda(d.salarioContratado) + '.';
+                } else {
+                    info.classList.add('alert-warning');
+                    info.textContent = 'Sem contrato vigente para este colaborador: a referência comparada é o teto legal de ' + fmtHoras(d.jornadaSemanalMax) + ' h/semana.';
+                }
+                d.semanas.forEach(function (s) {
+                    var tr = document.createElement('tr');
+                    var tdS = document.createElement('td'); tdS.className = 'small';
+                    var fimSemana = new Date(s.semanaInicio + 'T00:00:00');
+                    fimSemana.setDate(fimSemana.getDate() + 6);
+                    var fimTxt = (fimSemana.getMonth() + 1 < 10 ? '0' : '') + (fimSemana.getMonth() + 1) + '/' + (fimSemana.getDate() < 10 ? '0' : '') + fimSemana.getDate() + '/' + fimSemana.getFullYear();
+                    tdS.textContent = 'de ' + fmtData(s.semanaInicio) + ' a ' + fimTxt;
+                    var tdN = document.createElement('td'); tdN.className = 'font-monospace'; tdN.textContent = fmtHoras(s.normais);
+                    var tdE = document.createElement('td'); tdE.className = 'font-monospace'; tdE.textContent = fmtHoras(s.extras);
+                    var tdT = document.createElement('td'); tdT.className = 'font-monospace fw-semibold'; tdT.textContent = fmtHoras(s.total);
+                    var tdSit = document.createElement('td');
+                    var badge = document.createElement('span');
+                    var rotulo, cor;
+                    if (s.situacao === 'NAO_DECLARADA') { rotulo = 'Sem declaração'; cor = 'text-secondary'; }
+                    else if (s.situacao === 'CONFORME') { rotulo = 'Dentro da contratual'; cor = 'text-success-emphasis'; }
+                    else if (s.situacao === 'EXCEDE_CONTRATO') { rotulo = 'Acima da contratual'; cor = 'text-warning-emphasis'; }
+                    else { rotulo = 'Acima do limite legal'; cor = 'text-danger-emphasis'; }
+                    badge.className = 'badge ' + cor;
+                    badge.textContent = rotulo;
+                    tdSit.appendChild(badge);
+                    var tdA = document.createElement('td'); tdA.className = 'text-end';
+                    if (s.declarada) {
+                        var btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'btn btn-outline-danger btn-sm js-excluir-jornada';
+                        btn.setAttribute('data-id', s.id);
+                        btn.setAttribute('aria-label', 'Remover declaração da semana de ' + fmtData(s.semanaInicio));
+                        btn.textContent = 'Remover';
+                        tdA.appendChild(btn);
+                    }
+                    tr.appendChild(tdS); tr.appendChild(tdN); tr.appendChild(tdE); tr.appendChild(tdT); tr.appendChild(tdSit); tr.appendChild(tdA);
+                    corpo.appendChild(tr);
+                });
+                semanaAtual = d;
+                totais.classList.remove('d-none');
+                var texto = 'Total no mês: ' + fmtHoras(d.totalNormais) + ' h normais + ' + fmtHoras(d.totalExtras) + ' h extras (' + fmtHoras(d.totalHoras) + ' h no total); excedentes sobre a referência: ' + fmtHoras(d.horasExcedentesMes) + ' h.';
+                if (d.valorHoraExtra != null) texto += ' Estimativa da hora extra: ' + fmtMoeda(d.valorHoraExtra) + ' (salário/220h + 50% mínimo); excedentes estimados em ' + fmtMoeda(d.valorTotalHorasExtras) + '.';
+                totais.textContent = texto;
+                window.querySelectorAll('.js-excluir-jornada').forEach(function (b) {
+                    b.addEventListener('click', function () { abrirModal('jornada', b.getAttribute('data-id')); });
+                });
+            }).catch(function () { });
+    }
+
+    function salvarJornada() {
+        limparStatus('jornStatus');
+        var colaboradorId = sel('jornColabSel').value;
+        var dataSemana = sel('jdSemana').value;
+        var normais = Number(sel('jdNormais').value || 0);
+        var extras = Number(sel('jdExtras').value || 0);
+        if (!colaboradorId) { status('jornStatus', 'Selecione um colaborador.', 'erro'); return; }
+        if (!dataSemana) { status('jornStatus', 'Informe a data da semana.', 'erro'); return; }
+        postJson('/EsocialTrabalhoWeb/DeclararJornada', {
+            colaboradorId: colaboradorId,
+            semanaInicio: dataSemana,
+            horasNormais: normais,
+            horasExtras: extras,
+            observacao: sel('jdObs').value.trim()
+        }).then(function (resp) {
+            if (!resp.ok) { status('jornStatus', resp.erro || 'Não foi possível registrar a semana.', 'erro'); return; }
+            status('jornStatus', 'Semana registrada.', 'ok');
+            carregarJornada();
+        }).catch(function () { status('jornStatus', 'Falha de conexão ao registrar a semana.', 'erro'); });
+    }
+
+    // ---------------------------------------------------------------- aviso previo
+    function calcularAviso() {
+        limparStatus('apStatus');
+        var admissao = sel('apAdmissao').value;
+        var demissao = sel('apDemissao').value;
+        if (!admissao || !demissao) { status('apStatus', 'Informe as duas datas.', 'erro'); return; }
+        postJson('/EsocialTrabalhoWeb/AvisoPrevio', { admissaoEm: admissao, demissaoEm: demissao }).then(function (resp) {
+            var box = sel('apResultado');
+            if (!resp.ok) { box.classList.add('d-none'); status('apStatus', resp.erro || 'Não foi possível calcular o aviso prévio.', 'erro'); return; }
+            var d = resp.data;
+            box.classList.remove('d-none');
+            var corpo = sel('apTbody');
+            corpo.textContent = '';
+            var linhas = {
+                'Base legal': d.diasBase + ' dias',
+                'Anos completos de serviço': String(d.anosCompletos),
+                'Acréscimo por tempo de serviço': d.diasAcrecimo + ' dias',
+                'Aviso prévio total': d.diasTotal + ' dias'
+            };
+            Object.keys(linhas).forEach(function (rotulo) {
+                var tr = document.createElement('tr');
+                var tdR = document.createElement('td'); tdR.className = 'small text-secondary'; tdR.textContent = rotulo;
+                var tdV = document.createElement('td'); tdV.className = rotulo === 'Aviso prévio total' ? 'font-monospace fw-bold' : 'font-monospace';
+                tdV.textContent = linhas[rotulo];
+                tr.appendChild(tdR); tr.appendChild(tdV);
+                corpo.appendChild(tr);
+            });
+            sel('apReducao').textContent = d.reducaoJornadaAviso;
+            var fontes = sel('apFontes');
+            fontes.textContent = '';
+            d.fontes.forEach(function (f) {
+                var li = document.createElement('li');
+                li.textContent = f;
+                fontes.appendChild(li);
+            });
+        }).catch(function () { status('apStatus', 'Falha de conexão ao calcular o aviso prévio.', 'erro'); });
+    }
+
+    // ---------------------------------------------------------------- eventos
+    function carregarEventos() {
+        fetch('/EsocialTrabalhoWeb/Eventos').then(function (r) { return r.json(); }).then(function (resp) {
+            var corpo = sel('evTbody');
+            corpo.textContent = '';
+            if (!resp.ok) {
+                var tr = document.createElement('tr');
+                var td = document.createElement('td');
+                td.colSpan = 5; td.className = 'text-warning small py-3';
+                td.textContent = resp.erro || 'Eventos indisponíveis.';
+                tr.appendChild(td); corpo.appendChild(tr);
+                return;
+            }
+            if (!resp.data.length) {
+                var tr0 = document.createElement('tr');
+                var td0 = document.createElement('td');
+                td0.colSpan = 5; td0.className = 'text-secondary small py-3';
+                td0.textContent = 'Nenhum evento registrado ainda.';
+                tr0.appendChild(td0); corpo.appendChild(tr0);
+                return;
+            }
+            resp.data.forEach(function (e) {
+                var tr = document.createElement('tr');
+                var tdC = document.createElement('td'); tdC.className = 'font-monospace small'; tdC.textContent = e.codigoEvento;
+                var tdN = document.createElement('td'); tdN.className = 'small text-secondary'; tdN.textContent = e.colaboradorNome || 'Institucional';
+                var tdP = document.createElement('td'); tdP.className = 'small'; tdP.textContent = e.periodoApuracao || '—';
+                var tdD = document.createElement('td'); tdD.className = 'small'; tdD.textContent = fmtData(e.dataFato);
+                var tdA = document.createElement('td'); tdA.className = 'text-end';
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-outline-danger btn-sm js-excluir-evento';
+                btn.setAttribute('data-id', e.id);
+                btn.setAttribute('aria-label', 'Remover evento ' + e.codigoEvento + ' de ' + fmtData(e.dataFato));
+                btn.textContent = 'Remover';
+                tdA.appendChild(btn);
+                tr.appendChild(tdC); tr.appendChild(tdN); tr.appendChild(tdP); tr.appendChild(tdD); tr.appendChild(tdA);
+                corpo.appendChild(tr);
+            });
+            window.querySelectorAll('.js-excluir-evento').forEach(function (b) {
+                b.addEventListener('click', function () { abrirModal('evento', b.getAttribute('data-id')); });
+            });
+        }).catch(function () { });
+    }
+
+    function salvarEvento() {
+        limparStatus('evStatus');
+        var colaboradorId = sel('evColabSel').value || null;
+        var codigo = sel('evCodigoSel').value;
+        var periodo = sel('evPeriodo').value || null;
+        var dataFato = sel('evDataFato').value;
+        if (!codigo) { status('evStatus', 'Selecione o evento.', 'erro'); return; }
+        if (catalogoMapa[codigo] === 'PERIODICO' && !periodo) { status('evStatus', 'Eventos periódicos exigem o período de apuração.', 'erro'); return; }
+        if (!dataFato) { status('evStatus', 'Informe a data do fato.', 'erro'); return; }
+        postJson('/EsocialTrabalhoWeb/DeclararEvento', {
+            colaboradorId: colaboradorId,
+            codigoEvento: codigo,
+            periodoApuracao: periodo,
+            dataFato: dataFato,
+            descricao: sel('evDescr').value.trim()
+        }).then(function (resp) {
+            if (!resp.ok) { status('evStatus', resp.erro || 'Não foi possível registrar o evento.', 'erro'); return; }
+            status('evStatus', 'Evento registrado em prévia.', 'ok');
+            carregarEventos();
+        }).catch(function () { status('evStatus', 'Falha de conexão ao registrar o evento.', 'erro'); });
+    }
+
+    // ---------------------------------------------------------------- modal de exclusao
+    var pendente = null;
+    function abrirModal(alvo, id) {
+        pendente = { alvo: alvo, id: id };
+        if (window.bootstrap && window.bootstrap.Modal) bootstrap.Modal.getOrCreateInstance(sel('modalExcluir')).show();
+    }
+
+    function confirmarExclusao() {
+        if (!pendente) return;
+        var atual = pendente;
+        pendente = null;
+        if (window.bootstrap && window.bootstrap.Modal) bootstrap.Modal.getOrCreateInstance(sel('modalExcluir')).hide();
+        var url = atual.alvo === 'jornada' ? '/EsocialTrabalhoWeb/ExcluirJornada' : '/EsocialTrabalhoWeb/ExcluirEvento';
+        var okMsg = atual.alvo === 'jornada' ? 'Declaração removida.' : 'Evento removido.';
+        var falhaMsg = atual.alvo === 'jornada' ? 'Falha ao remover a declaração.' : 'Falha ao remover o evento.';
+        var barraId = atual.alvo === 'jornada' ? 'jornStatus' : 'evStatus';
+        var recarregar = atual.alvo === 'jornada' ? carregarJornada : carregarEventos;
+        postJson(url, { id: atual.id }).then(function (resp) {
+            if (!resp.ok) { status(barraId, resp.erro || falhaMsg, 'erro'); return; }
+            status(barraId, okMsg, 'ok');
+            recarregar();
+        }).catch(function () { status(barraId, falhaMsg, 'erro'); });
+    }
+
+    // ---------------------------------------------------------------- inicializacao
+    function hoje() {
+        var d = new Date();
+        var m = d.getMonth() + 1 < 10 ? '0' : '';
+        var mes = m + (d.getMonth() + 1);
+        var dia = d.getDate() < 10 ? '0' : '';
+        return { full: d.getFullYear() + '-' + mes + '-' + dia + '', mes: d.getFullYear() + '-' + mes };
+    }
+
+    function alternarPeriodo() {
+        var codigo = sel('evCodigoSel').value;
+        var wrap = sel('evPeriodoWrap');
+        if (catalogoMapa[codigo] === 'PERIODICO') { wrap.classList.remove('d-none'); }
+        else { wrap.classList.add('d-none'); sel('evPeriodo').value = ''; }
+    }
+
+    var h = hoje();
+    sel('jornMes').value = h.mes;
+    sel('jdSemana').value = h.full;
+    sel('evDataFato').value = h.full;
+    sel('apDemissao').value = h.full;
+    carregarCatalogo();
+    carregarColaboradores();
+    carregarEventos();
+    sel('jornCarregarBtn').addEventListener('click', carregarJornada);
+    sel('jdSalvarBtn').addEventListener('click', salvarJornada);
+    sel('apCalcBtn').addEventListener('click', calcularAviso);
+    sel('evSalvarBtn').addEventListener('click', salvarEvento);
+    sel('evCodigoSel').addEventListener('change', alternarPeriodo);
+    sel('modalExcluirOk').addEventListener('click', confirmarExclusao);
+})();
+</script>
+}

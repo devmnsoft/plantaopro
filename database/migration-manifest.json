@@ -1494,6 +1494,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2371_r88_esocial_trabalhista",
+                            "source":  "database/migrations/2026_10_v2371_r88_esocial_trabalhista.sql",
+                            "checksum":  "5f7c5591d39d40041416e27a9263638e615b31fff38da9c7b574ff30a06a2e24",
+                            "dependsOn":  [
+                                              "2026_10_v2370_r87_lgpd_saude"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

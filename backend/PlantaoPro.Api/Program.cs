@@ -217,6 +217,8 @@ string GetConn(IServiceProvider sp) => sp.GetRequiredService<IConfiguration>().G
 // R86: trilhos de pagamento (PIX EMV + boleto + CNAB 400) amarrados ao motor de cobranca SaaS.
 builder.Services.AddScoped<TrilhosPagamentoService>(sp => new TrilhosPagamentoService(GetConn(sp)));
 builder.Services.AddScoped<LgpdSaudeService>(sp => new LgpdSaudeService(GetConn(sp)));
+// R88: previa trabalhista eSocial (eventos S-1000 a S-1299, horas/jornada, aviso previo).
+builder.Services.AddScoped<EsocialTrabalhoService>(sp => new EsocialTrabalhoService(GetConn(sp)));
 builder.Services.AddScoped<ICadastrosRepository>(sp => new CadastrosRepository(GetConn(sp)));
 builder.Services.AddScoped<IComprasRepository>(sp => new ComprasRepository(GetConn(sp)));
 builder.Services.AddScoped<IEstoqueRepository>(sp => new EstoqueRepository(GetConn(sp)));

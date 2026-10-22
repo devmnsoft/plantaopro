@@ -146,6 +146,9 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
         ["Adm360DocumentosXmlWeb"] = "ADM360",
         ["Adm360CotacoesWeb"] = "ADM360",
         ["Adm360FiscalWeb"] = "ADM360",
+        // R88: previa trabalhista eSocial (eventos S-1000 a S-1299, horas/jornada, aviso previo)
+        // roda sob o mesmo modulo ADM360 do menu "Administracao do Cliente".
+        ["EsocialTrabalhoWeb"] = "ADM360",
         // Somente ambiente Testing (a acao responde 404 fora dele); modulo ADM360 porque
         // a suita assina com claims modules=ADM360/permissions=ADM360.*.
         ["MvcSeguroTest"] = "ADM360"

@@ -328,6 +328,9 @@
   <data name="Nav.TrilhosPagamento" xml:space="preserve">
     <value>Trilhos de Pagamento</value>
   </data>
+  <data name="Nav.EsocialTrabalhista" xml:space="preserve">
+    <value>eSocial Trabalhista</value>
+  </data>
   <data name="Nav.Relatorios" xml:space="preserve">
     <value>Relatórios</value>
   </data>

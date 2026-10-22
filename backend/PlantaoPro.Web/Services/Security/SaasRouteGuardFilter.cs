@@ -35,6 +35,7 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
         // coberto pelo mesmo mapeamento.
         ["Billing"] = "FATURAMENTO_SAAS",
         ["FaturamentoSaas"] = "FATURAMENTO_SAAS",
+        ["VendasInternacionaisWeb"] = "FATURAMENTO_SAAS",
         ["MinhaAssinatura"] = "ASSINATURAS",
         ["Marketplace"] = "MARKETPLACE",
         ["WhiteLabel"] = "WHITE_LABEL",

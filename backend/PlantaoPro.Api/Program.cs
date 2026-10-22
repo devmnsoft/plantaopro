@@ -219,6 +219,8 @@ builder.Services.AddScoped<TrilhosPagamentoService>(sp => new TrilhosPagamentoSe
 builder.Services.AddScoped<LgpdSaudeService>(sp => new LgpdSaudeService(GetConn(sp)));
 // R88: previa trabalhista eSocial (eventos S-1000 a S-1299, horas/jornada, aviso previo).
 builder.Services.AddScoped<EsocialTrabalhoService>(sp => new EsocialTrabalhoService(GetConn(sp)));
+// R89: faturamento internacional simplificado (cotacoes BRL + VAT por destino + nota nao-tradicional).
+builder.Services.AddScoped<VendasInternacionaisService>(sp => new VendasInternacionaisService(GetConn(sp)));
 builder.Services.AddScoped<ICadastrosRepository>(sp => new CadastrosRepository(GetConn(sp)));
 builder.Services.AddScoped<IComprasRepository>(sp => new ComprasRepository(GetConn(sp)));
 builder.Services.AddScoped<IEstoqueRepository>(sp => new EstoqueRepository(GetConn(sp)));

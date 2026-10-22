@@ -1504,6 +1504,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2372_r89_vendas_internacionais",
+                            "source":  "database/migrations/2026_10_v2372_r89_vendas_internacionais.sql",
+                            "checksum":  "f507cae52f2ab0d8d63859429f73f9466b2d204359d1cae8b37bfbf02abe94ed",
+                            "dependsOn":  [
+                                              "2026_10_v2371_r88_esocial_trabalhista"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

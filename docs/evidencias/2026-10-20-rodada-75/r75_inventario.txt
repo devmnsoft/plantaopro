@@ -665,6 +665,7 @@ PAGINA|V112Web|Outbox|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
 PAGINA|V112Web|Products|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
 PAGINA|V112Web|Tasks|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
 PAGINA|V112Web|Templates|V112Web/OperationalPage|ARQ_FALTA|LIT via Page|
+PAGINA|VendasInternacionaisWeb|Index|VendasInternacionaisWeb/Index|ARQ_OK|NOME|
 PAGINA|WhiteLabel|Assets|WhiteLabel/Assets|ARQ_OK|LIT|
 PAGINA|WhiteLabel|Edit|WhiteLabel/Index|ARQ_OK|LIT|
 PAGINA|WhiteLabel|Emails|WhiteLabel/Emails|ARQ_OK|LIT|
@@ -740,6 +741,7 @@ ARTIGO|id=adm-calendario-fiscal|CalendarioFiscalWeb/Index|titulo=Como acompanhar
 ARTIGO|id=adm-dfe-nacional|DfeNacionalWeb/Index|titulo=Como gerar e conferir a chave de acesso dos DF-e
 ARTIGO|id=adm-trilhos-pagamento|TrilhosPagamentoWeb/Index|titulo=Como configurar e gerar os trilhos de pagamento
 ARTIGO|id=adm-esocial-trabalho|EsocialTrabalhoWeb/Index|titulo=Como acompanhar eventos eSocial, jornada e aviso prévio dos colaboradores
+ARTIGO|id=adm-vendas-internacionais|VendasInternacionaisWeb/Index|titulo=Como faturar vendas para fora do país com cotações e VAT por destino
 ARTIGO|id=central-fatura|MinhaCentral/Index|titulo=Como resolver fatura vencida
 ARTIGO|id=central-notificacoes|Notificacoes/Preferencias|titulo=Como configurar notificações
 ARTIGO|id=cad-empresa|Cadastro/Empresa|titulo=Como começar o cadastro da instituição
@@ -1437,6 +1439,7 @@ POTE_QUEBRA|V112Web|Outbox|V112Web/OperationalPage|pagina GET sem arquivo resolv
 POTE_QUEBRA|V112Web|Products|V112Web/OperationalPage|pagina GET sem arquivo resolvido
 POTE_QUEBRA|V112Web|Tasks|V112Web/OperationalPage|pagina GET sem arquivo resolvido
 POTE_QUEBRA|V112Web|Templates|V112Web/OperationalPage|pagina GET sem arquivo resolvido
+COBERTA|VendasInternacionaisWeb|Index|artigo adm-vendas-internacionais
 SEM_ARTIGO|WhiteLabel|Assets
 SEM_ARTIGO|WhiteLabel|Edit
 SEM_ARTIGO|WhiteLabel|Emails
@@ -1452,5 +1455,5 @@ POTE_QUEBRA|WorkflowSaude360|Index|WorkflowSaude360/Index|pagina GET sem arquivo
 POTE_QUEBRA|WorkflowSaude360|ProximaAcao|WorkflowSaude360/ProximaAcao|pagina GET sem arquivo resolvido
 ACO_AUX|WorkflowSaude360|Salvar|WorkflowSaude360/Salvar|submissao dinamica ou helper herdado
 
-RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=681|FILE_OK=623|ARTIGOS=89|COBERTAS=87|FORA_ESCOPO=19|GAP_SEM_ARTIGO=517|ACO_AUX=29|POTE_QUEBRA=29
+RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=682|FILE_OK=624|ARTIGOS=90|COBERTAS=88|FORA_ESCOPO=19|GAP_SEM_ARTIGO=517|ACO_AUX=29|POTE_QUEBRA=29
 ARTIGOS_ORFAOS=NENHUM

@@ -331,6 +331,9 @@
   <data name="Nav.EsocialTrabalhista" xml:space="preserve">
     <value>Labor eSocial</value>
   </data>
+  <data name="Nav.VendasInternacionais" xml:space="preserve">
+    <value>International Sales</value>
+  </data>
   <data name="Nav.Relatorios" xml:space="preserve">
     <value>Reports</value>
   </data>

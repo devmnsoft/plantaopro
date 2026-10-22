@@ -1,0 +1,470 @@
+@{
+    ViewData["Title"] = "Vendas Internacionais";
+}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h4 class="mb-1 text-light">Vendas internacionais</h4>
+            <p class="text-secondary small mb-0">Moeda base BRL com cotações institucionais (USD/EUR/GBP) e faturamento internacional simplificado: nota fiscal não-tradicional por fatura, com o VAT padrão do país de destino acrescido sobre a base convertida.</p>
+        </div>
+        <a asp-action="Index" asp-controller="FaturamentoSaas" class="btn btn-sm btn-outline-secondary">Voltar ao Faturamento SaaS</a>
+    </div>
+
+    <div class="alert alert-info py-2 small mb-3" role="note">
+        A fatura sai sempre em real brasileiro (moeda base). Na emissão da nota o produto converte o valor pela cotação registrada mais recente até o dia e aplica o VAT <strong>acrescido</strong> do país de destino (subtotal + imposto). No lado brasileiro a venda ao exterior enquadra-se nas dispensas de exportação (ICMS/IPI). Sem transmissão externa nesta etapa: tudo fica como registro local.
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xxl-8 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Cotações de câmbio (moeda base BRL)</div>
+                <div class="card-body">
+                    <p class="small text-secondary mb-2">Quantos reais compram 1 unidade da moeda externa. O registro é por (moeda, data) e preserva o histórico; a nota usa a cotação mais recente em data anterior ou igual ao dia de emissão.</p>
+                    <div class="row g-2 mb-2">
+                        <div class="col-sm-2">
+                            <label class="form-label small" for="cotMoedaSel">Moeda</label>
+                            <select class="form-select form-select-sm" id="cotMoedaSel">
+                                <option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="cotData">Data da cotação</label>
+                            <input type="date" class="form-control form-control-sm" id="cotData" />
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="cotTaxa">Cotação (R$ por unidade)</label>
+                            <input type="number" min="0.000001" step="0.000001" class="form-control form-control-sm" id="cotTaxa" placeholder="Ex.: 5.027700" />
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label small" for="cotFonte">Fonte (opcional, até 300)</label>
+                            <input type="text" class="form-control form-control-sm" id="cotFonte" maxlength="300" placeholder="Ex.: taxa comercial BCB de 22/10/2026" />
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm" id="cotSalvarBtn">Registrar cotação</button>
+                    <div class="st-status alert alert-sm py-2 d-none mt-2" role="status" id="cotStatus"></div>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr class="text-secondary">
+                                    <th scope="col">Moeda</th><th scope="col">Data</th><th scope="col">Cotação (R$/unid.)</th><th scope="col" class="w-1">Fonte</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cotTbody">
+                                <tr><td colspan="4" class="text-secondary small py-3">Carregando cotações…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-dark border-secondary text-light mt-3 h-100">
+                <div class="card-header bg-dark border-secondary">Notas internacionais (forma não-tradicional)</div>
+                <div class="card-body">
+                    <div class="row g-2 mb-2">
+                        <div class="col-sm-5">
+                            <label class="form-label small" for="notaFaturaSel">Fatura (aberta/vencida)</label>
+                            <select class="form-select form-select-sm" id="notaFaturaSel"><option value="">Carregando faturas…</option></select>
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="notaPaisSel">País de destino</label>
+                            <select class="form-select form-select-sm" id="notaPaisSel"><option value="">Carregando destinos…</option></select>
+                        </div>
+                        <div class="col-sm-2">
+                            <label class="form-label small" for="notaMoedaSel">Moeda de cobrança</label>
+                            <select class="form-select form-select-sm" id="notaMoedaSel">
+                                <option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-2 d-flex gap-1">
+                            <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" id="simBtn">Simular</button>
+                            <button type="button" class="btn btn-primary btn-sm flex-fill" id="emitirBtn">Emitir</button>
+                        </div>
+                    </div>
+                    <div class="st-status alert alert-sm py-2 d-none mb-2" role="status" id="notaStatus"></div>
+                    <div class="d-none" id="simBox">
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-2">
+                                <tbody id="simTbody"></tbody>
+                            </table>
+                        </div>
+                        <details class="small">
+                            <summary class="text-secondary">Fontes aplicadas</summary>
+                            <ul class="ps-3 mt-1 mb-0" id="simFontes"></ul>
+                        </details>
+                    </div>
+
+                    <hr class="border-secondary" />
+                    <div class="st-status alert alert-sm py-2 d-none mb-2" role="status" id="notasStatus"></div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr class="text-secondary">
+                                    <th scope="col">Emissão</th><th scope="col">Cliente / fatura</th><th scope="col">Destino</th><th scope="col">Moeda</th><th scope="col">Base (BRL)</th><th scope="col">Total (moeda)</th><th scope="col">Status</th><th scope="col" class="text-end">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="notTbody">
+                                <tr><td colspan="8" class="text-secondary small py-3">Nenhuma nota internacional registrada ainda.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xxl-4 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Destinos e alíquotas padrão de VAT</div>
+                <div class="card-body">
+                    <p class="small text-secondary mb-2">Catálogo institucional: a alíquota padrão do país de destino é acrescida sobre a base convertida na nota. Sem regimes reduzidos ou especiais nesta etapa.</p>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr class="text-secondary">
+                                    <th scope="col">País</th><th scope="col">ISO</th><th scope="col">Alíquota</th><th scope="col" class="w-1">Fonte</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paisTbody">
+                                <tr><td colspan="4" class="text-secondary small py-3">Carregando destinos…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAnular" tabindex="-1" aria-hidden="true" aria-labelledby="modalAnularTitulo">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAnularTitulo">Anular nota internacional</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-secondary mb-2">Ao anular, a fatura volta a ficar disponível para nova emissão. A anulação não pode ser desfeita pela tela.</p>
+                <label class="form-label small" for="anularMotivo">Motivo (obrigatório, até 400)</label>
+                <input type="text" class="form-control form-control-sm" id="anularMotivo" maxlength="400" placeholder="Ex.: fatura duplicada de competência outubro" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger btn-sm" id="modalAnularOk">Anular</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    function sel(id) { return document.getElementById(id); }
+
+    function status(id, texto, tipo) {
+        var bar = sel(id);
+        bar.classList.remove('d-none', 'alert-success', 'alert-danger');
+        bar.classList.add(tipo === 'erro' ? 'alert-danger' : 'alert-success');
+        bar.textContent = texto;
+    }
+
+    function limparStatus(id) { sel(id).classList.add('d-none'); sel(id).classList.remove('alert-success', 'alert-danger'); sel(id).textContent = ''; }
+
+    function fmtData(s) {
+        if (!s) return '';
+        var p = s.substring(0, 10).split('-');
+        if (p.length !== 3) return s;
+        return p[2] + '/' + p[1] + '/' + p[0];
+    }
+
+    function fmtBrl(v) {
+        var p = (Math.round(Number(v) * 100) / 100).toFixed(2).split('.');
+        return 'R$ ' + p[0] + ',' + p[1];
+    }
+
+    function simbolo(m) { return m === 'USD' ? '$' : m === 'EUR' ? '€' : m === 'GBP' ? '£' : m + ' '; }
+
+    function fmtExt(v, m) {
+        var p = (Math.round(Number(v) * 100) / 100).toFixed(2).split('.');
+        return simbolo(m) + p[0] + ',' + p[1];
+    }
+
+    function fmtTaxa(v) { return Number(v).toFixed(6).replace('.', ','); }
+
+    function fmtPct(v) { return Number(v).toFixed(2).replace('.', ',') + '%'; }
+
+    function postJson(url, payload) {
+        return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            .then(function (r) { return r.json(); });
+    }
+
+    // ---------------------------------------------------------------- cotacoes
+    function carregarCotacoes() {
+        fetch('/VendasInternacionaisWeb/Cotacoes').then(function (r) { return r.json(); }).then(function (resp) {
+            var corpo = sel('cotTbody');
+            corpo.textContent = '';
+            if (!resp.ok) {
+                var tr = document.createElement('tr');
+                var td = document.createElement('td');
+                td.colSpan = 4; td.className = 'text-warning small py-3';
+                td.textContent = resp.erro || 'Cotações indisponíveis.';
+                tr.appendChild(td); corpo.appendChild(tr);
+                return;
+            }
+            if (!resp.data.length) {
+                var tr0 = document.createElement('tr');
+                var td0 = document.createElement('td');
+                td0.colSpan = 4; td0.className = 'text-secondary small py-3';
+                td0.textContent = 'Nenhuma cotação registrada ainda.';
+                tr0.appendChild(td0); corpo.appendChild(tr0);
+                return;
+            }
+            resp.data.forEach(function (c) {
+                var tr = document.createElement('tr');
+                var tdM = document.createElement('td'); tdM.className = 'font-monospace small'; tdM.textContent = c.moeda;
+                var tdD = document.createElement('td'); tdD.className = 'small'; tdD.textContent = fmtData(c.data);
+                var tdT = document.createElement('td'); tdT.className = 'font-monospace small'; tdT.textContent = fmtTaxa(c.taxa);
+                var tdF = document.createElement('td'); tdF.className = 'small text-secondary'; tdF.title = c.fonte; tdF.textContent = c.fonte.length > 80 ? c.fonte.substring(0, 80) + '…' : c.fonte;
+                tr.appendChild(tdM); tr.appendChild(tdD); tr.appendChild(tdT); tr.appendChild(tdF);
+                corpo.appendChild(tr);
+            });
+        }).catch(function () { });
+    }
+
+    function registrarCotacao() {
+        limparStatus('cotStatus');
+        var moeda = sel('cotMoedaSel').value;
+        var data = sel('cotData').value;
+        var taxa = Number(sel('cotTaxa').value || 0);
+        if (!data) { status('cotStatus', 'Informe a data da cotação.', 'erro'); return; }
+        if (!(taxa > 0)) { status('cotStatus', 'Informe a cotação em reais positivos.', 'erro'); return; }
+        postJson('/VendasInternacionaisWeb/RegistrarCotacao', {
+            moeda: moeda,
+            data: data,
+            taxa: taxa,
+            fonte: sel('cotFonte').value.trim()
+        }).then(function (resp) {
+            if (!resp.ok) { status('cotStatus', resp.erro || 'Não foi possível registrar a cotação.', 'erro'); return; }
+            status('cotStatus', 'Cotação registrada.', 'ok');
+            sel('cotTaxa').value = '';
+            sel('cotFonte').value = '';
+            carregarCotacoes();
+        }).catch(function () { status('cotStatus', 'Falha de conexão ao registrar a cotação.', 'erro'); });
+    }
+
+    // ---------------------------------------------------------------- destinos
+    function carregarPaises() {
+        fetch('/VendasInternacionaisWeb/PaisesVat').then(function (r) { return r.json(); }).then(function (resp) {
+            var corpo = sel('paisTbody');
+            corpo.textContent = '';
+            var optSel = sel('notaPaisSel');
+            optSel.textContent = '';
+            if (!resp.ok) {
+                var tr = document.createElement('tr');
+                var td = document.createElement('td');
+                td.colSpan = 4; td.className = 'text-warning small py-3';
+                td.textContent = resp.erro || 'Destinos indisponíveis.';
+                tr.appendChild(td); corpo.appendChild(tr);
+                var vazio = document.createElement('option');
+                vazio.value = ''; vazio.textContent = 'Indisponível';
+                optSel.appendChild(vazio);
+                return;
+            }
+            var vazio = document.createElement('option');
+            vazio.value = ''; vazio.textContent = 'Selecione o destino…';
+            optSel.appendChild(vazio);
+            if (!resp.data.length) {
+                var tr0 = document.createElement('tr');
+                var td0 = document.createElement('td');
+                td0.colSpan = 4; td0.className = 'text-secondary small py-3';
+                td0.textContent = 'Nenhum destino catalogado.';
+                tr0.appendChild(td0); corpo.appendChild(tr0);
+                return;
+            }
+            resp.data.forEach(function (p) {
+                var opt = document.createElement('option');
+                opt.value = p.pais;
+                opt.textContent = p.nome + ' (' + p.pais + ') — ' + fmtPct(p.aliquota);
+                optSel.appendChild(opt);
+                var tr = document.createElement('tr');
+                var tdN = document.createElement('td'); tdN.className = 'small'; tdN.textContent = p.nome;
+                var tdI = document.createElement('td'); tdI.className = 'font-monospace small'; tdI.textContent = p.pais;
+                var tdA = document.createElement('td'); tdA.className = 'font-monospace small'; tdA.textContent = fmtPct(p.aliquota);
+                var tdF = document.createElement('td'); tdF.className = 'small text-secondary'; tdF.title = p.fonte; tdF.textContent = p.fonte.length > 60 ? p.fonte.substring(0, 60) + '…' : p.fonte;
+                tr.appendChild(tdN); tr.appendChild(tdI); tr.appendChild(tdA); tr.appendChild(tdF);
+                corpo.appendChild(tr);
+            });
+        }).catch(function () { });
+    }
+
+    // ---------------------------------------------------------------- faturas
+    function carregarFaturas() {
+        fetch('/VendasInternacionaisWeb/Faturas?limite=100').then(function (r) { return r.json(); }).then(function (resp) {
+            var optSel = sel('notaFaturaSel');
+            optSel.textContent = '';
+            if (!resp.ok) {
+                var vazio = document.createElement('option');
+                vazio.value = ''; vazio.textContent = resp.erro || 'Indisponível';
+                optSel.appendChild(vazio);
+                return;
+            }
+            var vazio = document.createElement('option');
+            vazio.value = ''; vazio.textContent = resp.data.length ? 'Selecione a fatura…' : 'Nenhuma fatura aberta/vencida';
+            optSel.appendChild(vazio);
+            resp.data.forEach(function (f) {
+                var opt = document.createElement('option');
+                opt.value = f.id;
+                opt.textContent = (f.vencimento ? 'venc. ' + fmtData(f.vencimento) + ' — ' : '') + fmtBrl(f.valorBrl) + ' — ' + (f.clienteNome || 'Cliente');
+                optSel.appendChild(opt);
+            });
+        }).catch(function () { });
+    }
+
+    // ---------------------------------------------------------------- notas
+    function paramsNota() {
+        var faturaId = sel('notaFaturaSel').value;
+        var pais = sel('notaPaisSel').value;
+        var moeda = sel('notaMoedaSel').value;
+        if (!faturaId) { limparStatus('notaStatus'); status('notaStatus', 'Selecione a fatura.', 'erro'); return null; }
+        if (!pais) { limparStatus('notaStatus'); status('notaStatus', 'Selecione o país de destino.', 'erro'); return null; }
+        return { faturaId: faturaId, paisDestino: pais, moeda: moeda };
+    }
+
+    function simularNota() {
+        limparStatus('notaStatus');
+        var payload = paramsNota();
+        if (!payload) return;
+        postJson('/VendasInternacionaisWeb/SimularNota', payload).then(function (resp) {
+            var box = sel('simBox');
+            if (!resp.ok) { box.classList.add('d-none'); status('notaStatus', resp.erro || 'Não foi possível simular a nota.', 'erro'); return; }
+            var d = resp.data;
+            box.classList.remove('d-none');
+            var corpo = sel('simTbody');
+            corpo.textContent = '';
+            var linhas = {
+                'Valor da fatura (moeda base)': fmtBrl(d.valorBrl),
+                'Cotação aplicada (BRL/' + d.moeda + ')': fmtTaxa(d.taxaAplicada) + ' de ' + fmtData(d.dataCotacao),
+                'Valor convertido em ' + d.moeda: fmtExt(d.valorMoeda, d.moeda),
+                'VAT de ' + d.paisNome + ' (' + d.paisDestino + ') ' + fmtPct(d.aliquota): fmtExt(d.valorVat, d.moeda),
+                'Total da nota em ' + d.moeda: fmtExt(d.totalMoeda, d.moeda)
+            };
+            Object.keys(linhas).forEach(function (rotulo) {
+                var tr = document.createElement('tr');
+                var tdR = document.createElement('td'); tdR.className = 'small text-secondary'; tdR.textContent = rotulo;
+                var tdV = document.createElement('td'); tdV.className = rotulo.indexOf('Total') === 0 ? 'font-monospace fw-bold' : 'font-monospace';
+                tdV.textContent = linhas[rotulo];
+                tr.appendChild(tdR); tr.appendChild(tdV);
+                corpo.appendChild(tr);
+            });
+            var fontes = sel('simFontes');
+            fontes.textContent = '';
+            d.fontes.forEach(function (f) {
+                var li = document.createElement('li');
+                li.textContent = f;
+                fontes.appendChild(li);
+            });
+            status('notaStatus', 'Simulação concluída para ' + d.paisNome + ' em ' + d.moeda + '.', 'ok');
+        }).catch(function () { status('notaStatus', 'Falha de conexão ao simular a nota.', 'erro'); });
+    }
+
+    function emitirNota() {
+        limparStatus('notaStatus');
+        var payload = paramsNota();
+        if (!payload) return;
+        postJson('/VendasInternacionaisWeb/EmitirNota', payload).then(function (resp) {
+            if (!resp.ok) { status('notaStatus', resp.erro || 'Não foi possível emitir a nota.', 'erro'); return; }
+            status('notaStatus', 'Nota internacional emitida.', 'ok');
+            carregarNotas();
+            carregarFaturas();
+        }).catch(function () { status('notaStatus', 'Falha de conexão ao emitir a nota.', 'erro'); });
+    }
+
+    function carregarNotas() {
+        fetch('/VendasInternacionaisWeb/Notas').then(function (r) { return r.json(); }).then(function (resp) {
+            var corpo = sel('notTbody');
+            corpo.textContent = '';
+            if (!resp.ok) {
+                var tr = document.createElement('tr');
+                var td = document.createElement('td');
+                td.colSpan = 8; td.className = 'text-warning small py-3';
+                td.textContent = resp.erro || 'Notas indisponíveis.';
+                tr.appendChild(td); corpo.appendChild(tr);
+                return;
+            }
+            if (!resp.data.length) {
+                var tr0 = document.createElement('tr');
+                var td0 = document.createElement('td');
+                td0.colSpan = 8; td0.className = 'text-secondary small py-3';
+                td0.textContent = 'Nenhuma nota internacional registrada ainda.';
+                tr0.appendChild(td0); corpo.appendChild(tr0);
+                return;
+            }
+            resp.data.forEach(function (n) {
+                var tr = document.createElement('tr');
+                var tdE = document.createElement('td'); tdE.className = 'small'; tdE.textContent = fmtData(n.dataEmisso);
+                var tdC = document.createElement('td'); tdC.className = 'small'; tdC.textContent = n.clienteNome || 'Cliente';
+                var tdD = document.createElement('td'); tdD.className = 'small'; tdD.textContent = n.paisNome + ' (' + n.paisDestino + ')';
+                var tdM = document.createElement('td'); tdM.className = 'font-monospace small'; tdM.title = 'base ' + fmtExt(n.valorMoeda, n.moeda) + ' + VAT ' + fmtExt(n.valorVat, n.moeda) + ' a taxa ' + fmtTaxa(n.taxaAplicada); tdM.textContent = n.moeda;
+                var tdB = document.createElement('td'); tdB.className = 'font-monospace small'; tdB.textContent = fmtBrl(n.valorBrl);
+                var tdT = document.createElement('td'); tdT.className = 'font-monospace small'; tdT.textContent = fmtExt(n.totalMoeda, n.moeda);
+                var tdS = document.createElement('td');
+                var badge = document.createElement('span');
+                badge.className = 'badge ' + (n.status === 'EMITIDA' ? 'text-success-emphasis' : 'text-secondary');
+                if (n.status !== 'EMITIDA') badge.title = n.motivoAnulacao || '';
+                badge.textContent = n.status === 'EMITIDA' ? 'Emitida' : 'Anulada';
+                tdS.appendChild(badge);
+                var tdA = document.createElement('td'); tdA.className = 'text-end';
+                if (n.status === 'EMITIDA') {
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'btn btn-outline-danger btn-sm js-anular-nota';
+                    btn.setAttribute('data-id', n.id);
+                    btn.setAttribute('aria-label', 'Anular nota de ' + (n.clienteNome || 'cliente') + ' em ' + n.moeda);
+                    btn.textContent = 'Anular';
+                    tdA.appendChild(btn);
+                }
+                tr.appendChild(tdE); tr.appendChild(tdC); tr.appendChild(tdD); tr.appendChild(tdM); tr.appendChild(tdB); tr.appendChild(tdT); tr.appendChild(tdS); tr.appendChild(tdA);
+                corpo.appendChild(tr);
+            });
+            window.querySelectorAll('.js-anular-nota').forEach(function (b) {
+                b.addEventListener('click', function () { abrirAnular(b.getAttribute('data-id')); });
+            });
+        }).catch(function () { });
+    }
+
+    // ---------------------------------------------------------------- modal de anulacao
+    var pendenteAnular = null;
+    function abrirAnular(id) {
+        pendenteAnular = id;
+        sel('anularMotivo').value = '';
+        if (window.bootstrap && window.bootstrap.Modal) bootstrap.Modal.getOrCreateInstance(sel('modalAnular')).show();
+    }
+
+    function confirmarAnulacao() {
+        var id = pendenteAnular;
+        if (!id) return;
+        var motivo = sel('anularMotivo').value.trim();
+        if (!motivo) { status('notasStatus', 'Informe o motivo da anulação.', 'erro'); return; }
+        pendenteAnular = null;
+        if (window.bootstrap && window.bootstrap.Modal) bootstrap.Modal.getOrCreateInstance(sel('modalAnular')).hide();
+        postJson('/VendasInternacionaisWeb/AnularNota', { id: id, motivo: motivo }).then(function (resp) {
+            if (!resp.ok) { status('notasStatus', resp.erro || 'Não foi possível anular a nota.', 'erro'); return; }
+            status('notasStatus', 'Nota anulada; a fatura voltou a estar disponível.', 'ok');
+            carregarNotas();
+        }).catch(function () { status('notasStatus', 'Falha ao anular a nota.', 'erro'); });
+    }
+
+    // ---------------------------------------------------------------- inicializacao
+    var hoje = new Date();
+    var mm = hoje.getMonth() + 1 < 10 ? '0' + (hoje.getMonth() + 1) : String(hoje.getMonth() + 1);
+    var dd = hoje.getDate() < 10 ? '0' + hoje.getDate() : String(hoje.getDate());
+    sel('cotData').value = hoje.getFullYear() + '-' + mm + '-' + dd;
+    carregarCotacoes();
+    carregarPaises();
+    carregarFaturas();
+    carregarNotas();
+    sel('cotSalvarBtn').addEventListener('click', registrarCotacao);
+    sel('simBtn').addEventListener('click', simularNota);
+    sel('emitirBtn').addEventListener('click', emitirNota);
+    sel('modalAnularOk').addEventListener('click', confirmarAnulacao);
+})();
+</script>
+}

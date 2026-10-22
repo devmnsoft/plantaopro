@@ -322,6 +322,9 @@
   <data name="Nav.ObrigacoesFiscais" xml:space="preserve">
     <value>Tax Calendar</value>
   </data>
+  <data name="Nav.DfeNacional" xml:space="preserve">
+    <value>National e-Invoices</value>
+  </data>
   <data name="Nav.Relatorios" xml:space="preserve">
     <value>Reports</value>
   </data>

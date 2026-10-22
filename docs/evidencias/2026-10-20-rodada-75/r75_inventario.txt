@@ -289,6 +289,7 @@ PAGINA|Developer|Index|B2BLaunch/Index|ARQ_OK|LIT|
 PAGINA|Developer|RateLimits|B2BLaunch/Index|ARQ_OK|LIT|
 PAGINA|Developer|Uso|B2BLaunch/Index|ARQ_OK|LIT|
 PAGINA|Developer|Webhooks|B2BLaunch/Index|ARQ_OK|LIT|
+PAGINA|DfeNacionalWeb|Index|DfeNacionalWeb/Index|ARQ_OK|NOME|
 PAGINA|Error|Error|Shared/Error|ARQ_OK|LIT|
 PAGINA|Escalas|Details|Escalas/Details|ARQ_OK|NOME|
 PAGINA|Escalas|Index|Escalas/Index|ARQ_OK|NOME via RenderPaged|
@@ -732,6 +733,7 @@ ARTIGO|id=adm-matriz-permissoes|Permissoes/Matriz|titulo=Como consultar a matriz
 ARTIGO|id=adm-folha-calculos|FolhaWeb/Index|titulo=Como simular folha, 13º, férias e rescisão em linguagem simples
 ARTIGO|id=adm-simples-nacional|SimplesWeb/Index|titulo=Como prever o DAS do Simples Nacional com as tabelas oficiais
 ARTIGO|id=adm-calendario-fiscal|CalendarioFiscalWeb/Index|titulo=Como acompanhar as obrigações fiscais do mês no calendário
+ARTIGO|id=adm-dfe-nacional|DfeNacionalWeb/Index|titulo=Como gerar e conferir a chave de acesso dos DF-e
 ARTIGO|id=central-fatura|MinhaCentral/Index|titulo=Como resolver fatura vencida
 ARTIGO|id=central-notificacoes|Notificacoes/Preferencias|titulo=Como configurar notificações
 ARTIGO|id=cad-empresa|Cadastro/Empresa|titulo=Como começar o cadastro da instituição
@@ -1053,6 +1055,7 @@ SEM_ARTIGO|Developer|Index
 SEM_ARTIGO|Developer|RateLimits
 SEM_ARTIGO|Developer|Uso
 SEM_ARTIGO|Developer|Webhooks
+COBERTA|DfeNacionalWeb|Index|artigo adm-dfe-nacional
 SEM_ARTIGO|Error|Error
 SEM_ARTIGO|Escalas|Details
 COBERTA|Escalas|Index|artigo hospital-escalas
@@ -1440,5 +1443,5 @@ POTE_QUEBRA|WorkflowSaude360|Index|WorkflowSaude360/Index|pagina GET sem arquivo
 POTE_QUEBRA|WorkflowSaude360|ProximaAcao|WorkflowSaude360/ProximaAcao|pagina GET sem arquivo resolvido
 ACO_AUX|WorkflowSaude360|Salvar|WorkflowSaude360/Salvar|submissao dinamica ou helper herdado
 
-RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=677|FILE_OK=619|ARTIGOS=85|COBERTAS=83|FORA_ESCOPO=19|GAP_SEM_ARTIGO=517|ACO_AUX=29|POTE_QUEBRA=29
+RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=678|FILE_OK=620|ARTIGOS=86|COBERTAS=84|FORA_ESCOPO=19|GAP_SEM_ARTIGO=517|ACO_AUX=29|POTE_QUEBRA=29
 ARTIGOS_ORFAOS=NENHUM

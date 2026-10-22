@@ -1,0 +1,345 @@
+@{
+    ViewData["Title"] = "DF-e Nacional";
+}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h4 class="mb-1 text-light">DF-e nacional em linguagem simples</h4>
+            <p class="text-secondary small mb-0">Veja a configuração SEFAZ de cada UF, os layouts oficiais vigentes e gere ou confira a chave de acesso de 44 dígitos com o dígito verificador módulo 11.</p>
+        </div>
+        <a asp-action="Index" asp-controller="Administrativo360" class="btn btn-sm btn-outline-secondary">Voltar ao Administrativo 360</a>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xxl-8 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Gerar chave de acesso</div>
+                <div class="card-body">
+                    <div class="row g-2 mb-2">
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="dfUf">UF de emissão</label>
+                            <select class="form-select form-select-sm" id="dfUf">
+                                <option value="">Carregando UFs…</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="dfData">Data de emissão</label>
+                            <input type="date" class="form-control form-control-sm" id="dfData" />
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="dfRegistro">CNPJ ou CPF do emitente</label>
+                            <input type="text" class="form-control form-control-sm" id="dfRegistro" placeholder="somente dígitos" maxlength="18" />
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="dfModelo">Modelo fiscal</label>
+                            <select class="form-select form-select-sm" id="dfModelo">
+                                <option value="55">NF-e (modelo 55)</option>
+                                <option value="65">NFC-e (modelo 65)</option>
+                                <option value="59">CF-e SAT (modelo 59)</option>
+                                <option value="67">CF-e Serviços (modelo 67)</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-2">
+                            <label class="form-label small" for="dfSerie">Série</label>
+                            <input type="number" min="1" max="999" step="1" class="form-control form-control-sm" id="dfSerie" value="1" />
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="dfNumero">Número da nota</label>
+                            <input type="number" min="1" max="999999999" step="1" class="form-control form-control-sm" id="dfNumero" value="1" />
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="dfTipo">Tipo de emissão</label>
+                            <select class="form-select form-select-sm" id="dfTipo">
+                                <option value="1">Normal (1)</option>
+                                <option value="2">Contingência EPEC (2)</option>
+                                <option value="3">FS-DA (3)</option>
+                                <option value="4">Off-line (4)</option>
+                                <option value="5">SVRS (5)</option>
+                                <option value="6">SVC-AN (6)</option>
+                                <option value="7">SVC-RS (7)</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label small" for="dfCodigo">Código numérico aleatório (CNF)</label>
+                            <input type="number" min="0" max="99999999" step="1" class="form-control form-control-sm" id="dfCodigo" />
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm" id="dfGerarBtn">Gerar chave</button>
+                    <div class="df-status alert alert-sm py-2 d-none mt-2" role="status" id="dfGerarStatus"></div>
+                    <div class="d-none mt-3" id="dfGerarResultado">
+                        <label class="form-label small" for="dfGerarChave">Chave de acesso gerada (44 dígitos)</label>
+                        <div class="font-monospace fs-6 p-2 rounded bg-black bg-opacity-50 break-all" id="dfGerarChave"></div>
+                        <p class="small text-secondary mt-2" id="dfGerarDetalhe"></p>
+                        <div data-alvo="gerar-segmentos" class="mt-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-dark border-secondary text-light mt-3 h-100">
+                <div class="card-header bg-dark border-secondary">Validar chave recebida</div>
+                <div class="card-body">
+                    <p class="small text-secondary">Cole aqui a chave de um documento recebido (nota de fornecedor, consulta pública) para conferir o dígito verificador, a UF de origem e as faixas dos segmentos.</p>
+                    <label class="form-label small" for="dfChave">Chave de acesso (44 dígitos numéricos)</label>
+                    <div class="row g-2">
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control font-monospace" id="dfChave" maxlength="44" placeholder="44 dígitos numéricos" />
+                        </div>
+                        <div class="col-sm-4 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary btn-sm w-100" id="dfValidarBtn">Conferir chave</button>
+                        </div>
+                    </div>
+                    <div class="df-status alert alert-sm py-2 d-none mt-2" role="status" id="dfValidarStatus"></div>
+                    <p class="small text-secondary d-none mt-2" id="dfValidarDetalhe"></p>
+                    <div data-alvo="validar-segmentos" class="mt-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xxl-4 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Em linguagem simples</div>
+                <div class="card-body small text-secondary">
+                    <p class="mb-2">A <strong>chave de acesso</strong> é o identificador único do documento fiscal eletrônico: 44 dígitos que concentram quem emitiu, onde, quando e qual é o número do documento. Ela aparece no XML, na URL de consulta pública e no comprovante.</p>
+                    <ul class="ps-3 mb-2">
+                        <li><strong>Estrutura</strong> — UF (código oficial cUF), ano e mês de emissão, CNPJ/CPF do emitente, modelo fiscal, série, número da nota, tipo de emissão e um código numérico aleatório sorteado pelo emitente.</li>
+                        <li><strong>Dígito verificador (DV)</strong> — o 44º dígito fecha a chave: calcula-se a soma ponderada dos 43 primeiros com pesos de 2 a 9 (da direita para a esquerda, reiniciando em 2). Se o resto da divisão por 11 for 0 ou 1, o DV vale 0; caso contrário, vale 11 menos o resto.</li>
+                        <li><strong>DV por UF</strong> — o código da UF faz parte do corpo sobre o qual o DV é calculado: trocar o estado muda o corpo e, com ele, o dígito verificador. Por isso a validação confere também se a UF está no catálogo oficial SEFAZ e se apoia aquele modelo fiscal.</li>
+                        <li><strong>Ambientes SAT</strong> — em alguns estados (como Acre, Amapá, Ceará, Pará, Paraíba, Pernambuco e Roraima) o documento para consumidor final é o CF-e SAT, não a NFC-e: a tabela abaixo mostra o que cada UF apoia.</li>
+                    </ul>
+                    <p class="mb-0"><em>Ferramenta interna de conferência e planejamento: a geração/validação da chave reproduz a aritmética oficial, mas não substitui o fluxo de autorização junto à SEFAZ nem a homologação externa do sistema emissor.</em></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xxl-7">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Configuração SEFAZ por UF</div>
+                <div class="card-body">
+                    <div data-alvo="uf-tabela" class="table-responsive"><p class="small text-secondary">Carregando catálogo das 27 UFs…</p></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-5">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Layouts oficiais vigentes</div>
+                <div class="card-body">
+                    <div data-alvo="layout-tabela"><p class="small text-secondary">Carregando versões oficiais…</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    function sel(id) { return document.getElementById(id); }
+
+    function status(id, texto, tipo) {
+        var bar = sel(id);
+        bar.classList.remove('d-none', 'alert-success', 'alert-danger');
+        bar.classList.add(tipo === 'erro' ? 'alert-danger' : 'alert-success');
+        bar.textContent = texto;
+    }
+
+    function rotuloDocumento(d) {
+        if (d === 'NFE') return 'NF-e';
+        if (d === 'NFC-E') return 'NFC-e';
+        if (d === 'CFE_SAT') return 'CF-e SAT';
+        if (d === 'CFE_SERVICOS') return 'CF-e Serviços';
+        return d;
+    }
+
+    function classeDocumento(d) {
+        if (d === 'CFE_SAT') return 'text-bg-warning';
+        if (d === 'NFC-E') return 'text-bg-info';
+        if (d === 'CFE_SERVICOS') return 'text-bg-dark';
+        return 'text-bg-primary';
+    }
+
+    function cabecalhoTabela(tb, titulos, centro) {
+        var cab = tb.createTHead();
+        var trh = document.createElement('tr');
+        titulos.forEach(function (t, i) {
+            var th = document.createElement('th');
+            th.scope = 'col';
+            th.className = 'small' + (centro.indexOf(i) >= 0 ? ' text-center' : '');
+            th.textContent = t;
+            trh.appendChild(th);
+        });
+        cab.appendChild(trh);
+    }
+
+    function tabelaBasis(alvo, titulos, centro) {
+        var alcance = document.querySelector('[data-alvo="' + alvo + '"]');
+        alcance.textContent = '';
+        var tb = document.createElement('table');
+        tb.className = 'table table-sm table-dark table-hover align-middle mb-0';
+        tb.setAttribute('role', 'table');
+        cabecalhoTabela(tb, titulos, centro);
+        alcance.appendChild(tb);
+        return tb.createTBody();
+    }
+
+    function renderUfs(data) {
+        var ufSelect = sel('dfUf');
+        ufSelect.textContent = '';
+        var vazio = document.createElement('option');
+        vazio.value = '';
+        vazio.textContent = 'Selecione a UF…';
+        ufSelect.appendChild(vazio);
+
+        var corpo = tabelaBasis('uf-tabela', ['UF', 'cUF', 'Documentos apoiados'], [1]);
+        data.forEach(function (uf) {
+            var tr = document.createElement('tr');
+            var tdUf = document.createElement('td');
+            tdUf.textContent = uf.uf;
+            var tdCuf = document.createElement('td');
+            tdCuf.className = 'text-center font-monospace';
+            tdCuf.textContent = String(uf.cuf).padStart(2, '0');
+            var tdDocs = document.createElement('td');
+            uf.documentosApoiados.forEach(function (d) {
+                var badge = document.createElement('span');
+                badge.className = 'badge me-1 ' + classeDocumento(d);
+                badge.textContent = rotuloDocumento(d);
+                tdDocs.appendChild(badge);
+            });
+            tr.appendChild(tdUf);
+            tr.appendChild(tdCuf);
+            tr.appendChild(tdDocs);
+            corpo.appendChild(tr);
+            var opt = document.createElement('option');
+            opt.value = uf.uf;
+            opt.textContent = uf.uf + ' — cUF ' + String(uf.cuf).padStart(2, '0');
+            ufSelect.appendChild(opt);
+        });
+    }
+
+    function renderLayouts(data) {
+        var corpo = tabelaBasis('layout-tabela', ['Documento', 'Versão', 'Fonte oficial'], [1]);
+        data.forEach(function (l) {
+            var tr = document.createElement('tr');
+            var tdNome = document.createElement('td');
+            tdNome.textContent = l.nome;
+            var tdVersao = document.createElement('td');
+            tdVersao.className = 'text-center font-monospace';
+            tdVersao.textContent = l.versao;
+            var tdFonte = document.createElement('td');
+            tdFonte.className = 'small text-secondary';
+            tdFonte.textContent = l.fonteOficial;
+            tr.appendChild(tdNome);
+            tr.appendChild(tdVersao);
+            tr.appendChild(tdFonte);
+            corpo.appendChild(tr);
+        });
+    }
+
+    function renderSegmentos(alvo, segmentos) {
+        var corpo = tabelaBasis(alvo, ['Segmento', 'Valor'], []);
+        segmentos.forEach(function (s) {
+            var tr = document.createElement('tr');
+            var tdNome = document.createElement('td');
+            tdNome.textContent = s.nome;
+            tdNome.className = 'small';
+            var tdValor = document.createElement('td');
+            tdValor.className = 'font-monospace';
+            tdValor.textContent = s.valor;
+            tr.appendChild(tdNome);
+            tr.appendChild(tdValor);
+            corpo.appendChild(tr);
+        });
+    }
+
+    function carregarCatalogo() {
+        fetch('/DfeNacionalWeb/Ufs').then(function (r) { return r.json(); }).then(function (resp) {
+            if (!resp.ok) {
+                document.querySelector('[data-alvo="uf-tabela"]').textContent = resp.erro || 'Não foi possível carregar o catálogo de UFs.';
+                sel('dfUf').textContent = 'UF indisponível';
+                return;
+            }
+            renderUfs(resp.data);
+        }).catch(function () {
+            document.querySelector('[data-alvo="uf-tabela"]').textContent = 'Falha de conexão ao carregar o catálogo de UFs.';
+        });
+        fetch('/DfeNacionalWeb/Layouts').then(function (r) { return r.json(); }).then(function (resp) {
+            if (!resp.ok) {
+                document.querySelector('[data-alvo="layout-tabela"]').textContent = resp.erro || 'Não foi possível carregar os layouts oficiais.';
+                return;
+            }
+            renderLayouts(resp.data);
+        }).catch(function () {
+            document.querySelector('[data-alvo="layout-tabela"]').textContent = 'Falha de conexão ao carregar os layouts oficiais.';
+        });
+    }
+
+    function enviarGerar() {
+        var uf = sel('dfUf').value;
+        var data = sel('dfData').value;
+        var registro = sel('dfRegistro').value.trim();
+        if (!uf) { status('dfGerarStatus', 'Selecione a UF de emissão antes de gerar a chave.', 'erro'); return; }
+        if (!data) { status('dfGerarStatus', 'Informe a data de emissão antes de gerar a chave.', 'erro'); return; }
+        if (!registro) { status('dfGerarStatus', 'Informe o CNPJ (14 dígitos) ou CPF (11 dígitos) do emitente.', 'erro'); return; }
+
+        var payload = {
+            uf: uf,
+            dataEmissao: data,
+            registroCnpjCpf: registro,
+            modulo: Number(sel('dfModelo').value),
+            serie: Number(sel('dfSerie').value),
+            numeroNota: Number(sel('dfNumero').value),
+            tipoEmissao: Number(sel('dfTipo').value),
+            codigoNumerico: Number(sel('dfCodigo').value)
+        };
+        fetch('/DfeNacionalWeb/GerarChave', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            .then(function (r) { return r.json(); })
+            .then(function (resp) {
+                sel('dfGerarResultado').classList.add('d-none');
+                if (!resp.ok) { status('dfGerarStatus', resp.erro || 'Não foi possível gerar a chave.', 'erro'); return; }
+                if (!resp.data.valida) {
+                    status('dfGerarStatus', resp.data.erros.join(' '), 'erro');
+                    return;
+                }
+                status('dfGerarStatus', 'Chave gerada e conferida pelo módulo 11: todos os segmentos estão na faixa oficial.', 'ok');
+                sel('dfGerarChave').textContent = resp.data.chave.chave;
+                sel('dfGerarDetalhe').textContent = resp.data.detalheCalculo;
+                renderSegmentos('gerar-segmentos', resp.data.chave.segmentos);
+                sel('dfGerarResultado').classList.remove('d-none');
+            })
+            .catch(function () { status('dfGerarStatus', 'Falha de conexão ao gerar a chave. Tente novamente.', 'erro'); });
+    }
+
+    function enviarValidar() {
+        var chave = sel('dfChave').value.trim();
+        if (!chave) { status('dfValidarStatus', 'Cole a chave de acesso (44 dígitos) antes de conferir.', 'erro'); return; }
+        fetch('/DfeNacionalWeb/ValidarChave', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chave: chave }) })
+            .then(function (r) { return r.json(); })
+            .then(function (resp) {
+                document.querySelector('[data-alvo="validar-segmentos"]').textContent = '';
+                sel('dfValidarDetalhe').classList.add('d-none');
+                if (!resp.ok) { status('dfValidarStatus', resp.erro || 'Não foi possível validar a chave.', 'erro'); return; }
+                if (!resp.data.valida) {
+                    status('dfValidarStatus', resp.data.erros.join(' '), 'erro');
+                    if (resp.data.detalheCalculo) {
+                        sel('dfValidarDetalhe').textContent = resp.data.detalheCalculo;
+                        sel('dfValidarDetalhe').classList.remove('d-none');
+                    }
+                    return;
+                }
+                status('dfValidarStatus', 'Chave válida: dígito verificador confere, a UF está no catálogo SEFAZ e apoia o modelo desta chave.', 'ok');
+                sel('dfValidarDetalhe').textContent = resp.data.detalheCalculo;
+                sel('dfValidarDetalhe').classList.remove('d-none');
+                renderSegmentos('validar-segmentos', resp.data.chave.segmentos);
+            })
+            .catch(function () { status('dfValidarStatus', 'Falha de conexão ao validar a chave. Tente novamente.', 'erro'); });
+    }
+
+    sel('dfData').value = new Date().toISOString().slice(0, 10);
+    sel('dfCodigo').value = String(Math.floor(10000000 + Math.random() * 90000000));
+    sel('dfGerarBtn').addEventListener('click', enviarGerar);
+    sel('dfValidarBtn').addEventListener('click', enviarValidar);
+    carregarCatalogo();
+})();
+</script>
+}

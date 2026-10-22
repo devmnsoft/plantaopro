@@ -79,6 +79,7 @@
             @if (Can("ADM360")) { <a class="nav-link-app @Active("FolhaWeb")" asp-controller="FolhaWeb" asp-action="Index"><app-icon name="Reception" size="19" /><span>@UiText.L("Nav.FolhaCalculos")</span></a> }
             @if (Can("ADM360")) { <a class="nav-link-app @Active("SimplesWeb")" asp-controller="SimplesWeb" asp-action="Index"><app-icon name="Print" size="19" /><span>@UiText.L("Nav.SimplesNacional")</span></a> }
             @if (Can("ADM360")) { <a class="nav-link-app @Active("CalendarioFiscalWeb")" asp-controller="CalendarioFiscalWeb" asp-action="Index"><app-icon name="Favorite" size="19" /><span>@UiText.L("Nav.ObrigacoesFiscais")</span></a> }
+            @if (Can("ADM360")) { <a class="nav-link-app @Active("DfeNacionalWeb")" asp-controller="DfeNacionalWeb" asp-action="Index"><app-icon name="Upload" size="19" /><span>@UiText.L("Nav.DfeNacional")</span></a> }
             @if (Can("RELATORIOS")) { <a class="nav-link-app @Active("Relatorios")" asp-controller="Relatorios" asp-action="Index"><app-icon name="Report" size="19" /><span>@UiText.L("Nav.Relatorios")</span></a> }
             @if (Can("MEDICOS")) { <a class="nav-link-app @Active("Medicos")" asp-controller="Medicos" asp-action="Index"><app-icon name="Doctor" size="19" /><span>@UiText.L("Nav.Profissionais")</span></a> }
             @if (Can("HOSPITAIS")) { <a class="nav-link-app @Active("Hospitais")" asp-controller="Hospitais" asp-action="Index"><app-icon name="Hospital" size="19" /><span>@UiText.L("Nav.Unidades")</span></a> }

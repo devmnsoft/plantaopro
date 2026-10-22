@@ -374,6 +374,7 @@ PAGINA|JornadaClientes|Details|JornadaClientes/Details|ARQ_OK|NOME|
 PAGINA|JornadaClientes|Funil|JornadaClientes/Funil|ARQ_OK|NOME|
 PAGINA|JornadaClientes|Index|JornadaClientes/Index|ARQ_OK|NOME|
 PAGINA|JornadaClientes|Tarefas|JornadaClientes/Tarefas|ARQ_OK|NOME|
+PAGINA|LegislacaoWeb|Index|LegislacaoWeb/Index|ARQ_OK|NOME|
 PAGINA|Lgpd|Consentimentos|Lgpd/Consentimentos|ARQ_OK|NOME|
 PAGINA|Lgpd|ConsentimentosSaude|Lgpd/ConsentimentosSaude|ARQ_OK|NOME|
 PAGINA|Lgpd|Eventos|Lgpd/Eventos|ARQ_OK|NOME|
@@ -742,6 +743,7 @@ ARTIGO|id=adm-dfe-nacional|DfeNacionalWeb/Index|titulo=Como gerar e conferir a c
 ARTIGO|id=adm-trilhos-pagamento|TrilhosPagamentoWeb/Index|titulo=Como configurar e gerar os trilhos de pagamento
 ARTIGO|id=adm-esocial-trabalho|EsocialTrabalhoWeb/Index|titulo=Como acompanhar eventos eSocial, jornada e aviso prévio dos colaboradores
 ARTIGO|id=adm-vendas-internacionais|VendasInternacionaisWeb/Index|titulo=Como faturar vendas para fora do país com cotações e VAT por destino
+ARTIGO|id=adm-parametros-legais|LegislacaoWeb/Index|titulo=Como consultar a bateria de parâmetros legais travada para 2026
 ARTIGO|id=central-fatura|MinhaCentral/Index|titulo=Como resolver fatura vencida
 ARTIGO|id=central-notificacoes|Notificacoes/Preferencias|titulo=Como configurar notificações
 ARTIGO|id=cad-empresa|Cadastro/Empresa|titulo=Como começar o cadastro da instituição
@@ -1148,6 +1150,7 @@ SEM_ARTIGO|JornadaClientes|Details
 SEM_ARTIGO|JornadaClientes|Funil
 SEM_ARTIGO|JornadaClientes|Index
 SEM_ARTIGO|JornadaClientes|Tarefas
+COBERTA|LegislacaoWeb|Index|artigo adm-parametros-legais
 SEM_ARTIGO|Lgpd|Consentimentos
 COBERTA|Lgpd|ConsentimentosSaude|artigo lgpd-saude-consentimentos
 SEM_ARTIGO|Lgpd|Eventos
@@ -1455,5 +1458,5 @@ POTE_QUEBRA|WorkflowSaude360|Index|WorkflowSaude360/Index|pagina GET sem arquivo
 POTE_QUEBRA|WorkflowSaude360|ProximaAcao|WorkflowSaude360/ProximaAcao|pagina GET sem arquivo resolvido
 ACO_AUX|WorkflowSaude360|Salvar|WorkflowSaude360/Salvar|submissao dinamica ou helper herdado
 
-RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=682|FILE_OK=624|ARTIGOS=90|COBERTAS=88|FORA_ESCOPO=19|GAP_SEM_ARTIGO=517|ACO_AUX=29|POTE_QUEBRA=29
+RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=683|FILE_OK=625|ARTIGOS=91|COBERTAS=89|FORA_ESCOPO=19|GAP_SEM_ARTIGO=517|ACO_AUX=29|POTE_QUEBRA=29
 ARTIGOS_ORFAOS=NENHUM

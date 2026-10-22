@@ -316,6 +316,9 @@
   <data name="Nav.FolhaCalculos" xml:space="preserve">
     <value>Nómina y Rescisión</value>
   </data>
+  <data name="Nav.BateriaLegal" xml:space="preserve">
+    <value>Parámetros Legales</value>
+  </data>
   <data name="Nav.SimplesNacional" xml:space="preserve">
     <value>Régimen Simplificado</value>
   </data>

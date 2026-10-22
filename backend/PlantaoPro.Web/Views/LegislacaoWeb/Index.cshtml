@@ -1,0 +1,195 @@
+@{
+    ViewData["Title"] = "Parâmetros Legais";
+}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h4 class="mb-1 text-light">Parâmetros legais 2026</h4>
+            <p class="text-secondary small mb-0">Bateria de contratos legais travada na fonte única: cada valor tem fonte oficial citável e vigência. Somente leitura — novos valores entram por migração versionada.</p>
+        </div>
+        <a asp-action="Index" asp-controller="FolhaWeb" class="btn btn-sm btn-outline-secondary">Voltar à Folha e Rescisões</a>
+    </div>
+
+    <div class="alert alert-info py-2 small mb-3" role="note" id="bateriaResumo">
+        Carregando a bateria de parâmetros…
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xxl-8 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Bateria travada por tema</div>
+                <div class="card-body">
+                    <p class="small text-secondary mb-2">O valor aparece no texto canônico (ponto decimal para numérico, dígitos puros para dias). A fonte oficial completa fica no balão ao passar o mouse.</p>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr class="text-secondary">
+                                    <th scope="col">Código</th><th scope="col">Valor</th><th scope="col">Vigência</th><th scope="col" class="w-1">Fonte oficial</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batTbody">
+                                <tr><td colspan="4" class="text-secondary small py-3">Carregando bateria…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xxl-4 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Exemplos reais de cálculo</div>
+                <div class="card-body">
+                    <p class="small text-secondary mb-2">Três cenários oficiais passam pelo serviço de tributação PF com os mesmos vetores travados aqui: salário mínimo, teto de contribuição e salário de 5.000,00.</p>
+                    <div class="st-status alert alert-sm py-2 d-none mb-2" role="status" id="exStatus"></div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr class="text-secondary">
+                                    <th scope="col">Cenário</th><th scope="col">Bruto</th><th scope="col">INSS</th><th scope="col">IRRF</th><th scope="col">Líquido</th>
+                                </tr>
+                            </thead>
+                            <tbody id="exTbody">
+                                <tr><td colspan="5" class="text-secondary small py-3">Carregando exemplos…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    function sel(id) { return document.getElementById(id); }
+
+    function statusEx(texto, tipo) {
+        var bar = sel('exStatus');
+        bar.classList.remove('d-none', 'alert-success', 'alert-danger');
+        bar.classList.add(tipo === 'erro' ? 'alert-danger' : 'alert-success');
+        bar.textContent = texto;
+    }
+
+    function fmtData(s) {
+        if (!s) return '';
+        var p = s.substring(0, 10).split('-');
+        if (p.length !== 3) return s;
+        return p[2] + '/' + p[1] + '/' + p[0];
+    }
+
+    function fmtBrl(v) {
+        var p = (Math.round(Number(v) * 100) / 100).toFixed(2).split('.');
+        return 'R$ ' + p[0] + ',' + p[1];
+    }
+
+    function linha(tbody, celulas) {
+        var tr = document.createElement('tr');
+        celulas.forEach(function (c) {
+            var td = document.createElement('td');
+            if (c.classe) td.className = c.classe;
+            if (c.titulo) td.title = c.titulo;
+            td.textContent = c.texto;
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    }
+
+    // ------------------------------------------------------------------ bateria
+    function carregarBateria() {
+        fetch('/LegislacaoWeb/Bateria').then(function (r) { return r.json(); }).then(function (resp) {
+            var resumo = sel('bateriaResumo');
+            var corpo = sel('batTbody');
+            corpo.textContent = '';
+            if (!resp.ok) {
+                resumo.classList.remove('alert-info');
+                resumo.classList.add('alert-warning');
+                resumo.textContent = resp.erro || 'Bateria indisponível.';
+                linha(corpo, [{ texto: 'Bateria indisponível no momento.', classe: 'text-warning small py-3' }]);
+                return;
+            }
+            var grupos = resp.data.grupos || [];
+            var total = resp.data.totalParametros || 0;
+            resumo.textContent = total + ' parâmetros ativos em 2026, agrupados em ' + grupos.length + ' temas — todos com fonte oficial citável e vigência travada.';
+            grupos.forEach(function (g) {
+                var cab = document.createElement('tr');
+                cab.className = 'bg-secondary bg-opacity-25';
+                var tdc = document.createElement('td');
+                tdc.colSpan = 4;
+                tdc.className = 'small fw-semibold text-uppercase py-1';
+                tdc.textContent = g.temaRotulo;
+                cab.appendChild(tdc);
+                corpo.appendChild(cab);
+                if (!g.parametros.length) {
+                    linha(corpo, [{ texto: 'Nenhum parâmetro ativo para o filtro.', classe: 'text-secondary small' }]);
+                    return;
+                }
+                g.parametros.forEach(function (p) {
+                    var vig = (p.vigenciaInicio && p.vigenciaFim) ? (fmtData(p.vigenciaInicio) + ' a ' + fmtData(p.vigenciaFim)) : 'fixo (sem vigência)';
+                    var fonte = p.fonteOficial || '';
+                    linha(corpo, [
+                        { texto: p.codigo, classe: 'font-monospace small' },
+                        { texto: p.valor, classe: 'font-monospace small' },
+                        { texto: vig, classe: 'small' },
+                        { texto: fonte.length > 90 ? fonte.substring(0, 90) + '…' : fonte, titulo: fonte, classe: 'small text-secondary' }
+                    ]);
+                });
+            });
+        }).catch(function () {
+            sel('batTbody').textContent = '';
+            linha(sel('batTbody'), [{ texto: 'Falha de conexão ao carregar a bateria.', classe: 'text-danger small py-3' }]);
+        });
+    }
+
+    // ------------------------------------------------------------------- exemplos
+    function calcular(bruto) {
+        return fetch('/LegislacaoWeb/TributacaoCalcular', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ salarioBruto: bruto, ano: null }) })
+            .then(function (r) { return r.json(); });
+    }
+
+    function carregarExemplos() {
+        fetch('/LegislacaoWeb/TributacaoTabela').then(function (r) { return r.json(); }).then(function (resp) {
+            if (!resp.ok) {
+                sel('exTbody').textContent = '';
+                linha(sel('exTbody'), [{ texto: resp.erro || 'Tabela indisponível.', classe: 'text-warning small py-3' }]);
+                return;
+            }
+            var minimo = Number(resp.data.salarioMinimo);
+            var teto = Number(resp.data.tetoInss);
+            Promise.all([calcular(minimo), calcular(teto), calcular(5000.0)])
+                .then(function (resps) {
+                    var corpo = sel('exTbody');
+                    corpo.textContent = '';
+                    var nomes = ['Salário mínimo (trava)', 'Teto de contribuição (trava)', 'Salário 5.000,00 (trava)'];
+                    resps.forEach(function (r, i) {
+                        if (!r.ok) {
+                            linha(corpo, [{ texto: nomes[i], classe: 'small' }, { texto: '', classe: '' }, { texto: r.erro || 'indisponível', classe: 'text-warning small', titulo: r.erro || '' }, { texto: '', classe: '' }, { texto: '', classe: '' }]);
+                            return;
+                        }
+                        var d = r.data;
+                        linha(corpo, [
+                            { texto: nomes[i], classe: 'small' },
+                            { texto: fmtBrl(d.salarioBruto), classe: 'font-monospace small' },
+                            { texto: fmtBrl(d.inss), classe: 'font-monospace small' },
+                            { texto: fmtBrl(d.irrf), classe: 'font-monospace small' },
+                            { texto: fmtBrl(d.salarioLiquido), classe: 'font-monospace small' }
+                        ]);
+                    });
+                    statusEx('Exemplos calculados com os vetores oficiais travados.', 'ok');
+                })
+                .catch(function () {
+                    sel('exTbody').textContent = '';
+                    linha(sel('exTbody'), [{ texto: 'Falha de conexão ao calcular os exemplos.', classe: 'text-danger small py-3' }]);
+                });
+        }).catch(function () {
+            sel('exTbody').textContent = '';
+            linha(sel('exTbody'), [{ texto: 'Falha de conexão ao carregar a tabela.', classe: 'text-danger small py-3' }]);
+        });
+    }
+
+    carregarBateria();
+    carregarExemplos();
+})();
+</script>
+}

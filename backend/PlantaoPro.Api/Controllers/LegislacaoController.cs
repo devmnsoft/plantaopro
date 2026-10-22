@@ -17,16 +17,24 @@ public sealed class LegislacaoController : ControllerBase
 {
     private readonly IParametrosLegaisRepository repository;
     private readonly ITributacaoPfService tributacao;
+    private readonly IBateriaLegalService bateria;
 
-    public LegislacaoController(IParametrosLegaisRepository repository, ITributacaoPfService tributacao)
+    public LegislacaoController(IParametrosLegaisRepository repository, ITributacaoPfService tributacao, IBateriaLegalService bateria)
     {
         this.repository = repository;
         this.tributacao = tributacao;
+        this.bateria = bateria;
     }
 
     [HttpGet]
     public async Task<IActionResult> Listar([FromQuery] int? ano, CancellationToken ct) =>
         Ok(await repository.ListarAtivosAsync(ano, ct));
+
+    // R90: bateria de contratos legais - todos os parametros ativos do ano agrupados
+    // por tema (rota literal precede a parametrica {codigo}).
+    [HttpGet("bateria")]
+    public async Task<IActionResult> Bateria([FromQuery] int? ano, CancellationToken ct) =>
+        Ok(await bateria.ObterBateriaAsync(ano, ct));
 
     [HttpGet("{codigo}")]
     public async Task<IActionResult> Obter(string codigo, [FromQuery] int? ano, CancellationToken ct)

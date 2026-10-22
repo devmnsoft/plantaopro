@@ -77,6 +77,7 @@
             <div class="nav-section-title"><span>@UiText.L("Nav.SectionClientAdmin")</span></div>
             @if (Can("ADM360")) { <a class="nav-link-app @Active("Administrativo360")" asp-controller="Administrativo360" asp-action="Index"><app-icon name="More" size="19" /><span>@UiText.L("Nav.Administrativo360")</span></a> }
             @if (Can("ADM360")) { <a class="nav-link-app @Active("FolhaWeb")" asp-controller="FolhaWeb" asp-action="Index"><app-icon name="Reception" size="19" /><span>@UiText.L("Nav.FolhaCalculos")</span></a> }
+            @if (Can("ADM360")) { <a class="nav-link-app @Active("LegislacaoWeb")" asp-controller="LegislacaoWeb" asp-action="Index"><app-icon name="Edit" size="19" /><span>@UiText.L("Nav.BateriaLegal")</span></a> }
             @if (Can("ADM360")) { <a class="nav-link-app @Active("SimplesWeb")" asp-controller="SimplesWeb" asp-action="Index"><app-icon name="Print" size="19" /><span>@UiText.L("Nav.SimplesNacional")</span></a> }
             @if (Can("ADM360")) { <a class="nav-link-app @Active("CalendarioFiscalWeb")" asp-controller="CalendarioFiscalWeb" asp-action="Index"><app-icon name="Favorite" size="19" /><span>@UiText.L("Nav.ObrigacoesFiscais")</span></a> }
             @if (Can("ADM360")) { <a class="nav-link-app @Active("DfeNacionalWeb")" asp-controller="DfeNacionalWeb" asp-action="Index"><app-icon name="Upload" size="19" /><span>@UiText.L("Nav.DfeNacional")</span></a> }

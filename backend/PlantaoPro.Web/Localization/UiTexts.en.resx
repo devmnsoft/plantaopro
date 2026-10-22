@@ -316,6 +316,9 @@
   <data name="Nav.FolhaCalculos" xml:space="preserve">
     <value>Payroll and Separation</value>
   </data>
+  <data name="Nav.BateriaLegal" xml:space="preserve">
+    <value>Legal Parameters</value>
+  </data>
   <data name="Nav.SimplesNacional" xml:space="preserve">
     <value>Simplified Tax Regime</value>
   </data>

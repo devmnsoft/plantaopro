@@ -1524,6 +1524,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2374_r93_erros_negocio",
+                            "source":  "database/migrations/2026_10_v2374_r93_erros_negocio.sql",
+                            "checksum":  "33b0fee80cd68e7fadc3cbca10c8787e201de2709cda82ca1d9d50de0bb63cc1",
+                            "dependsOn":  [
+                                              "2026_10_v2373_r92_indizes_caminhos_quentes"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

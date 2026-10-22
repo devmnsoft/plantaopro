@@ -29,6 +29,7 @@ public sealed class ObservabilidadeController : ControllerBase
             var data = await cn.QueryFirstAsync(@"select
                 (select count(*) from plantaopro.api_request_logs where reg_date::date = current_date) as TotalRequestsHoje,
                 (select count(*) from plantaopro.api_error_logs where reg_date::date = current_date) as TotalErrosHoje,
+                (select count(*) from plantaopro.erros_negocio where reg_date::date = current_date) as TotalErrosNegocioHoje,
                 coalesce((select avg(duracao_ms) from plantaopro.api_request_logs where reg_date::date = current_date),0) as TempoMedioMs,
                 (select count(*) from plantaopro.usuarios where reg_status = 'A') as UsuariosAtivos");
             return Ok(ApiResponse<object>.Ok(data, "Resumo de observabilidade carregado."));
@@ -174,6 +175,59 @@ public sealed class ObservabilidadeController : ControllerBase
         {
             _logger.LogError(ex, "Erro ao carregar jobs");
             return StatusCode(500, ApiResponse<string>.Fail("Falha ao carregar jobs.", 500));
+        }
+    }
+
+    /// <summary>
+    /// Digest diário de erros de negócio (R93, B5 observabilidade): agrega plantaopro.erros_negocio
+    /// (gravado pelo Adm360BusinessExceptionFilter em cada 400/403/404 amigável do módulo) por dia
+    /// e categoria, com as 10 mensagens mais recorrentes no período. Opcionalmente filtra por tenant.
+    /// </summary>
+    [HttpGet("digest-diario")]
+    public async Task<IActionResult> DigestDiario([FromQuery] int dias = 1, [FromQuery] Guid? tenantId = null)
+    {
+        try
+        {
+            var periodo = Math.Clamp(dias, 1, 31);
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var parametros = new { diasAtras = periodo - 1, tenant = tenantId };
+            const string onde = "e.reg_date >= (current_date - (@diasAtras))::timestamp and (@tenant::uuid is null or e.tenant_id = @tenant)";
+            var linhas = (await cn.QueryAsync<(DateOnly Dia, string Categoria, long Total)>(
+                $@"select e.reg_date::date as Dia, e.categoria as Categoria, count(*)::bigint as Total
+                    from plantaopro.erros_negocio e
+                    where {onde}
+                    group by e.reg_date::date, e.categoria
+                    order by e.reg_date::date desc, e.categoria", parametros)).ToList();
+            var topMensagens = (await cn.QueryAsync<(string Categoria, string Mensagem, long Total)>(
+                $@"select e.categoria as Categoria, e.mensagem as Mensagem, count(*)::bigint as Total
+                    from plantaopro.erros_negocio e
+                    where {onde}
+                    group by e.categoria, e.mensagem
+                    order by Total desc, e.categoria, e.mensagem
+                    limit 10", parametros))
+                .Select(t => new { t.Categoria, t.Mensagem, t.Total })
+                .ToArray();
+            var porDia = linhas.GroupBy(l => l.Dia)
+                .OrderByDescending(g => g.Key)
+                .Select(g => new
+                {
+                    Dia = g.Key,
+                    Total = g.Sum(x => x.Total),
+                    Categorias = g.Select(x => new { x.Categoria, x.Total })
+                });
+            return Ok(ApiResponse<object>.Ok(new
+            {
+                PeriodoDias = periodo,
+                TenantFiltro = tenantId,
+                TotalErrosNegocio = linhas.Sum(l => l.Total),
+                PorDia = porDia.ToArray(),
+                TopMensagens = topMensagens
+            }, "Digest diário de erros de negócio carregado."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar digest diário de erros de negócio");
+            return StatusCode(500, ApiResponse<string>.Fail("Falha ao carregar digest diário.", 500));
         }
     }
 

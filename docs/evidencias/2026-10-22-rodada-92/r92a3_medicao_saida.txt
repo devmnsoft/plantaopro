@@ -1,0 +1,42 @@
+﻿-- volumes (banco de teste)
+  linhas adm360_orcamentos=11326
+  linhas adm360_saldos=9290
+  linhas adm360_movimentos=17888
+  linhas adm360_lotes=6814
+  linhas adm360_reservas=2623
+  linhas adm360_produtos=1285
+  linhas adm_colaboradores=2
+  linhas colaborador_eventos_esocial=0
+  linhas colaborador_jornadas_semanais=0
+  linhas cotacoes_moedas=3
+  linhas notas_internacionais=0
+  linhas paises_vat=9
+APPS_NO_AR api_pid=34004 web_pid=41536
+LOGIN_OK
+WARMUP_OK
+-- paginas web (HTML) n=3
+/Administrativo360/Orcamentos bytes=265056 media_ms=594
+/Administrativo360/Orcamentos?pagina=2 bytes=265137 media_ms=415
+/Administrativo360/Estoque bytes=186188 media_ms=608,3
+/Administrativo360/Estoque?pagina=2 bytes=186300 media_ms=446
+/Administrativo360/Vendas bytes=61880 media_ms=167,3
+/Administrativo360/PedidosCompra bytes=168948 media_ms=304
+/Administrativo360/TitulosReceber bytes=63668 media_ms=139
+/Administrativo360/RelatoriosFinanceiros bytes=73604 media_ms=333
+/FolhaWeb/Index bytes=57874 media_ms=86
+/SimplesWeb/Index bytes=56709 media_ms=88
+/CalendarioFiscalWeb/Index bytes=52926 media_ms=86,3
+/DfeNacionalWeb/Index bytes=59255 media_ms=91
+/TrilhosPagamentoWeb/Index bytes=67961 media_ms=105
+/EsocialTrabalhoWeb/Index bytes=73546 media_ms=103,7
+/VendasInternacionaisWeb/Index bytes=40947 media_ms=79
+/LegislacaoWeb/Index bytes=49689 media_ms=82
+-- rotas raiz (1x)
+/ status=200 bytes=44679
+/index status=404
+-- endpoints api (JSON) n=3
+/api/administrativo360/orcamentos bytes=37781 media_ms=100
+/api/administrativo360/orcamentos?pagina=2 bytes=37782 media_ms=112
+/api/administrativo360/estoque bytes=35528 media_ms=272,3
+/api/administrativo360/estoque?pagina=2 bytes=35528 media_ms=262
+APPS_AINDA_NO_AR (teardown por porta ao fim da rodada)

@@ -1,0 +1,552 @@
+== recon R92 - caminhos quentes ADM360 (banco 
+tenant=d3f6584c-2c64-4e5a-9ea9-4e1428647502 orcamento=a3610000-0000-4000-8000-000000000041 item_prod=a3610000-0000-4000-8000-000000000002 fe_prod=0840e80f-5f0b-442b-8498-8db13ff78431
+
+== volumetria ==
+  linhas adm360_orcamentos=11326
+  linhas adm360_orcamento_itens=7541
+  linhas adm360_saldos=9290
+  linhas adm360_movimentos=17888
+  linhas adm360_reservas=2623
+  linhas adm360_lotes=6814
+  linhas adm360_produtos=1285
+  linhas adm360_operacoes=20597
+
+== volumetria do tenant amostrado ==
+  linhas adm360_orcamentos=10172
+  linhas adm360_saldos=9288
+  linhas adm360_movimentos=17886
+  linhas adm360_reservas=2623
+  adm360_caixa_fechamentos :: adm360_caixa_fechamentos_pkey     CREATE UNIQUE INDEX adm360_caixa_fechamentos_pkey ON plantaopro.adm360_caixa_fechamentos USING btree (id)
+  adm360_caixa_fechamentos :: adm360_caixa_fechamentos_tenant_id_conta_id_data_fechamento_key     CREATE UNIQUE INDEX adm360_caixa_fechamentos_tenant_id_conta_id_data_fechamento_key ON plantaopro.adm360_caixa_fechamentos USING btree (tenant_id, conta_id, data_fechamento)
+  adm360_caixa_fechamentos :: adm360_caixa_fechamentos_tenant_id_id_key     CREATE UNIQUE INDEX adm360_caixa_fechamentos_tenant_id_id_key ON plantaopro.adm360_caixa_fechamentos USING btree (tenant_id, id)
+  adm360_caixa_fechamentos :: ix_adm360_caixa_fech_tenant_conta     CREATE INDEX ix_adm360_caixa_fech_tenant_conta ON plantaopro.adm360_caixa_fechamentos USING btree (tenant_id, conta_id, data_fechamento)
+  adm360_capacidades_contratadas :: adm360_capacidades_contratadas_pkey     CREATE UNIQUE INDEX adm360_capacidades_contratadas_pkey ON plantaopro.adm360_capacidades_contratadas USING btree (id)
+  adm360_capacidades_contratadas :: adm360_capacidades_contratadas_tenant_id_capacidade_key     CREATE UNIQUE INDEX adm360_capacidades_contratadas_tenant_id_capacidade_key ON plantaopro.adm360_capacidades_contratadas USING btree (tenant_id, capacidade)
+  adm360_capacidades_contratadas :: adm360_capacidades_contratadas_tenant_id_id_key     CREATE UNIQUE INDEX adm360_capacidades_contratadas_tenant_id_id_key ON plantaopro.adm360_capacidades_contratadas USING btree (tenant_id, id)
+  adm360_cirurgias :: adm360_cirurgias_pkey     CREATE UNIQUE INDEX adm360_cirurgias_pkey ON plantaopro.adm360_cirurgias USING btree (id)
+  adm360_cirurgias :: adm360_cirurgias_tenant_id_id_key     CREATE UNIQUE INDEX adm360_cirurgias_tenant_id_id_key ON plantaopro.adm360_cirurgias USING btree (tenant_id, id)
+  adm360_cirurgias :: adm360_cirurgias_tenant_id_numero_key     CREATE UNIQUE INDEX adm360_cirurgias_tenant_id_numero_key ON plantaopro.adm360_cirurgias USING btree (tenant_id, numero)
+  adm360_cirurgias :: ix_adm360_cirurgias_orcamento     CREATE INDEX ix_adm360_cirurgias_orcamento ON plantaopro.adm360_cirurgias USING btree (tenant_id, orcamento_id)
+  adm360_cirurgias :: ix_adm360_cirurgias_tenant_data     CREATE INDEX ix_adm360_cirurgias_tenant_data ON plantaopro.adm360_cirurgias USING btree (tenant_id, data_prevista, situacao)
+  adm360_comissoes_apropriadas :: adm360_comissoes_apropriadas_pkey     CREATE UNIQUE INDEX adm360_comissoes_apropriadas_pkey ON plantaopro.adm360_comissoes_apropriadas USING btree (id)
+  adm360_comissoes_apropriadas :: adm360_comissoes_apropriadas_tenant_id_baixa_id_key     CREATE UNIQUE INDEX adm360_comissoes_apropriadas_tenant_id_baixa_id_key ON plantaopro.adm360_comissoes_apropriadas USING btree (tenant_id, baixa_id)
+  adm360_comissoes_apropriadas :: adm360_comissoes_apropriadas_tenant_id_id_key     CREATE UNIQUE INDEX adm360_comissoes_apropriadas_tenant_id_id_key ON plantaopro.adm360_comissoes_apropriadas USING btree (tenant_id, id)
+  adm360_comissoes_apropriadas :: ix_adm360_comissoes_vendedor     CREATE INDEX ix_adm360_comissoes_vendedor ON plantaopro.adm360_comissoes_apropriadas USING btree (tenant_id, vendedor_id, situacao)
+  adm360_contas_financeiras :: adm360_contas_financeiras_pkey     CREATE UNIQUE INDEX adm360_contas_financeiras_pkey ON plantaopro.adm360_contas_financeiras USING btree (id)
+  adm360_contas_financeiras :: adm360_contas_financeiras_tenant_id_id_key     CREATE UNIQUE INDEX adm360_contas_financeiras_tenant_id_id_key ON plantaopro.adm360_contas_financeiras USING btree (tenant_id, id)
+  adm360_cotacao_anexos :: adm360_cotacao_anexos_pkey     CREATE UNIQUE INDEX adm360_cotacao_anexos_pkey ON plantaopro.adm360_cotacao_anexos USING btree (id)
+  adm360_cotacao_anexos :: adm360_cotacao_anexos_tenant_id_id_key     CREATE UNIQUE INDEX adm360_cotacao_anexos_tenant_id_id_key ON plantaopro.adm360_cotacao_anexos USING btree (tenant_id, id)
+  adm360_cotacao_envios :: ix_adm360_envios_resposta     CREATE INDEX ix_adm360_envios_resposta ON plantaopro.adm360_cotacao_envios USING btree (resposta_id, tenant_id)
+  adm360_cotacao_envios :: ix_adm360_envios_tenant_status     CREATE INDEX ix_adm360_envios_tenant_status ON plantaopro.adm360_cotacao_envios USING btree (tenant_id, status_transmissao)
+  adm360_cotacao_envios :: pk_adm360_cotacao_envios     CREATE UNIQUE INDEX pk_adm360_cotacao_envios ON plantaopro.adm360_cotacao_envios USING btree (id)
+  adm360_cotacao_envios :: uq_adm360_cotacao_envios_tentativa     CREATE UNIQUE INDEX uq_adm360_cotacao_envios_tentativa ON plantaopro.adm360_cotacao_envios USING btree (tenant_id, resposta_id, tentativa)
+  adm360_cotacao_exportacoes :: adm360_cotacao_exportacoes_pkey     CREATE UNIQUE INDEX adm360_cotacao_exportacoes_pkey ON plantaopro.adm360_cotacao_exportacoes USING btree (id)
+  adm360_cotacao_exportacoes :: adm360_cotacao_exportacoes_tenant_id_id_key     CREATE UNIQUE INDEX adm360_cotacao_exportacoes_tenant_id_id_key ON plantaopro.adm360_cotacao_exportacoes USING btree (tenant_id, id)
+  adm360_cotacao_exportacoes :: adm360_cotacao_exportacoes_tenant_id_resposta_id_key     CREATE UNIQUE INDEX adm360_cotacao_exportacoes_tenant_id_resposta_id_key ON plantaopro.adm360_cotacao_exportacoes USING btree (tenant_id, resposta_id)
+  adm360_cotacao_exportacoes :: ix_adm360_export_tenant_cotacao     CREATE INDEX ix_adm360_export_tenant_cotacao ON plantaopro.adm360_cotacao_exportacoes USING btree (tenant_id, cotacao_id)
+  adm360_cotacao_itens :: adm360_cotacao_itens_pkey     CREATE UNIQUE INDEX adm360_cotacao_itens_pkey ON plantaopro.adm360_cotacao_itens USING btree (id)
+  adm360_cotacao_itens :: adm360_cotacao_itens_tenant_id_cotacao_id_numero_item_key     CREATE UNIQUE INDEX adm360_cotacao_itens_tenant_id_cotacao_id_numero_item_key ON plantaopro.adm360_cotacao_itens USING btree (tenant_id, cotacao_id, numero_item)
+  adm360_cotacao_itens :: adm360_cotacao_itens_tenant_id_id_key     CREATE UNIQUE INDEX adm360_cotacao_itens_tenant_id_id_key ON plantaopro.adm360_cotacao_itens USING btree (tenant_id, id)
+  adm360_cotacao_respostas :: adm360_cotacao_respostas_pkey     CREATE UNIQUE INDEX adm360_cotacao_respostas_pkey ON plantaopro.adm360_cotacao_respostas USING btree (id)
+  adm360_cotacao_respostas :: adm360_cotacao_respostas_tenant_id_id_key     CREATE UNIQUE INDEX adm360_cotacao_respostas_tenant_id_id_key ON plantaopro.adm360_cotacao_respostas USING btree (tenant_id, id)
+  adm360_cotacao_respostas :: ix_adm360_respcot_tenant_status     CREATE INDEX ix_adm360_respcot_tenant_status ON plantaopro.adm360_cotacao_respostas USING btree (tenant_id, status_transmissao, proxima_tentativa)
+  adm360_cotacao_respostas :: ix_adm360_respostas_cotacao_ordem     CREATE INDEX ix_adm360_respostas_cotacao_ordem ON plantaopro.adm360_cotacao_respostas USING btree (tenant_id, cotacao_id, created_at)
+  adm360_cotacao_respostas :: ux_adm360_resposta_cotacao_nao_resolvida     CREATE UNIQUE INDEX ux_adm360_resposta_cotacao_nao_resolvida ON plantaopro.adm360_cotacao_respostas USING btree (tenant_id, cotacao_id) WHERE ((status_transmissao)::text = ANY ((ARRAY['NA_FILA'::character varying, 'ENVIANDO'::character varying, 'RESULTADO_DESCONHECIDO'::character varying, 'CONFIGURACAO_PENDENTE'::character varying, 'REJEITADA_PELO_PORTAL'::character varying, 'EXPORTADA_MANUALMENTE'::character varying])::text[]))
+  adm360_cotacoes :: adm360_cotacoes_pkey     CREATE UNIQUE INDEX adm360_cotacoes_pkey ON plantaopro.adm360_cotacoes USING btree (id)
+  adm360_cotacoes :: adm360_cotacoes_tenant_id_id_key     CREATE UNIQUE INDEX adm360_cotacoes_tenant_id_id_key ON plantaopro.adm360_cotacoes USING btree (tenant_id, id)
+  adm360_cotacoes :: adm360_cotacoes_tenant_id_portal_conta_id_identificador_ext_key     CREATE UNIQUE INDEX adm360_cotacoes_tenant_id_portal_conta_id_identificador_ext_key ON plantaopro.adm360_cotacoes USING btree (tenant_id, portal_conta_id, identificador_externo, revisao_externa)
+  adm360_cotacoes :: ix_adm360_cot_tenant_ext     CREATE INDEX ix_adm360_cot_tenant_ext ON plantaopro.adm360_cotacoes USING btree (tenant_id, provedor, identificador_externo)
+  adm360_cotacoes :: ix_adm360_cot_tenant_prazo     CREATE INDEX ix_adm360_cot_tenant_prazo ON plantaopro.adm360_cotacoes USING btree (tenant_id, prazo_resposta, status_interno)
+  adm360_dfe_sincronizacoes :: adm360_dfe_sincronizacoes_pkey     CREATE UNIQUE INDEX adm360_dfe_sincronizacoes_pkey ON plantaopro.adm360_dfe_sincronizacoes USING btree (id)
+  adm360_dfe_sincronizacoes :: adm360_dfe_sincronizacoes_tenant_id_estabelecimento_id_ambi_key     CREATE UNIQUE INDEX adm360_dfe_sincronizacoes_tenant_id_estabelecimento_id_ambi_key ON plantaopro.adm360_dfe_sincronizacoes USING btree (tenant_id, estabelecimento_id, ambiente)
+  adm360_dfe_sincronizacoes :: adm360_dfe_sincronizacoes_tenant_id_id_key     CREATE UNIQUE INDEX adm360_dfe_sincronizacoes_tenant_id_id_key ON plantaopro.adm360_dfe_sincronizacoes USING btree (tenant_id, id)
+  adm360_documento_eventos :: adm360_documento_eventos_pkey     CREATE UNIQUE INDEX adm360_documento_eventos_pkey ON plantaopro.adm360_documento_eventos USING btree (id)
+  adm360_documento_eventos :: adm360_documento_eventos_tenant_id_id_key     CREATE UNIQUE INDEX adm360_documento_eventos_tenant_id_id_key ON plantaopro.adm360_documento_eventos USING btree (tenant_id, id)
+  adm360_documento_eventos :: ux_adm360_doc_eventos_tenant_doc_seq     CREATE UNIQUE INDEX ux_adm360_doc_eventos_tenant_doc_seq ON plantaopro.adm360_documento_eventos USING btree (tenant_id, documento_id, sequencia_evento)
+  adm360_documento_itens :: adm360_documento_itens_pkey     CREATE UNIQUE INDEX adm360_documento_itens_pkey ON plantaopro.adm360_documento_itens USING btree (id)
+  adm360_documento_itens :: adm360_documento_itens_tenant_id_documento_id_numero_item_key     CREATE UNIQUE INDEX adm360_documento_itens_tenant_id_documento_id_numero_item_key ON plantaopro.adm360_documento_itens USING btree (tenant_id, documento_id, numero_item)
+  adm360_documento_itens :: adm360_documento_itens_tenant_id_id_key     CREATE UNIQUE INDEX adm360_documento_itens_tenant_id_id_key ON plantaopro.adm360_documento_itens USING btree (tenant_id, id)
+  adm360_documentos_recebidos :: adm360_documentos_recebidos_pkey     CREATE UNIQUE INDEX adm360_documentos_recebidos_pkey ON plantaopro.adm360_documentos_recebidos USING btree (id)
+  adm360_documentos_recebidos :: adm360_documentos_recebidos_tenant_id_chave_acesso_key     CREATE UNIQUE INDEX adm360_documentos_recebidos_tenant_id_chave_acesso_key ON plantaopro.adm360_documentos_recebidos USING btree (tenant_id, chave_acesso)
+  adm360_documentos_recebidos :: adm360_documentos_recebidos_tenant_id_id_key     CREATE UNIQUE INDEX adm360_documentos_recebidos_tenant_id_id_key ON plantaopro.adm360_documentos_recebidos USING btree (tenant_id, id)
+  adm360_documentos_recebidos :: ix_adm360_docrec_tenant_chave     CREATE INDEX ix_adm360_docrec_tenant_chave ON plantaopro.adm360_documentos_recebidos USING btree (tenant_id, chave_acesso)
+  adm360_documentos_recebidos :: ix_adm360_docrec_tenant_status     CREATE INDEX ix_adm360_docrec_tenant_status ON plantaopro.adm360_documentos_recebidos USING btree (tenant_id, status_conferencia, quarentena)
+  adm360_documentos_recebidos :: ix_adm360_docrec_triagem     CREATE INDEX ix_adm360_docrec_triagem ON plantaopro.adm360_documentos_recebidos USING btree (tenant_id, quarentena, triagem_prazo) WHERE quarentena
+  adm360_documentos_recebidos :: ux_adm360_docrec_tenant_fiscal     CREATE UNIQUE INDEX ux_adm360_docrec_tenant_fiscal ON plantaopro.adm360_documentos_recebidos USING btree (tenant_id, emitente_cnpj, modelo, numero, serie) WHERE (quarentena = false)
+  adm360_estabelecimentos :: adm360_estabelecimentos_pkey     CREATE UNIQUE INDEX adm360_estabelecimentos_pkey ON plantaopro.adm360_estabelecimentos USING btree (id)
+  adm360_estabelecimentos :: adm360_estabelecimentos_tenant_id_cnpj_key     CREATE UNIQUE INDEX adm360_estabelecimentos_tenant_id_cnpj_key ON plantaopro.adm360_estabelecimentos USING btree (tenant_id, cnpj)
+  adm360_estabelecimentos :: adm360_estabelecimentos_tenant_id_id_key     CREATE UNIQUE INDEX adm360_estabelecimentos_tenant_id_id_key ON plantaopro.adm360_estabelecimentos USING btree (tenant_id, id)
+  adm360_estabelecimentos :: ix_adm360_estab_tenant_cnpj     CREATE INDEX ix_adm360_estab_tenant_cnpj ON plantaopro.adm360_estabelecimentos USING btree (tenant_id, cnpj)
+  adm360_eventos :: adm360_eventos_pkey     CREATE UNIQUE INDEX adm360_eventos_pkey ON plantaopro.adm360_eventos USING btree (id)
+  adm360_eventos :: adm360_eventos_tenant_id_id_key     CREATE UNIQUE INDEX adm360_eventos_tenant_id_id_key ON plantaopro.adm360_eventos USING btree (tenant_id, id)
+  adm360_eventos :: adm360_eventos_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_eventos_tenant_id_idempotency_key_key ON plantaopro.adm360_eventos USING btree (tenant_id, idempotency_key)
+  adm360_eventos :: ix_adm360_eventos_entidade     CREATE INDEX ix_adm360_eventos_entidade ON plantaopro.adm360_eventos USING btree (tenant_id, entidade, entidade_id)
+  adm360_eventos :: ix_adm360_eventos_tenant_tipo     CREATE INDEX ix_adm360_eventos_tenant_tipo ON plantaopro.adm360_eventos USING btree (tenant_id, tipo_evento, created_at DESC)
+  adm360_inspecoes :: adm360_inspecoes_pkey     CREATE UNIQUE INDEX adm360_inspecoes_pkey ON plantaopro.adm360_inspecoes USING btree (id)
+  adm360_inspecoes :: adm360_inspecoes_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_inspecoes_tenant_id_idempotency_key_key ON plantaopro.adm360_inspecoes USING btree (tenant_id, idempotency_key)
+  adm360_inventario_itens :: adm360_inventario_itens_pkey     CREATE UNIQUE INDEX adm360_inventario_itens_pkey ON plantaopro.adm360_inventario_itens USING btree (id)
+  adm360_inventario_itens :: ux_adm360_inv_itens_condicao     CREATE UNIQUE INDEX ux_adm360_inv_itens_condicao ON plantaopro.adm360_inventario_itens USING btree (tenant_id, inventario_id, produto_id, lote_id, condicao)
+  adm360_inventarios :: adm360_inventarios_pkey     CREATE UNIQUE INDEX adm360_inventarios_pkey ON plantaopro.adm360_inventarios USING btree (id)
+  adm360_inventarios :: adm360_inventarios_tenant_id_id_key     CREATE UNIQUE INDEX adm360_inventarios_tenant_id_id_key ON plantaopro.adm360_inventarios USING btree (tenant_id, id)
+  adm360_inventarios :: adm360_inventarios_tenant_id_idempotency_aprovacao_key     CREATE UNIQUE INDEX adm360_inventarios_tenant_id_idempotency_aprovacao_key ON plantaopro.adm360_inventarios USING btree (tenant_id, idempotency_aprovacao)
+  adm360_leituras :: adm360_leituras_pkey     CREATE UNIQUE INDEX adm360_leituras_pkey ON plantaopro.adm360_leituras USING btree (id)
+  adm360_leituras :: adm360_leituras_tenant_id_scan_id_key     CREATE UNIQUE INDEX adm360_leituras_tenant_id_scan_id_key ON plantaopro.adm360_leituras USING btree (tenant_id, scan_id)
+  adm360_locais :: adm360_locais_pkey     CREATE UNIQUE INDEX adm360_locais_pkey ON plantaopro.adm360_locais USING btree (id)
+  adm360_locais :: adm360_locais_tenant_id_codigo_key     CREATE UNIQUE INDEX adm360_locais_tenant_id_codigo_key ON plantaopro.adm360_locais USING btree (tenant_id, codigo)
+  adm360_locais :: adm360_locais_tenant_id_id_key     CREATE UNIQUE INDEX adm360_locais_tenant_id_id_key ON plantaopro.adm360_locais USING btree (tenant_id, id)
+  adm360_locais :: ux_adm360_locais_tenant_codigo     CREATE UNIQUE INDEX ux_adm360_locais_tenant_codigo ON plantaopro.adm360_locais USING btree (tenant_id, upper((codigo)::text)) WHERE (ativo = true)
+  adm360_lotes :: adm360_lotes_pkey     CREATE UNIQUE INDEX adm360_lotes_pkey ON plantaopro.adm360_lotes USING btree (id)
+  adm360_lotes :: adm360_lotes_tenant_id_id_key     CREATE UNIQUE INDEX adm360_lotes_tenant_id_id_key ON plantaopro.adm360_lotes USING btree (tenant_id, id)
+  adm360_lotes :: adm360_lotes_tenant_id_produto_id_codigo_key     CREATE UNIQUE INDEX adm360_lotes_tenant_id_produto_id_codigo_key ON plantaopro.adm360_lotes USING btree (tenant_id, produto_id, codigo)
+  adm360_lotes :: ix_adm360_lotes_validade     CREATE INDEX ix_adm360_lotes_validade ON plantaopro.adm360_lotes USING btree (tenant_id, validade)
+  adm360_mapeamentos_de_para :: adm360_mapeamentos_de_para_pkey     CREATE UNIQUE INDEX adm360_mapeamentos_de_para_pkey ON plantaopro.adm360_mapeamentos_de_para USING btree (id)
+  adm360_mapeamentos_de_para :: adm360_mapeamentos_de_para_tenant_id_id_key     CREATE UNIQUE INDEX adm360_mapeamentos_de_para_tenant_id_id_key ON plantaopro.adm360_mapeamentos_de_para USING btree (tenant_id, id)
+  adm360_mapeamentos_de_para :: adm360_mapeamentos_de_para_tenant_id_provedor_tipo_entidade_key     CREATE UNIQUE INDEX adm360_mapeamentos_de_para_tenant_id_provedor_tipo_entidade_key ON plantaopro.adm360_mapeamentos_de_para USING btree (tenant_id, provedor, tipo_entidade, codigo_externo)
+  adm360_mapeamentos_de_para :: ix_adm360_depara_tenant_tipo     CREATE INDEX ix_adm360_depara_tenant_tipo ON plantaopro.adm360_mapeamentos_de_para USING btree (tenant_id, provedor, tipo_entidade, codigo_externo)
+  adm360_movimentos :: adm360_movimentos_pkey     CREATE UNIQUE INDEX adm360_movimentos_pkey ON plantaopro.adm360_movimentos USING btree (id)
+  adm360_movimentos :: adm360_movimentos_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_movimentos_tenant_id_idempotency_key_key ON plantaopro.adm360_movimentos USING btree (tenant_id, idempotency_key)
+  adm360_movimentos :: ix_adm360_movimentos_saldo     CREATE INDEX ix_adm360_movimentos_saldo ON plantaopro.adm360_movimentos USING btree (tenant_id, produto_id, lote_id, local_id, condicao, created_at)
+  adm360_movimentos_financeiros :: adm360_movimentos_financeiros_pkey     CREATE UNIQUE INDEX adm360_movimentos_financeiros_pkey ON plantaopro.adm360_movimentos_financeiros USING btree (id)
+  adm360_movimentos_financeiros :: adm360_movimentos_financeiros_tenant_id_id_key     CREATE UNIQUE INDEX adm360_movimentos_financeiros_tenant_id_id_key ON plantaopro.adm360_movimentos_financeiros USING btree (tenant_id, id)
+  adm360_movimentos_financeiros :: adm360_movimentos_financeiros_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_movimentos_financeiros_tenant_id_idempotency_key_key ON plantaopro.adm360_movimentos_financeiros USING btree (tenant_id, idempotency_key)
+  adm360_movimentos_financeiros :: ix_adm360_movfin_tenant_conta     CREATE INDEX ix_adm360_movfin_tenant_conta ON plantaopro.adm360_movimentos_financeiros USING btree (tenant_id, conta_id, data_movimento)
+  adm360_nota_pre_emitida_itens :: adm360_nota_pre_emitida_itens_pkey     CREATE UNIQUE INDEX adm360_nota_pre_emitida_itens_pkey ON plantaopro.adm360_nota_pre_emitida_itens USING btree (id)
+  adm360_nota_pre_emitida_itens :: adm360_nota_pre_emitida_itens_tenant_id_id_key     CREATE UNIQUE INDEX adm360_nota_pre_emitida_itens_tenant_id_id_key ON plantaopro.adm360_nota_pre_emitida_itens USING btree (tenant_id, id)
+  adm360_nota_pre_emitida_itens :: ix_adm360_notas_pre_itens_nota     CREATE INDEX ix_adm360_notas_pre_itens_nota ON plantaopro.adm360_nota_pre_emitida_itens USING btree (tenant_id, nota_id)
+  adm360_notas_pre_emitidas :: adm360_notas_pre_emitidas_pkey     CREATE UNIQUE INDEX adm360_notas_pre_emitidas_pkey ON plantaopro.adm360_notas_pre_emitidas USING btree (id)
+  adm360_notas_pre_emitidas :: adm360_notas_pre_emitidas_tenant_id_id_key     CREATE UNIQUE INDEX adm360_notas_pre_emitidas_tenant_id_id_key ON plantaopro.adm360_notas_pre_emitidas USING btree (tenant_id, id)
+  adm360_notas_pre_emitidas :: adm360_notas_pre_emitidas_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_notas_pre_emitidas_tenant_id_idempotency_key_key ON plantaopro.adm360_notas_pre_emitidas USING btree (tenant_id, idempotency_key)
+  adm360_notas_pre_emitidas :: adm360_notas_pre_emitidas_tenant_id_numero_key     CREATE UNIQUE INDEX adm360_notas_pre_emitidas_tenant_id_numero_key ON plantaopro.adm360_notas_pre_emitidas USING btree (tenant_id, numero)
+  adm360_notas_pre_emitidas :: ix_adm360_notas_pre_filtro     CREATE INDEX ix_adm360_notas_pre_filtro ON plantaopro.adm360_notas_pre_emitidas USING btree (tenant_id, situacao, created_at DESC)
+  adm360_ocorrencias :: adm360_ocorrencias_pkey     CREATE UNIQUE INDEX adm360_ocorrencias_pkey ON plantaopro.adm360_ocorrencias USING btree (id)
+  adm360_ocorrencias :: adm360_ocorrencias_tenant_id_id_key     CREATE UNIQUE INDEX adm360_ocorrencias_tenant_id_id_key ON plantaopro.adm360_ocorrencias USING btree (tenant_id, id)
+  adm360_operacoes :: adm360_operacoes_pkey     CREATE UNIQUE INDEX adm360_operacoes_pkey ON plantaopro.adm360_operacoes USING btree (id)
+  adm360_operacoes :: adm360_operacoes_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_operacoes_tenant_id_idempotency_key_key ON plantaopro.adm360_operacoes USING btree (tenant_id, idempotency_key)
+  adm360_operacoes :: ix_adm360_operacoes_tenant_tipo     CREATE INDEX ix_adm360_operacoes_tenant_tipo ON plantaopro.adm360_operacoes USING btree (tenant_id, tipo, created_at)
+  adm360_orcamento_itens :: adm360_orcamento_itens_pkey     CREATE UNIQUE INDEX adm360_orcamento_itens_pkey ON plantaopro.adm360_orcamento_itens USING btree (id)
+  adm360_orcamento_itens :: adm360_orcamento_itens_tenant_id_id_key     CREATE UNIQUE INDEX adm360_orcamento_itens_tenant_id_id_key ON plantaopro.adm360_orcamento_itens USING btree (tenant_id, id)
+  adm360_orcamento_revisoes :: adm360_orcamento_revisoes_pkey     CREATE UNIQUE INDEX adm360_orcamento_revisoes_pkey ON plantaopro.adm360_orcamento_revisoes USING btree (id)
+  adm360_orcamento_revisoes :: ix_adm360_orcamento_revisoes_orc     CREATE INDEX ix_adm360_orcamento_revisoes_orc ON plantaopro.adm360_orcamento_revisoes USING btree (tenant_id, orcamento_id, revisao)
+  adm360_orcamentos :: adm360_orcamentos_pkey     CREATE UNIQUE INDEX adm360_orcamentos_pkey ON plantaopro.adm360_orcamentos USING btree (id)
+  adm360_orcamentos :: adm360_orcamentos_tenant_id_id_key     CREATE UNIQUE INDEX adm360_orcamentos_tenant_id_id_key ON plantaopro.adm360_orcamentos USING btree (tenant_id, id)
+  adm360_orcamentos :: adm360_orcamentos_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_orcamentos_tenant_id_idempotency_key_key ON plantaopro.adm360_orcamentos USING btree (tenant_id, idempotency_key)
+  adm360_orcamentos :: adm360_orcamentos_tenant_id_numero_revisao_key     CREATE UNIQUE INDEX adm360_orcamentos_tenant_id_numero_revisao_key ON plantaopro.adm360_orcamentos USING btree (tenant_id, numero, revisao)
+  adm360_orcamentos :: ix_adm360_orcamentos_tenant_sit     CREATE INDEX ix_adm360_orcamentos_tenant_sit ON plantaopro.adm360_orcamentos USING btree (tenant_id, situacao, data_prevista)
+  adm360_pagamento_estornos :: adm360_pagamento_estornos_pkey     CREATE UNIQUE INDEX adm360_pagamento_estornos_pkey ON plantaopro.adm360_pagamento_estornos USING btree (id)
+  adm360_pagamento_estornos :: adm360_pagamento_estornos_tenant_id_id_key     CREATE UNIQUE INDEX adm360_pagamento_estornos_tenant_id_id_key ON plantaopro.adm360_pagamento_estornos USING btree (tenant_id, id)
+  adm360_pagamento_estornos :: adm360_pagamento_estornos_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_pagamento_estornos_tenant_id_idempotency_key_key ON plantaopro.adm360_pagamento_estornos USING btree (tenant_id, idempotency_key)
+  adm360_parametros_fiscais :: adm360_parametros_fiscais_pkey     CREATE UNIQUE INDEX adm360_parametros_fiscais_pkey ON plantaopro.adm360_parametros_fiscais USING btree (id)
+  adm360_parametros_fiscais :: adm360_parametros_fiscais_tenant_id_id_key     CREATE UNIQUE INDEX adm360_parametros_fiscais_tenant_id_id_key ON plantaopro.adm360_parametros_fiscais USING btree (tenant_id, id)
+  adm360_parametros_fiscais :: adm360_parametros_fiscais_tenant_id_key     CREATE UNIQUE INDEX adm360_parametros_fiscais_tenant_id_key ON plantaopro.adm360_parametros_fiscais USING btree (tenant_id)
+  adm360_parceiros :: adm360_parceiros_pkey     CREATE UNIQUE INDEX adm360_parceiros_pkey ON plantaopro.adm360_parceiros USING btree (id)
+  adm360_parceiros :: adm360_parceiros_tenant_id_id_key     CREATE UNIQUE INDEX adm360_parceiros_tenant_id_id_key ON plantaopro.adm360_parceiros USING btree (tenant_id, id)
+  adm360_parceiros :: ux_adm360_parceiro_documento     CREATE UNIQUE INDEX ux_adm360_parceiro_documento ON plantaopro.adm360_parceiros USING btree (tenant_id, documento) WHERE (documento IS NOT NULL)
+  adm360_pedido_itens :: adm360_pedido_itens_pkey     CREATE UNIQUE INDEX adm360_pedido_itens_pkey ON plantaopro.adm360_pedido_itens USING btree (id)
+  adm360_pedido_itens :: adm360_pedido_itens_tenant_id_id_key     CREATE UNIQUE INDEX adm360_pedido_itens_tenant_id_id_key ON plantaopro.adm360_pedido_itens USING btree (tenant_id, id)
+  adm360_pedidos :: adm360_pedidos_pkey     CREATE UNIQUE INDEX adm360_pedidos_pkey ON plantaopro.adm360_pedidos USING btree (id)
+  adm360_pedidos :: adm360_pedidos_tenant_id_id_key     CREATE UNIQUE INDEX adm360_pedidos_tenant_id_id_key ON plantaopro.adm360_pedidos USING btree (tenant_id, id)
+  adm360_pedidos :: adm360_pedidos_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_pedidos_tenant_id_idempotency_key_key ON plantaopro.adm360_pedidos USING btree (tenant_id, idempotency_key)
+  adm360_pedidos :: adm360_pedidos_tenant_id_numero_key     CREATE UNIQUE INDEX adm360_pedidos_tenant_id_numero_key ON plantaopro.adm360_pedidos USING btree (tenant_id, numero)
+  adm360_pedidos :: ix_adm360_pedidos_filtro     CREATE INDEX ix_adm360_pedidos_filtro ON plantaopro.adm360_pedidos USING btree (tenant_id, situacao, created_at, fornecedor_id)
+  adm360_portal_contas :: adm360_portal_contas_pkey     CREATE UNIQUE INDEX adm360_portal_contas_pkey ON plantaopro.adm360_portal_contas USING btree (id)
+  adm360_portal_contas :: adm360_portal_contas_tenant_id_id_key     CREATE UNIQUE INDEX adm360_portal_contas_tenant_id_id_key ON plantaopro.adm360_portal_contas USING btree (tenant_id, id)
+  adm360_portal_contas :: adm360_portal_contas_tenant_id_provedor_identificador_exter_key     CREATE UNIQUE INDEX adm360_portal_contas_tenant_id_provedor_identificador_exter_key ON plantaopro.adm360_portal_contas USING btree (tenant_id, provedor, identificador_externo)
+  adm360_portal_contas :: ix_adm360_pcontas_tenant_prov     CREATE INDEX ix_adm360_pcontas_tenant_prov ON plantaopro.adm360_portal_contas USING btree (tenant_id, provedor, status_integracao)
+  adm360_produtos :: adm360_produtos_pkey     CREATE UNIQUE INDEX adm360_produtos_pkey ON plantaopro.adm360_produtos USING btree (id)
+  adm360_produtos :: adm360_produtos_tenant_id_id_key     CREATE UNIQUE INDEX adm360_produtos_tenant_id_id_key ON plantaopro.adm360_produtos USING btree (tenant_id, id)
+  adm360_produtos :: adm360_produtos_tenant_id_sku_key     CREATE UNIQUE INDEX adm360_produtos_tenant_id_sku_key ON plantaopro.adm360_produtos USING btree (tenant_id, sku)
+  adm360_produtos :: ux_adm360_produto_barcode     CREATE UNIQUE INDEX ux_adm360_produto_barcode ON plantaopro.adm360_produtos USING btree (tenant_id, codigo_barras) WHERE (codigo_barras IS NOT NULL)
+  adm360_recebimento_itens :: adm360_recebimento_itens_pkey     CREATE UNIQUE INDEX adm360_recebimento_itens_pkey ON plantaopro.adm360_recebimento_itens USING btree (id)
+  adm360_recebimento_itens :: adm360_recebimento_itens_tenant_id_id_key     CREATE UNIQUE INDEX adm360_recebimento_itens_tenant_id_id_key ON plantaopro.adm360_recebimento_itens USING btree (tenant_id, id)
+  adm360_recebimentos :: adm360_recebimentos_pkey     CREATE UNIQUE INDEX adm360_recebimentos_pkey ON plantaopro.adm360_recebimentos USING btree (id)
+  adm360_recebimentos :: adm360_recebimentos_tenant_id_id_key     CREATE UNIQUE INDEX adm360_recebimentos_tenant_id_id_key ON plantaopro.adm360_recebimentos USING btree (tenant_id, id)
+  adm360_recebimentos :: adm360_recebimentos_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_recebimentos_tenant_id_idempotency_key_key ON plantaopro.adm360_recebimentos USING btree (tenant_id, idempotency_key)
+  adm360_reservas :: adm360_reservas_pkey     CREATE UNIQUE INDEX adm360_reservas_pkey ON plantaopro.adm360_reservas USING btree (id)
+  adm360_reservas :: adm360_reservas_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_reservas_tenant_id_idempotency_key_key ON plantaopro.adm360_reservas USING btree (tenant_id, idempotency_key)
+  adm360_reservas :: ix_adm360_reservas_saldo     CREATE INDEX ix_adm360_reservas_saldo ON plantaopro.adm360_reservas USING btree (tenant_id, produto_id, lote_id, local_id) INCLUDE (quantidade) WHERE ((situacao)::text = 'ATIVA'::text)
+  adm360_tarefas_coleta :: adm360_tarefas_coleta_pkey     CREATE UNIQUE INDEX adm360_tarefas_coleta_pkey ON plantaopro.adm360_tarefas_coleta USING btree (id)
+  adm360_tarefas_coleta :: adm360_tarefas_coleta_tenant_id_id_key     CREATE UNIQUE INDEX adm360_tarefas_coleta_tenant_id_id_key ON plantaopro.adm360_tarefas_coleta USING btree (tenant_id, id)
+  adm360_titulo_baixas :: adm360_titulo_baixas_pkey     CREATE UNIQUE INDEX adm360_titulo_baixas_pkey ON plantaopro.adm360_titulo_baixas USING btree (id)
+  adm360_titulo_baixas :: adm360_titulo_baixas_tenant_id_id_key     CREATE UNIQUE INDEX adm360_titulo_baixas_tenant_id_id_key ON plantaopro.adm360_titulo_baixas USING btree (tenant_id, id)
+  adm360_titulo_baixas :: adm360_titulo_baixas_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_titulo_baixas_tenant_id_idempotency_key_key ON plantaopro.adm360_titulo_baixas USING btree (tenant_id, idempotency_key)
+  adm360_titulo_baixas :: ix_adm360_baixas_tenant_tit     CREATE INDEX ix_adm360_baixas_tenant_tit ON plantaopro.adm360_titulo_baixas USING btree (tenant_id, titulo_id)
+  adm360_titulo_estornos :: adm360_titulo_estornos_pkey     CREATE UNIQUE INDEX adm360_titulo_estornos_pkey ON plantaopro.adm360_titulo_estornos USING btree (id)
+  adm360_titulo_estornos :: adm360_titulo_estornos_tenant_id_baixa_id_key     CREATE UNIQUE INDEX adm360_titulo_estornos_tenant_id_baixa_id_key ON plantaopro.adm360_titulo_estornos USING btree (tenant_id, baixa_id)
+  adm360_titulo_estornos :: adm360_titulo_estornos_tenant_id_id_key     CREATE UNIQUE INDEX adm360_titulo_estornos_tenant_id_id_key ON plantaopro.adm360_titulo_estornos USING btree (tenant_id, id)
+  adm360_titulo_estornos :: adm360_titulo_estornos_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_titulo_estornos_tenant_id_idempotency_key_key ON plantaopro.adm360_titulo_estornos USING btree (tenant_id, idempotency_key)
+  adm360_titulo_pagamentos :: adm360_titulo_pagamentos_pkey     CREATE UNIQUE INDEX adm360_titulo_pagamentos_pkey ON plantaopro.adm360_titulo_pagamentos USING btree (id)
+  adm360_titulo_pagamentos :: adm360_titulo_pagamentos_tenant_id_id_key     CREATE UNIQUE INDEX adm360_titulo_pagamentos_tenant_id_id_key ON plantaopro.adm360_titulo_pagamentos USING btree (tenant_id, id)
+  adm360_titulo_pagamentos :: adm360_titulo_pagamentos_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_titulo_pagamentos_tenant_id_idempotency_key_key ON plantaopro.adm360_titulo_pagamentos USING btree (tenant_id, idempotency_key)
+  adm360_titulo_pagamentos :: ix_adm360_titpag_tenant_data     CREATE INDEX ix_adm360_titpag_tenant_data ON plantaopro.adm360_titulo_pagamentos USING btree (tenant_id, data_pagamento)
+  adm360_titulo_pagamentos :: ix_adm360_titpag_tenant_tit     CREATE INDEX ix_adm360_titpag_tenant_tit ON plantaopro.adm360_titulo_pagamentos USING btree (tenant_id, titulo_id)
+  adm360_titulos_pagar :: adm360_titulos_pagar_pkey     CREATE UNIQUE INDEX adm360_titulos_pagar_pkey ON plantaopro.adm360_titulos_pagar USING btree (id)
+  adm360_titulos_pagar :: adm360_titulos_pagar_tenant_id_id_key     CREATE UNIQUE INDEX adm360_titulos_pagar_tenant_id_id_key ON plantaopro.adm360_titulos_pagar USING btree (tenant_id, id)
+  adm360_titulos_pagar :: adm360_titulos_pagar_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_titulos_pagar_tenant_id_idempotency_key_key ON plantaopro.adm360_titulos_pagar USING btree (tenant_id, idempotency_key)
+  adm360_titulos_pagar :: adm360_titulos_pagar_tenant_id_numero_key     CREATE UNIQUE INDEX adm360_titulos_pagar_tenant_id_numero_key ON plantaopro.adm360_titulos_pagar USING btree (tenant_id, numero)
+  adm360_titulos_pagar :: ix_adm360_titulos_pagar_fornecedor     CREATE INDEX ix_adm360_titulos_pagar_fornecedor ON plantaopro.adm360_titulos_pagar USING btree (tenant_id, fornecedor_id, situacao)
+  adm360_titulos_pagar :: ix_adm360_titulos_pagar_venc     CREATE INDEX ix_adm360_titulos_pagar_venc ON plantaopro.adm360_titulos_pagar USING btree (tenant_id, data_vencimento, situacao)
+  adm360_titulos_pagar :: ux_adm360_titulos_pagar_origem     CREATE UNIQUE INDEX ux_adm360_titulos_pagar_origem ON plantaopro.adm360_titulos_pagar USING btree (tenant_id, origem_tipo, origem_id, parcela) WHERE (origem_id IS NOT NULL)
+  adm360_titulos_receber :: adm360_titulos_receber_pkey     CREATE UNIQUE INDEX adm360_titulos_receber_pkey ON plantaopro.adm360_titulos_receber USING btree (id)
+  adm360_titulos_receber :: adm360_titulos_receber_tenant_id_id_key     CREATE UNIQUE INDEX adm360_titulos_receber_tenant_id_id_key ON plantaopro.adm360_titulos_receber USING btree (tenant_id, id)
+  adm360_titulos_receber :: adm360_titulos_receber_tenant_id_venda_id_parcela_key     CREATE UNIQUE INDEX adm360_titulos_receber_tenant_id_venda_id_parcela_key ON plantaopro.adm360_titulos_receber USING btree (tenant_id, venda_id, parcela)
+  adm360_titulos_receber :: ix_adm360_titulos_pagador     CREATE INDEX ix_adm360_titulos_pagador ON plantaopro.adm360_titulos_receber USING btree (tenant_id, pagador_id)
+  adm360_titulos_receber :: ix_adm360_titulos_tenant_venc     CREATE INDEX ix_adm360_titulos_tenant_venc ON plantaopro.adm360_titulos_receber USING btree (tenant_id, data_vencimento, situacao)
+  adm360_vale_eventos :: adm360_vale_eventos_pkey     CREATE UNIQUE INDEX adm360_vale_eventos_pkey ON plantaopro.adm360_vale_eventos USING btree (id)
+  adm360_vale_eventos :: adm360_vale_eventos_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_vale_eventos_tenant_id_idempotency_key_key ON plantaopro.adm360_vale_eventos USING btree (tenant_id, idempotency_key)
+  adm360_vale_eventos :: ix_adm360_vale_eventos_item     CREATE INDEX ix_adm360_vale_eventos_item ON plantaopro.adm360_vale_eventos USING btree (tenant_id, vale_item_id)
+  adm360_vale_eventos :: ix_adm360_vale_eventos_tenant_vale     CREATE INDEX ix_adm360_vale_eventos_tenant_vale ON plantaopro.adm360_vale_eventos USING btree (tenant_id, vale_id)
+  adm360_vale_itens :: adm360_vale_itens_pkey     CREATE UNIQUE INDEX adm360_vale_itens_pkey ON plantaopro.adm360_vale_itens USING btree (id)
+  adm360_vale_itens :: adm360_vale_itens_tenant_id_id_key     CREATE UNIQUE INDEX adm360_vale_itens_tenant_id_id_key ON plantaopro.adm360_vale_itens USING btree (tenant_id, id)
+  adm360_vale_itens :: adm360_vale_itens_tenant_id_vale_id_produto_id_lote_id_key     CREATE UNIQUE INDEX adm360_vale_itens_tenant_id_vale_id_produto_id_lote_id_key ON plantaopro.adm360_vale_itens USING btree (tenant_id, vale_id, produto_id, lote_id)
+  adm360_vale_itens :: ix_adm360_vale_itens_reserva     CREATE INDEX ix_adm360_vale_itens_reserva ON plantaopro.adm360_vale_itens USING btree (tenant_id, reserva_id)
+  adm360_vale_itens :: ix_adm360_vale_itens_tenant_vale     CREATE INDEX ix_adm360_vale_itens_tenant_vale ON plantaopro.adm360_vale_itens USING btree (tenant_id, vale_id)
+  adm360_vales :: adm360_vales_pkey     CREATE UNIQUE INDEX adm360_vales_pkey ON plantaopro.adm360_vales USING btree (id)
+  adm360_vales :: adm360_vales_tenant_id_id_key     CREATE UNIQUE INDEX adm360_vales_tenant_id_id_key ON plantaopro.adm360_vales USING btree (tenant_id, id)
+  adm360_vales :: adm360_vales_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_vales_tenant_id_idempotency_key_key ON plantaopro.adm360_vales USING btree (tenant_id, idempotency_key)
+  adm360_vales :: adm360_vales_tenant_id_numero_key     CREATE UNIQUE INDEX adm360_vales_tenant_id_numero_key ON plantaopro.adm360_vales USING btree (tenant_id, numero)
+  adm360_vales :: ix_adm360_vales_cirurgia     CREATE INDEX ix_adm360_vales_cirurgia ON plantaopro.adm360_vales USING btree (tenant_id, cirurgia_id)
+  adm360_vales :: ix_adm360_vales_tenant_hospital     CREATE INDEX ix_adm360_vales_tenant_hospital ON plantaopro.adm360_vales USING btree (tenant_id, hospital_id)
+  adm360_vales :: ix_adm360_vales_tenant_situacao     CREATE INDEX ix_adm360_vales_tenant_situacao ON plantaopro.adm360_vales USING btree (tenant_id, situacao, data_saida_prevista)
+  adm360_valorizacao_itens :: adm360_valorizacao_itens_pkey     CREATE UNIQUE INDEX adm360_valorizacao_itens_pkey ON plantaopro.adm360_valorizacao_itens USING btree (id)
+  adm360_valorizacao_itens :: adm360_valorizacao_itens_tenant_id_id_key     CREATE UNIQUE INDEX adm360_valorizacao_itens_tenant_id_id_key ON plantaopro.adm360_valorizacao_itens USING btree (tenant_id, id)
+  adm360_valorizacao_itens :: adm360_valorizacao_itens_tenant_id_valorizacao_id_vale_item_key     CREATE UNIQUE INDEX adm360_valorizacao_itens_tenant_id_valorizacao_id_vale_item_key ON plantaopro.adm360_valorizacao_itens USING btree (tenant_id, valorizacao_id, vale_item_id)
+  adm360_valorizacoes :: adm360_valorizacoes_pkey     CREATE UNIQUE INDEX adm360_valorizacoes_pkey ON plantaopro.adm360_valorizacoes USING btree (id)
+  adm360_valorizacoes :: adm360_valorizacoes_tenant_id_id_key     CREATE UNIQUE INDEX adm360_valorizacoes_tenant_id_id_key ON plantaopro.adm360_valorizacoes USING btree (tenant_id, id)
+  adm360_valorizacoes :: adm360_valorizacoes_tenant_id_vale_id_key     CREATE UNIQUE INDEX adm360_valorizacoes_tenant_id_vale_id_key ON plantaopro.adm360_valorizacoes USING btree (tenant_id, vale_id)
+  adm360_valorizacoes :: ix_adm360_val_tenant_vale     CREATE INDEX ix_adm360_val_tenant_vale ON plantaopro.adm360_valorizacoes USING btree (tenant_id, vale_id)
+  adm360_venda_itens :: adm360_venda_itens_pkey     CREATE UNIQUE INDEX adm360_venda_itens_pkey ON plantaopro.adm360_venda_itens USING btree (id)
+  adm360_venda_itens :: adm360_venda_itens_tenant_id_id_key     CREATE UNIQUE INDEX adm360_venda_itens_tenant_id_id_key ON plantaopro.adm360_venda_itens USING btree (tenant_id, id)
+  adm360_vendas :: adm360_vendas_pkey     CREATE UNIQUE INDEX adm360_vendas_pkey ON plantaopro.adm360_vendas USING btree (id)
+  adm360_vendas :: adm360_vendas_tenant_id_id_key     CREATE UNIQUE INDEX adm360_vendas_tenant_id_id_key ON plantaopro.adm360_vendas USING btree (tenant_id, id)
+  adm360_vendas :: adm360_vendas_tenant_id_idempotency_key_key     CREATE UNIQUE INDEX adm360_vendas_tenant_id_idempotency_key_key ON plantaopro.adm360_vendas USING btree (tenant_id, idempotency_key)
+  adm360_vendas :: adm360_vendas_tenant_id_numero_key     CREATE UNIQUE INDEX adm360_vendas_tenant_id_numero_key ON plantaopro.adm360_vendas USING btree (tenant_id, numero)
+  adm360_vendas :: adm360_vendas_tenant_id_valorizacao_id_key     CREATE UNIQUE INDEX adm360_vendas_tenant_id_valorizacao_id_key ON plantaopro.adm360_vendas USING btree (tenant_id, valorizacao_id)
+  adm360_vendas :: ix_adm360_vendas_tenant_comp     CREATE INDEX ix_adm360_vendas_tenant_comp ON plantaopro.adm360_vendas USING btree (tenant_id, competencia, situacao)
+
+== definicao da view adm360_saldos ==
+   SELECT m.tenant_id,
+      m.produto_id,
+      p.nome AS produto,
+      m.lote_id,
+      l.codigo AS lote,
+      l.validade,
+      m.local_id,
+      o.nome AS local,
+      m.condicao,
+      (sum(m.quantidade))::numeric(18,4) AS fisico,
+      (COALESCE(( SELECT sum(r.quantidade) AS sum
+             FROM plantaopro.adm360_reservas r
+            WHERE ((r.tenant_id = m.tenant_id) AND (r.produto_id = m.produto_id) AND (r.lote_id = m.lote_id) AND (r.local_id = m.local_id) AND ((r.situacao)::text = 'ATIVA'::text))), (0)::numeric))::numeric(18,4) AS reservado,
+      (
+          CASE
+              WHEN (((m.condicao)::text = 'LIBERADO'::text) AND ((l.validade IS NULL) OR (l.validade >= CURRENT_DATE))) THEN (sum(m.quantidade) - COALESCE(( SELECT sum(r.quantidade) AS sum
+                 FROM plantaopro.adm360_reservas r
+                WHERE ((r.tenant_id = m.tenant_id) AND (r.produto_id = m.produto_id) AND (r.lote_id = m.lote_id) AND (r.local_id = m.local_id) AND ((r.situacao)::text = 'ATIVA'::text))), (0)::numeric))
+              ELSE (0)::numeric
+          END)::numeric(18,4) AS disponivel
+     FROM (((plantaopro.adm360_movimentos m
+       JOIN plantaopro.adm360_produtos p ON (((p.id = m.produto_id) AND (p.tenant_id = m.tenant_id))))
+       JOIN plantaopro.adm360_lotes l ON (((l.id = m.lote_id) AND (l.tenant_id = m.tenant_id))))
+       JOIN plantaopro.adm360_locais o ON (((o.id = m.local_id) AND (o.tenant_id = m.tenant_id))))
+    GROUP BY m.tenant_id, m.produto_id, p.nome, m.lote_id, l.codigo, l.validade, m.local_id, o.nome, m.condicao;
+
+== EXPLAIN 
+  Limit  (cost=961.01..961.14 rows=50 width=62) (actual time=4.377..4.381 rows=50.00 loops=1)
+    Buffers: shared hit=458
+    ->  Sort  (cost=961.01..987.85 rows=10734 width=62) (actual time=4.376..4.377 rows=50.00 loops=1)
+          Sort Key: o.created_at DESC
+          Sort Method: top-N heapsort  Memory: 38kB
+          Buffers: shared hit=458
+          ->  Seq Scan on adm360_orcamentos o  (cost=0.00..604.44 rows=10734 width=62) (actual time=0.020..3.022 rows=10172.00 loops=1)
+                Filter: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                Rows Removed by Filter: 1154
+                Buffers: shared hit=455
+  Planning:
+    Buffers: shared hit=412
+  Planning Time: 3.163 ms
+  Execution Time: 4.411 ms
+
+== EXPLAIN 
+  Aggregate  (cost=631.27..631.28 rows=1 width=8) (actual time=2.518..2.519 rows=1.00 loops=1)
+    Buffers: shared hit=455
+    ->  Seq Scan on adm360_orcamentos o  (cost=0.00..604.44 rows=10734 width=0) (actual time=0.022..2.190 rows=10172.00 loops=1)
+          Filter: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+          Rows Removed by Filter: 1154
+          Buffers: shared hit=455
+  Planning:
+    Buffers: shared hit=371
+  Planning Time: 3.818 ms
+  Execution Time: 2.565 ms
+
+== EXPLAIN 
+  Limit  (cost=299163.46..299163.58 rows=50 width=172) (actual time=67.507..67.522 rows=50.00 loops=1)
+    Buffers: shared hit=37654 dirtied=1
+    ->  Sort  (cost=299163.46..299207.95 rows=17796 width=172) (actual time=67.506..67.518 rows=50.00 loops=1)
+          Sort Key: adm360_saldos.produto, adm360_saldos.validade
+          Sort Method: top-N heapsort  Memory: 40kB
+          Buffers: shared hit=37654 dirtied=1
+          ->  Subquery Scan on adm360_saldos  (cost=1823.99..298572.29 rows=17796 width=172) (actual time=25.282..64.716 rows=9288.00 loops=1)
+                Buffers: shared hit=37648 dirtied=1
+                ->  HashAggregate  (cost=1823.99..298394.33 rows=17796 width=188) (actual time=25.281..63.718 rows=9288.00 loops=1)
+                      Group Key: m.produto_id, p.nome, m.lote_id, l.codigo, l.validade, m.local_id, o.nome, m.condicao
+                      Batches: 1  Memory Usage: 4889kB
+                      Buffers: shared hit=37648 dirtied=1
+                      ->  Hash Join  (cost=322.68..1423.58 rows=17796 width=133) (actual time=1.936..14.989 rows=17886.00 loops=1)
+                            Hash Cond: (m.local_id = o.id)
+                            Buffers: shared hit=875
+                            ->  Hash Join  (cost=285.34..1339.44 rows=17796 width=111) (actual time=1.819..12.341 rows=17886.00 loops=1)
+                                  Hash Cond: (m.lote_id = l.id)
+                                  Buffers: shared hit=860
+                                  ->  Hash Join  (cost=30.08..1037.43 rows=17796 width=91) (actual time=0.124..7.221 rows=17886.00 loops=1)
+                                        Hash Cond: (m.produto_id = p.id)
+                                        Buffers: shared hit=759
+                                        ->  Seq Scan on adm360_movimentos m  (cost=0.00..960.48 rows=17796 width=78) (actual time=0.013..3.873 rows=17886.00 loops=1)
+                                              Filter: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                              Rows Removed by Filter: 2
+                                              Buffers: shared hit=738
+                                        ->  Hash  (cost=29.84..29.84 rows=19 width=45) (actual time=0.102..0.108 rows=19.00 loops=1)
+                                              Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                                              Buffers: shared hit=21
+                                              ->  Bitmap Heap Scan on adm360_produtos p  (cost=4.42..29.84 rows=19 width=45) (actual time=0.036..0.096 rows=19.00 loops=1)
+                                                    Recheck Cond: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                                    Heap Blocks: exact=18
+                                                    Buffers: shared hit=21
+                                                    ->  Bitmap Index Scan on adm360_produtos_tenant_id_sku_key  (cost=0.00..4.42 rows=19 width=0) (actual time=0.021..0.022 rows=45.00 loops=1)
+                                                          Index Cond: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                                          Index Searches: 1
+                                                          Buffers: shared hit=3
+                                  ->  Hash  (cost=185.28..185.28 rows=5599 width=52) (actual time=1.668..1.668 rows=5659.00 loops=1)
+                                        Buckets: 8192  Batches: 1  Memory Usage: 544kB
+                                        Buffers: shared hit=101
+                                        ->  Seq Scan on adm360_lotes l  (cost=0.00..185.28 rows=5599 width=52) (actual time=0.010..0.960 rows=5659.00 loops=1)
+                                              Filter: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                              Rows Removed by Filter: 1155
+                                              Buffers: shared hit=101
+                            ->  Hash  (cost=37.10..37.10 rows=19 width=54) (actual time=0.110..0.110 rows=19.00 loops=1)
+                                  Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                                  Buffers: shared hit=15
+                                  ->  Bitmap Heap Scan on adm360_locais o  (cost=4.43..37.10 rows=19 width=54) (actual time=0.050..0.103 rows=19.00 loops=1)
+                                        Recheck Cond: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                        Heap Blocks: exact=13
+                                        Buffers: shared hit=15
+                                        ->  Bitmap Index Scan on adm360_locais_tenant_id_codigo_key  (cost=0.00..4.42 rows=19 width=0) (actual time=0.022..0.022 rows=89.00 loops=1)
+                                              Index Cond: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                              Index Searches: 1
+                                              Buffers: shared hit=2
+                      SubPlan 1
+                        ->  Aggregate  (cost=8.31..8.32 rows=1 width=32) (actual time=0.002..0.002 rows=1.00 loops=9288)
+                              Buffers: shared hit=20091 dirtied=1
+                              ->  Index Only Scan using ix_adm360_reservas_saldo on adm360_reservas r  (cost=0.28..8.30 rows=1 width=5) (actual time=0.002..0.002 rows=0.20 loops=9288)
+                                    Index Cond: ((tenant_id = m.tenant_id) AND (produto_id = m.produto_id) AND (lote_id = m.lote_id) AND (local_id = m.local_id))
+                                    Heap Fetches: 1514
+                                    Index Searches: 9288
+                                    Buffers: shared hit=20091 dirtied=1
+                      SubPlan 2
+                        ->  Aggregate  (cost=8.31..8.32 rows=1 width=32) (actual time=0.001..0.001 rows=1.00 loops=7585)
+                              Buffers: shared hit=16682
+                              ->  Index Only Scan using ix_adm360_reservas_saldo on adm360_reservas r_1  (cost=0.28..8.30 rows=1 width=5) (actual time=0.001..0.001 rows=0.25 loops=7585)
+                                    Index Cond: ((tenant_id = m.tenant_id) AND (produto_id = m.produto_id) AND (lote_id = m.lote_id) AND (local_id = m.local_id))
+                                    Heap Fetches: 1511
+                                    Index Searches: 7585
+                                    Buffers: shared hit=16682
+  Planning:
+    Buffers: shared hit=701
+  Planning Time: 4.532 ms
+  Execution Time: 68.783 ms
+
+== EXPLAIN 
+  Aggregate  (cost=2179.91..2179.92 rows=1 width=8) (actual time=24.516..24.520 rows=1.00 loops=1)
+    Buffers: shared hit=875
+    ->  HashAggregate  (cost=1779.50..1957.46 rows=17796 width=188) (actual time=22.379..24.196 rows=9288.00 loops=1)
+          Group Key: m.produto_id, p.nome, m.lote_id, l.codigo, l.validade, m.local_id, o.nome, m.condicao
+          Batches: 1  Memory Usage: 2337kB
+          Buffers: shared hit=875
+          ->  Hash Join  (cost=322.68..1423.58 rows=17796 width=128) (actual time=1.951..14.589 rows=17886.00 loops=1)
+                Hash Cond: (m.local_id = o.id)
+                Buffers: shared hit=875
+                ->  Hash Join  (cost=285.34..1339.44 rows=17796 width=106) (actual time=1.786..12.020 rows=17886.00 loops=1)
+                      Hash Cond: (m.lote_id = l.id)
+                      Buffers: shared hit=860
+                      ->  Hash Join  (cost=30.08..1037.43 rows=17796 width=86) (actual time=0.119..7.121 rows=17886.00 loops=1)
+                            Hash Cond: (m.produto_id = p.id)
+                            Buffers: shared hit=759
+                            ->  Seq Scan on adm360_movimentos m  (cost=0.00..960.48 rows=17796 width=73) (actual time=0.012..4.087 rows=17886.00 loops=1)
+                                  Filter: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                  Rows Removed by Filter: 2
+                                  Buffers: shared hit=738
+                            ->  Hash  (cost=29.84..29.84 rows=19 width=45) (actual time=0.099..0.099 rows=19.00 loops=1)
+                                  Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                                  Buffers: shared hit=21
+                                  ->  Bitmap Heap Scan on adm360_produtos p  (cost=4.42..29.84 rows=19 width=45) (actual time=0.034..0.092 rows=19.00 loops=1)
+                                        Recheck Cond: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                        Heap Blocks: exact=18
+                                        Buffers: shared hit=21
+                                        ->  Bitmap Index Scan on adm360_produtos_tenant_id_sku_key  (cost=0.00..4.42 rows=19 width=0) (actual time=0.020..0.020 rows=45.00 loops=1)
+                                              Index Cond: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                              Index Searches: 1
+                                              Buffers: shared hit=3
+                      ->  Hash  (cost=185.28..185.28 rows=5599 width=52) (actual time=1.641..1.641 rows=5659.00 loops=1)
+                            Buckets: 8192  Batches: 1  Memory Usage: 544kB
+                            Buffers: shared hit=101
+                            ->  Seq Scan on adm360_lotes l  (cost=0.00..185.28 rows=5599 width=52) (actual time=0.012..0.937 rows=5659.00 loops=1)
+                                  Filter: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                  Rows Removed by Filter: 1155
+                                  Buffers: shared hit=101
+                ->  Hash  (cost=37.10..37.10 rows=19 width=54) (actual time=0.115..0.116 rows=19.00 loops=1)
+                      Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                      Buffers: shared hit=15
+                      ->  Bitmap Heap Scan on adm360_locais o  (cost=4.43..37.10 rows=19 width=54) (actual time=0.050..0.107 rows=19.00 loops=1)
+                            Recheck Cond: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                            Heap Blocks: exact=13
+                            Buffers: shared hit=15
+                            ->  Bitmap Index Scan on adm360_locais_tenant_id_codigo_key  (cost=0.00..4.42 rows=19 width=0) (actual time=0.024..0.024 rows=89.00 loops=1)
+                                  Index Cond: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                  Index Searches: 1
+                                  Buffers: shared hit=2
+  Planning:
+    Buffers: shared hit=610
+  Planning Time: 4.182 ms
+  Execution Time: 25.042 ms
+
+== EXPLAIN 
+  Aggregate  (cost=298705.76..298705.77 rows=1 width=96) (actual time=62.287..62.293 rows=1.00 loops=1)
+    Buffers: shared hit=37647
+    ->  HashAggregate  (cost=1823.99..298394.33 rows=17796 width=188) (actual time=26.395..61.097 rows=9288.00 loops=1)
+          Group Key: m.produto_id, p.nome, m.lote_id, l.codigo, l.validade, m.local_id, o.nome, m.condicao
+          Batches: 1  Memory Usage: 4889kB
+          Buffers: shared hit=37647
+          ->  Hash Join  (cost=322.68..1423.58 rows=17796 width=133) (actual time=2.135..16.253 rows=17886.00 loops=1)
+                Hash Cond: (m.local_id = o.id)
+                Buffers: shared hit=875
+                ->  Hash Join  (cost=285.34..1339.44 rows=17796 width=111) (actual time=1.983..13.310 rows=17886.00 loops=1)
+                      Hash Cond: (m.lote_id = l.id)
+                      Buffers: shared hit=860
+                      ->  Hash Join  (cost=30.08..1037.43 rows=17796 width=91) (actual time=0.164..7.849 rows=17886.00 loops=1)
+                            Hash Cond: (m.produto_id = p.id)
+                            Buffers: shared hit=759
+                            ->  Seq Scan on adm360_movimentos m  (cost=0.00..960.48 rows=17796 width=78) (actual time=0.021..4.300 rows=17886.00 loops=1)
+                                  Filter: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                  Rows Removed by Filter: 2
+                                  Buffers: shared hit=738
+                            ->  Hash  (cost=29.84..29.84 rows=19 width=45) (actual time=0.128..0.129 rows=19.00 loops=1)
+                                  Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                                  Buffers: shared hit=21
+                                  ->  Bitmap Heap Scan on adm360_produtos p  (cost=4.42..29.84 rows=19 width=45) (actual time=0.043..0.120 rows=19.00 loops=1)
+                                        Recheck Cond: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                        Heap Blocks: exact=18
+                                        Buffers: shared hit=21
+                                        ->  Bitmap Index Scan on adm360_produtos_tenant_id_sku_key  (cost=0.00..4.42 rows=19 width=0) (actual time=0.025..0.025 rows=45.00 loops=1)
+                                              Index Cond: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                              Index Searches: 1
+                                              Buffers: shared hit=3
+                      ->  Hash  (cost=185.28..185.28 rows=5599 width=52) (actual time=1.794..1.794 rows=5659.00 loops=1)
+                            Buckets: 8192  Batches: 1  Memory Usage: 544kB
+                            Buffers: shared hit=101
+                            ->  Seq Scan on adm360_lotes l  (cost=0.00..185.28 rows=5599 width=52) (actual time=0.013..1.017 rows=5659.00 loops=1)
+                                  Filter: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                  Rows Removed by Filter: 1155
+                                  Buffers: shared hit=101
+                ->  Hash  (cost=37.10..37.10 rows=19 width=54) (actual time=0.143..0.143 rows=19.00 loops=1)
+                      Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                      Buffers: shared hit=15
+                      ->  Bitmap Heap Scan on adm360_locais o  (cost=4.43..37.10 rows=19 width=54) (actual time=0.064..0.133 rows=19.00 loops=1)
+                            Recheck Cond: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                            Heap Blocks: exact=13
+                            Buffers: shared hit=15
+                            ->  Bitmap Index Scan on adm360_locais_tenant_id_codigo_key  (cost=0.00..4.42 rows=19 width=0) (actual time=0.030..0.030 rows=89.00 loops=1)
+                                  Index Cond: (tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid)
+                                  Index Searches: 1
+                                  Buffers: shared hit=2
+          SubPlan 1
+            ->  Aggregate  (cost=8.31..8.32 rows=1 width=32) (actual time=0.001..0.001 rows=1.00 loops=9288)
+                  Buffers: shared hit=20090
+                  ->  Index Only Scan using ix_adm360_reservas_saldo on adm360_reservas r  (cost=0.28..8.30 rows=1 width=5) (actual time=0.001..0.001 rows=0.20 loops=9288)
+                        Index Cond: ((tenant_id = m.tenant_id) AND (produto_id = m.produto_id) AND (lote_id = m.lote_id) AND (local_id = m.local_id))
+                        Heap Fetches: 1513
+                        Index Searches: 9288
+                        Buffers: shared hit=20090
+          SubPlan 2
+            ->  Aggregate  (cost=8.31..8.32 rows=1 width=32) (actual time=0.001..0.001 rows=1.00 loops=7585)
+                  Buffers: shared hit=16682
+                  ->  Index Only Scan using ix_adm360_reservas_saldo on adm360_reservas r_1  (cost=0.28..8.30 rows=1 width=5) (actual time=0.001..0.001 rows=0.25 loops=7585)
+                        Index Cond: ((tenant_id = m.tenant_id) AND (produto_id = m.produto_id) AND (lote_id = m.lote_id) AND (local_id = m.local_id))
+                        Heap Fetches: 1511
+                        Index Searches: 7585
+                        Buffers: shared hit=16682
+  Planning:
+    Buffers: shared hit=700
+  Planning Time: 5.164 ms
+  Execution Time: 63.278 ms
+
+== EXPLAIN 
+  Aggregate  (cost=163.07..163.08 rows=1 width=32) (actual time=0.620..0.621 rows=1.00 loops=1)
+    Buffers: shared hit=102
+    ->  Seq Scan on adm360_reservas  (cost=0.00..163.06 rows=1 width=5) (actual time=0.021..0.613 rows=1.00 loops=1)
+          Filter: ((tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid) AND ((origem_tipo)::text = 'ORCAMENTO_CIRURGICO'::text) AND (origem_id = 'a3610000-0000-4000-8000-000000000041'::uuid) AND (produto_id = 'a3610000-0000-4000-8000-000000000002'::uuid) AND ((situacao)::text = 'ATIVA'::text))
+          Rows Removed by Filter: 2622
+          Buffers: shared hit=102
+  Planning:
+    Buffers: shared hit=147
+  Planning Time: 0.980 ms
+  Execution Time: 0.644 ms
+
+== EXPLAIN 
+  Sort  (cost=50.96..50.97 rows=1 width=96) (actual time=1.631..1.633 rows=1.00 loops=1)
+    Sort Key: adm360_saldos.validade
+    Sort Method: quicksort  Memory: 25kB
+    Buffers: shared hit=28 read=1
+    ->  Subquery Scan on adm360_saldos  (cost=17.71..50.95 rows=1 width=96) (actual time=1.620..1.622 rows=1.00 loops=1)
+          Buffers: shared hit=25 read=1
+          ->  GroupAggregate  (cost=17.71..50.94 rows=1 width=188) (actual time=1.619..1.621 rows=1.00 loops=1)
+                Group Key: m.lote_id, m.local_id, p.nome, l.codigo, l.validade, o.nome
+                Filter: ((sum(m.quantidade))::numeric(18,4) > '0'::numeric)
+                Buffers: shared hit=25 read=1
+                ->  Incremental Sort  (cost=17.71..34.24 rows=2 width=133) (actual time=1.574..1.576 rows=1.00 loops=1)
+                      Sort Key: m.lote_id, m.local_id, p.nome, l.codigo, l.validade, o.nome
+                      Presorted Key: m.lote_id, m.local_id
+                      Full-sort Groups: 1  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
+                      Buffers: shared hit=21 read=1
+                      ->  Nested Loop  (cost=1.25..34.15 rows=1 width=133) (actual time=1.550..1.556 rows=1.00 loops=1)
+                            Buffers: shared hit=15 read=1
+                            ->  Nested Loop  (cost=0.97..25.05 rows=1 width=111) (actual time=1.034..1.039 rows=1.00 loops=1)
+                                  Buffers: shared hit=12 read=1
+                                  ->  Nested Loop  (cost=0.69..16.74 rows=1 width=91) (actual time=0.059..0.063 rows=1.00 loops=1)
+                                        Buffers: shared hit=10
+                                        ->  Index Scan using ix_adm360_movimentos_saldo on adm360_movimentos m  (cost=0.41..8.43 rows=1 width=78) (actual time=0.037..0.038 rows=1.00 loops=1)
+                                              Index Cond: ((tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid) AND (produto_id = '0840e80f-5f0b-442b-8498-8db13ff78431'::uuid) AND ((condicao)::text = 'LIBERADO'::text))
+                                              Index Searches: 1
+                                              Buffers: shared hit=7
+                                        ->  Index Scan using adm360_produtos_tenant_id_id_key on adm360_produtos p  (cost=0.28..8.30 rows=1 width=45) (actual time=0.021..0.023 rows=1.00 loops=1)
+                                              Index Cond: ((tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid) AND (id = '0840e80f-5f0b-442b-8498-8db13ff78431'::uuid))
+                                              Index Searches: 1
+                                              Buffers: shared hit=3
+                                  ->  Index Scan using adm360_lotes_tenant_id_id_key on adm360_lotes l  (cost=0.28..8.30 rows=1 width=52) (actual time=0.973..0.973 rows=1.00 loops=1)
+                                        Index Cond: ((tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid) AND (id = m.lote_id))
+                                        Index Searches: 1
+                                        Buffers: shared hit=2 read=1
+                            ->  Index Scan using adm360_locais_tenant_id_id_key on adm360_locais o  (cost=0.28..8.30 rows=1 width=54) (actual time=0.513..0.513 rows=1.00 loops=1)
+                                  Index Cond: ((tenant_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647502'::uuid) AND (id = m.local_id))
+                                  Index Searches: 1
+                                  Buffers: shared hit=3
+                SubPlan 1
+                  ->  Aggregate  (cost=8.31..8.32 rows=1 width=32) (actual time=0.020..0.020 rows=1.00 loops=1)
+                        Buffers: shared hit=2
+                        ->  Index Only Scan using ix_adm360_reservas_saldo on adm360_reservas r  (cost=0.28..8.30 rows=1 width=5) (actual time=0.019..0.019 rows=0.00 loops=1)
+                              Index Cond: ((tenant_id = m.tenant_id) AND (produto_id = m.produto_id) AND (lote_id = m.lote_id) AND (local_id = m.local_id))
+                              Heap Fetches: 0
+                              Index Searches: 1
+                              Buffers: shared hit=2
+                SubPlan 2
+                  ->  Aggregate  (cost=8.31..8.32 rows=1 width=32) (actual time=0.008..0.009 rows=1.00 loops=1)
+                        Buffers: shared hit=2
+                        ->  Index Only Scan using ix_adm360_reservas_saldo on adm360_reservas r_1  (cost=0.28..8.30 rows=1 width=5) (actual time=0.007..0.007 rows=0.00 loops=1)
+                              Index Cond: ((tenant_id = m.tenant_id) AND (produto_id = m.produto_id) AND (lote_id = m.lote_id) AND (local_id = m.local_id))
+                              Heap Fetches: 0
+                              Index Searches: 1
+                              Buffers: shared hit=2
+  Planning:
+    Buffers: shared hit=695
+  Planning Time: 4.189 ms
+  Execution Time: 1.794 ms
+
+== fim recon ==

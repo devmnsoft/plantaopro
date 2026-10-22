@@ -11,6 +11,8 @@ namespace PlantaoPro.Web.Controllers;
 /// vive na API (api/simples).
 /// </summary>
 [Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE,ADMIN_CLIENTE,GESTOR_OPERACIONAL,DIRETOR,COORDENACAO,COORDENADOR,CONSULTA_CLIENTE,AUDITOR")]
+// R91: prefixo de rota explicito — sem ele, ""/Index viravam rotas absolutas "/" e "/index" (colisao/404).
+[Route("SimplesWeb")]
 public sealed class SimplesWebController : BaseWebController
 {
     public SimplesWebController(IHttpClientFactory factory, ILogger<SimplesWebController> logger)

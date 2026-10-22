@@ -11,6 +11,8 @@ namespace PlantaoPro.Web.Controllers;
 /// Folha e do Simples). O motor e o estado por tenant vivem na API (api/calendario-fiscal).
 /// </summary>
 [Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE,ADMIN_CLIENTE,GESTOR_OPERACIONAL,DIRETOR,COORDENACAO,COORDENADOR,CONSULTA_CLIENTE,AUDITOR")]
+// R91: prefixo de rota explicito — sem ele, ""/Index viravam rotas absolutas "/" e "/index" (colisao/404).
+[Route("CalendarioFiscalWeb")]
 public sealed class CalendarioFiscalWebController : BaseWebController
 {
     public CalendarioFiscalWebController(IHttpClientFactory factory, ILogger<CalendarioFiscalWebController> logger)

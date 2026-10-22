@@ -12,6 +12,8 @@ namespace PlantaoPro.Web.Controllers;
 /// { ok, data/erro } do padrao da casa. O motor vive na API (api/legislacao/parametros).
 /// </summary>
 [Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE,ADMIN_CLIENTE,GESTOR_OPERACIONAL,DIRETOR,COORDENACAO,COORDENADOR,CONSULTA_CLIENTE,AUDITOR")]
+// R91: prefixo de rota explicito — sem ele, ""/Index viravam rotas absolutas "/" e "/index" (colisao/404).
+[Route("LegislacaoWeb")]
 public sealed class LegislacaoWebController : BaseWebController
 {
     public LegislacaoWebController(IHttpClientFactory factory, ILogger<LegislacaoWebController> logger)

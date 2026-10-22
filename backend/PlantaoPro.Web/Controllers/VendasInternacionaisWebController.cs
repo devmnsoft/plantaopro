@@ -12,6 +12,8 @@ namespace PlantaoPro.Web.Controllers;
 /// O motor vive na API (api/vendas-internacionais).
 /// </summary>
 [Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE,ADMIN_CLIENTE,GESTOR_OPERACIONAL,DIRETOR,COORDENACAO,COORDENADOR,CONSULTA_CLIENTE,AUDITOR")]
+// R91: prefixo de rota explicito — sem ele, ""/Index viravam rotas absolutas "/" e "/index" (colisao/404).
+[Route("VendasInternacionaisWeb")]
 public sealed class VendasInternacionaisWebController : BaseWebController
 {
     public VendasInternacionaisWebController(IHttpClientFactory factory, ILogger<VendasInternacionaisWebController> logger)

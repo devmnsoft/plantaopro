@@ -10,6 +10,8 @@ namespace PlantaoPro.Web.Controllers;
 /// (mesmo padrao do bloco de anexos, R72). O calculo vive na API (api/folha).
 /// </summary>
 [Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE,ADMIN_CLIENTE,GESTOR_OPERACIONAL,DIRETOR,COORDENACAO,COORDENADOR,CONSULTA_CLIENTE,AUDITOR")]
+// R91: prefixo de rota explicito — sem ele, ""/Index viravam rotas absolutas "/" e "/index" (colisao/404).
+[Route("FolhaWeb")]
 public sealed class FolhaWebController : BaseWebController
 {
     public FolhaWebController(IHttpClientFactory factory, ILogger<FolhaWebController> logger)

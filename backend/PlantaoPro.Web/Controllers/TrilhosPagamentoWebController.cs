@@ -12,6 +12,8 @@ namespace PlantaoPro.Web.Controllers;
 /// (api/trilhos-pagamento).
 /// </summary>
 [Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE,ADMIN_CLIENTE,GESTOR_OPERACIONAL,DIRETOR,COORDENACAO,COORDENADOR,CONSULTA_CLIENTE,AUDITOR")]
+// R91: prefixo de rota explicito — sem ele, ""/Index viravam rotas absolutas "/" e "/index" (colisao/404).
+[Route("TrilhosPagamentoWeb")]
 public sealed class TrilhosPagamentoWebController : BaseWebController
 {
     public TrilhosPagamentoWebController(IHttpClientFactory factory, ILogger<TrilhosPagamentoWebController> logger)

@@ -147,6 +147,17 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
         ["Adm360DocumentosXmlWeb"] = "ADM360",
         ["Adm360CotacoesWeb"] = "ADM360",
         ["Adm360FiscalWeb"] = "ADM360",
+        // R91: as seis paginas legais do bloco B4 nao estavam no catalogo — acesso direto caia em
+        // CATALOGO_NAO_CONFIGURADO (R88/R89 ja haviam registrado as suas ao publicar).
+        ["FolhaWeb"] = "ADM360",
+        ["SimplesWeb"] = "ADM360",
+        ["CalendarioFiscalWeb"] = "ADM360",
+        ["DfeNacionalWeb"] = "ADM360",
+        ["TrilhosPagamentoWeb"] = "ADM360",
+        ["LegislacaoWeb"] = "ADM360",
+        // R91: a jornada completa do cliente e aberta a partir da pagina de jornada do modulo
+        // CLIENTES (Views/Clientes/Jornada.cshtml) — fora do catalogo caia em CATALOGO_NAO_CONFIGURADO.
+        ["JornadaClientes"] = "CLIENTES",
         // R88: previa trabalhista eSocial (eventos S-1000 a S-1299, horas/jornada, aviso previo)
         // roda sob o mesmo modulo ADM360 do menu "Administracao do Cliente".
         ["EsocialTrabalhoWeb"] = "ADM360",

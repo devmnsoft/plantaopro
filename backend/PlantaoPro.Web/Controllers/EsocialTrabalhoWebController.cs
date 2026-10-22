@@ -12,6 +12,8 @@ namespace PlantaoPro.Web.Controllers;
 /// (api/esocial-trabalhista).
 /// </summary>
 [Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE,ADMIN_CLIENTE,GESTOR_OPERACIONAL,DIRETOR,COORDENACAO,COORDENADOR,CONSULTA_CLIENTE,AUDITOR")]
+// R91: prefixo de rota explicito — sem ele, ""/Index viravam rotas absolutas "/" e "/index" (colisao/404).
+[Route("EsocialTrabalhoWeb")]
 public sealed class EsocialTrabalhoWebController : BaseWebController
 {
     public EsocialTrabalhoWebController(IHttpClientFactory factory, ILogger<EsocialTrabalhoWebController> logger)

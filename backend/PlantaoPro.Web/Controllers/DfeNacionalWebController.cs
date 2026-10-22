@@ -12,6 +12,8 @@ namespace PlantaoPro.Web.Controllers;
 /// API (api/dfe-nacional).
 /// </summary>
 [Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE,ADMIN_CLIENTE,GESTOR_OPERACIONAL,DIRETOR,COORDENACAO,COORDENADOR,CONSULTA_CLIENTE,AUDITOR")]
+// R91: prefixo de rota explicito — sem ele, ""/Index viravam rotas absolutas "/" e "/index" (colisao/404).
+[Route("DfeNacionalWeb")]
 public sealed class DfeNacionalWebController : BaseWebController
 {
     public DfeNacionalWebController(IHttpClientFactory factory, ILogger<DfeNacionalWebController> logger)

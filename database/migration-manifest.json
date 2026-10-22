@@ -1514,6 +1514,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2373_r92_indizes_caminhos_quentes",
+                            "source":  "database/migrations/2026_10_v2373_r92_indizes_caminhos_quentes.sql",
+                            "checksum":  "9334ee36d0329905d9e19e3dabe78ebf6126fbe72990c6b22c082f2ee477b4c4",
+                            "dependsOn":  [
+                                              "2026_10_v2372_r89_vendas_internacionais"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

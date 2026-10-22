@@ -1474,6 +1474,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2369_r86_trilhos_pagamento",
+                            "source":  "database/migrations/2026_10_v2369_r86_trilhos_pagamento.sql",
+                            "checksum":  "f4ef956be0c4729793f92105598b4054a94f34b91730903fb9d84a2a175c5139",
+                            "dependsOn":  [
+                                              "2026_10_v2368_r85_dfe_nacional"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

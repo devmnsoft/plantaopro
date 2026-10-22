@@ -641,6 +641,7 @@ PAGINA|Triagem|Finalizar|Saude360/Formulario|ARQ_OK|LIT|
 PAGINA|Triagem|HistoricoPaciente|Triagem/HistoricoPaciente|ARQ_OK|NOME via ModuloAsync|
 PAGINA|Triagem|Index|Triagem/Index|ARQ_OK|NOME via ModuloAsync|
 PAGINA|Triagem|Salvar|Triagem/Salvar|ARQ_FALTA|NOME|herdado-de-Saude360WebControllerBase
+PAGINA|TrilhosPagamentoWeb|Index|TrilhosPagamentoWeb/Index|ARQ_OK|NOME|
 PAGINA|Usuario|Admin|Usuario/Admin|ARQ_OK|NOME|
 PAGINA|Usuario|AlterarSenha|Usuario/AlterarSenha|ARQ_OK|NOME|
 PAGINA|Usuario|Edit|Usuario/Edit|ARQ_OK|NOME|
@@ -734,6 +735,7 @@ ARTIGO|id=adm-folha-calculos|FolhaWeb/Index|titulo=Como simular folha, 13º, fé
 ARTIGO|id=adm-simples-nacional|SimplesWeb/Index|titulo=Como prever o DAS do Simples Nacional com as tabelas oficiais
 ARTIGO|id=adm-calendario-fiscal|CalendarioFiscalWeb/Index|titulo=Como acompanhar as obrigações fiscais do mês no calendário
 ARTIGO|id=adm-dfe-nacional|DfeNacionalWeb/Index|titulo=Como gerar e conferir a chave de acesso dos DF-e
+ARTIGO|id=adm-trilhos-pagamento|TrilhosPagamentoWeb/Index|titulo=Como configurar e gerar os trilhos de pagamento
 ARTIGO|id=central-fatura|MinhaCentral/Index|titulo=Como resolver fatura vencida
 ARTIGO|id=central-notificacoes|Notificacoes/Preferencias|titulo=Como configurar notificações
 ARTIGO|id=cad-empresa|Cadastro/Empresa|titulo=Como começar o cadastro da instituição
@@ -1407,6 +1409,7 @@ COBERTA|Triagem|Finalizar|artigo clin-triagem-finalizar
 SEM_ARTIGO|Triagem|HistoricoPaciente
 SEM_ARTIGO|Triagem|Index
 ACO_AUX|Triagem|Salvar|Triagem/Salvar|submissao dinamica ou helper herdado
+COBERTA|TrilhosPagamentoWeb|Index|artigo adm-trilhos-pagamento
 SEM_ARTIGO|Usuario|Admin
 COBERTA|Usuario|AlterarSenha|artigo adm-alterar-senha
 SEM_ARTIGO|Usuario|Edit
@@ -1443,5 +1446,5 @@ POTE_QUEBRA|WorkflowSaude360|Index|WorkflowSaude360/Index|pagina GET sem arquivo
 POTE_QUEBRA|WorkflowSaude360|ProximaAcao|WorkflowSaude360/ProximaAcao|pagina GET sem arquivo resolvido
 ACO_AUX|WorkflowSaude360|Salvar|WorkflowSaude360/Salvar|submissao dinamica ou helper herdado
 
-RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=678|FILE_OK=620|ARTIGOS=86|COBERTAS=84|FORA_ESCOPO=19|GAP_SEM_ARTIGO=517|ACO_AUX=29|POTE_QUEBRA=29
+RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=679|FILE_OK=621|ARTIGOS=87|COBERTAS=85|FORA_ESCOPO=19|GAP_SEM_ARTIGO=517|ACO_AUX=29|POTE_QUEBRA=29
 ARTIGOS_ORFAOS=NENHUM

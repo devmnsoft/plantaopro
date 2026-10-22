@@ -214,6 +214,8 @@ builder.Services.AddScoped<ConvitesEquipeService>();
 builder.Services.AddSingleton<ICobrancaProvider, SandboxCobrancaProvider>();
 builder.Services.AddScoped<CobrancaService>();
 string GetConn(IServiceProvider sp) => sp.GetRequiredService<IConfiguration>().GetConnectionString("Default") ?? connectionString!;
+// R86: trilhos de pagamento (PIX EMV + boleto + CNAB 400) amarrados ao motor de cobranca SaaS.
+builder.Services.AddScoped<TrilhosPagamentoService>(sp => new TrilhosPagamentoService(GetConn(sp)));
 builder.Services.AddScoped<ICadastrosRepository>(sp => new CadastrosRepository(GetConn(sp)));
 builder.Services.AddScoped<IComprasRepository>(sp => new ComprasRepository(GetConn(sp)));
 builder.Services.AddScoped<IEstoqueRepository>(sp => new EstoqueRepository(GetConn(sp)));

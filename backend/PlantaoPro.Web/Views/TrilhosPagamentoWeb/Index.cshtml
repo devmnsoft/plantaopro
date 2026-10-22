@@ -1,0 +1,445 @@
+@{
+    ViewData["Title"] = "Trilhos de Pagamento";
+}
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h4 class="mb-1 text-light">Trilhos de pagamento em linguagem simples</h4>
+            <p class="text-secondary small mb-0">Configure o banco e a chave PIX, gere o QR Code copia-e-cola EMV por fatura, confira linha digitável de boleto e gere o arquivo CNAB 400 de remessa das faturas abertas.</p>
+        </div>
+        <a asp-action="Index" asp-controller="Administrativo360" class="btn btn-sm btn-outline-secondary">Voltar ao Administrativo 360</a>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xxl-8 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Configuração dos trilhos</div>
+                <div class="card-body">
+                    <div class="row g-2 mb-2">
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="cfgBanco">Código do banco (3 dígitos)</label>
+                            <input type="text" class="form-control form-control-sm font-monospace" id="cfgBanco" maxlength="3" placeholder="237" />
+                        </div>
+                        <div class="col-sm-5">
+                            <label class="form-label small" for="cfgBancoNome">Nome do banco</label>
+                            <input type="text" class="form-control form-control-sm" id="cfgBancoNome" maxlength="60" placeholder="CAIXA ECONOMICA FEDERAL" />
+                        </div>
+                        <div class="col-sm-2">
+                            <label class="form-label small" for="cfgAgencia">Agência (4 dígitos)</label>
+                            <input type="text" class="form-control form-control-sm font-monospace" id="cfgAgencia" maxlength="4" placeholder="0001" />
+                        </div>
+                        <div class="col-sm-2">
+                            <label class="form-label small" for="cfgCarteira">Carteira (2 dígitos)</label>
+                            <input type="text" class="form-control form-control-sm font-monospace" id="cfgCarteira" maxlength="2" placeholder="01" />
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="cfgConta">Conta do cedente (7 dígitos)</label>
+                            <input type="text" class="form-control form-control-sm font-monospace" id="cfgConta" maxlength="7" placeholder="1234567" />
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label small" for="cfgNosso">Nosso número base</label>
+                            <input type="number" min="1" max="99999999999" step="1" class="form-control form-control-sm" id="cfgNosso" value="7000" />
+                        </div>
+                        <div class="col-sm-5">
+                            <label class="form-label small" for="cfgChave">Chave PIX</label>
+                            <input type="text" class="form-control form-control-sm" id="cfgChave" maxlength="64" placeholder="CPF, e-mail, telefone, chave aleatória" />
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label small" for="cfgNome">Nome do beneficiário (sem acento, até 25)</label>
+                            <input type="text" class="form-control form-control-sm" id="cfgNome" maxlength="25" placeholder="PLANTAOPRO LTDA" />
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label small" for="cfgCidade">Cidade do beneficiário (sem acento, até 15)</label>
+                            <input type="text" class="form-control form-control-sm" id="cfgCidade" maxlength="15" placeholder="CURITIBA" />
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm" id="cfgSalvarBtn">Salvar configuração</button>
+                    <div class="tr-status alert alert-sm py-2 d-none mt-2" role="status" id="cfgStatus"></div>
+                </div>
+            </div>
+
+            <div class="card bg-dark border-secondary text-light mt-3 h-100">
+                <div class="card-header bg-dark border-secondary">PIX copia-e-cola (QR Code EMV)</div>
+                <div class="card-body">
+                    <p class="small text-secondary">Gere o payload copia-e-cola estático (chave geral, sem valor) ou dinâmico para uma fatura aberta (valor em reais + identificador da transação derivado da fatura).</p>
+                    <div class="row g-2 mb-2">
+                        <div class="col-sm-6">
+                            <label class="form-label small" for="pixFaturaSel">Fatura para payload dinâmico</label>
+                            <select class="form-select form-select-sm" id="pixFaturaSel">
+                                <option value="">Carregando faturas abertas…</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-3 d-flex align-items-end gap-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm flex-grow-1" id="pixEstaticoBtn">Gerar estático</button>
+                        </div>
+                        <div class="col-sm-3 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary btn-sm w-100" id="pixFaturaBtn">Gerar da fatura</button>
+                        </div>
+                    </div>
+                    <div class="tr-status alert alert-sm py-2 d-none mt-2" role="status" id="pixStatus"></div>
+                    <div class="d-none mt-3" id="pixResultado">
+                        <label class="form-label small" for="pixPayload">Payload copia-e-cola</label>
+                        <div class="font-monospace fs-6 p-2 rounded bg-black bg-opacity-50 break-all" id="pixPayload"></div>
+                        <p class="small text-secondary mt-2" id="pixDetalhe"></p>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnCopiarPix">Copiar conteúdo</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xxl-4 col-lg-12">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Em linguagem simples</div>
+                <div class="card-body small text-secondary">
+                    <p class="mb-2">Os <strong>trilhos de pagamento</strong> transformam as faturas abertas do motor de cobrança em formatos que os bancos aceitam: o QR Code PIX, o boleto bancário e o arquivo de remessa.</p>
+                    <ul class="ps-3 mb-2">
+                        <li><strong>PIX copia-e-cola</strong> — payload oficial BR Code: GUI br.gov.bcb.pix, chave, MCC 0000, moeda 986, país BR, nome e cidade do beneficiário e, no dinâmico, o valor e um identificador de transação. Fecha com um código de verificação CRC16: qualquer alteração muda esse código e a validação detecta.</li>
+                        <li><strong>Boleto</strong> — código de barras de 44 posições com dígito verificador módulo 11 (pesos 2 a 9 da direita para a esquerda; resto 0, 1 ou 10 resulta em DV 1) e linha digitável de 47, com mais três dígitos módulo 10. O fator de vencimento conta dias desde 07/10/1997; como a tabela oficial se encerrou em fevereiro de 2025 (fator 9999), o produto aplica o rollover (fator exibido = dias totais mod 10000).</li>
+                        <li><strong>Remessa CNAB 400</strong> — arquivo ASCII com cabeçalho, um registro por título e trailer, todos com exatamente 400 posições: nosso número sequenciado a partir da base, linha número embutida, vencimento e valores em centavos. O total do trailer fecha com a soma dos registros.</li>
+                        <li><strong>FEBEN e CNAB 240</strong> — o catálogo ISO 20022 (camt.239/camt.240, gestão de lote de cobrança) vive na fonte única de parâmetros; a emissão XML FEBEN, o CNAB 240 e o SPI/DCI do Pix entram no marco de homologação externa com credenciais de banco.</li>
+                    </ul>
+                    <p class="mb-0"><em>Ferramenta interna de geração e conferência: reproduz a aritmética oficial (CC 2926, BR Code/EMVCo, canon CNAB 400), mas não substitui a homologação junto ao banco nem a liquidação real dos pagamentos.</em></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xxl-7">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Remessa CNAB 400 das faturas abertas</div>
+                <div class="card-body">
+                    <div class="row g-2 mb-2">
+                        <div class="col-sm-4">
+                            <label class="form-label small" for="remAte">Até o vencimento (opcional)</label>
+                            <input type="date" class="form-control form-control-sm" id="remAte" />
+                        </div>
+                        <div class="col-sm-3">
+                            <label class="form-label small" for="remLimite">Máximo de títulos</label>
+                            <input type="number" min="1" max="500" step="1" class="form-control form-control-sm" id="remLimite" value="200" />
+                        </div>
+                        <div class="col-sm-5 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary btn-sm w-100" id="remGerarBtn">Gerar arquivo de remessa</button>
+                        </div>
+                    </div>
+                    <div class="tr-status alert alert-sm py-2 d-none mt-2" role="status" id="remStatus"></div>
+                    <div class="d-none mt-3" id="remResultado">
+                        <p class="small text-secondary mb-2" id="remResumo"></p>
+                        <div data-alvo="remItens" class="table-responsive mb-2"></div>
+                        <label class="form-label small" for="remArquivo">Conteúdo do arquivo (linhas de 400 posições, CRLF)</label>
+                        <pre class="font-monospace fs-6 p-2 rounded bg-black bg-opacity-50 overflow-auto" style="max-height:320px;" id="remArquivo"></pre>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnCopiarRemessa">Copiar conteúdo</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xxl-5">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">Validar payload ou linha digitável</div>
+                <div class="card-body">
+                    <p class="small text-secondary">Cole um copia-e-cola PIX recebido (confere estrutura, campos obrigatórios e CRC16) ou uma linha digitável de boleto (confere os três dígitos módulo 10, o dígito geral módulo 11 e extrai fator/valor).</p>
+                    <div class="row g-2 mb-2">
+                        <div class="col-sm-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="valModo" id="valModoPix" value="pix" checked />
+                                <label class="form-check-label small" for="valModoPix">PIX copia-e-cola (EMV)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="valModo" id="valModoBoleto" value="boleto" />
+                                <label class="form-check-label small" for="valModoBoleto">Linha digitável de boleto</label>
+                            </div>
+                        </div>
+                    </div>
+                    <label class="form-label small" for="valInput">Conteúdo recebido</label>
+                    <div class="row g-2">
+                        <div class="col-sm-8">
+                            <textarea class="form-control font-monospace" id="valInput" rows="3" placeholder="00020126…6304… ou 23790.00108 10000.000702 …"></textarea>
+                        </div>
+                        <div class="col-sm-4 d-flex align-items-end">
+                            <button type="button" class="btn btn-primary btn-sm w-100" id="valBtn">Conferir</button>
+                        </div>
+                    </div>
+                    <div class="tr-status alert alert-sm py-2 d-none mt-2" role="status" id="valStatus"></div>
+                    <div class="d-none mt-3" id="valResultado">
+                        <p class="small text-secondary mb-2" id="valDetalhe"></p>
+                        <div data-alvo="valCampos" class="table-responsive"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    function sel(id) { return document.getElementById(id); }
+
+    function status(id, texto, tipo) {
+        var bar = sel(id);
+        bar.classList.remove('d-none', 'alert-success', 'alert-danger');
+        bar.classList.add(tipo === 'erro' ? 'alert-danger' : 'alert-success');
+        bar.textContent = texto;
+    }
+
+    function limparStatus(id) { sel(id).classList.add('d-none'); sel(id).classList.remove('alert-success', 'alert-danger'); sel(id).textContent = ''; }
+
+    function fmtData(s) {
+        if (!s) return '';
+        var p = s.substring(0, 10).split('-');
+        if (p.length !== 3) return s;
+        return p[2] + '/' + p[1] + '/' + p[0];
+    }
+
+    function fmtMoeda(v) {
+        var p = (Math.round(Number(v) * 100) / 100).toFixed(2).split('.');
+        return p[0] + ',' + p[1];
+    }
+
+    function linhaCampo(alvo, rotulo, valor) {
+        var alcance = document.querySelector('[data-alvo="' + alvo + '"]');
+        if (!alvo || !valor) return;
+        var tb = alcance.querySelector('table');
+        if (!tb) return;
+        var tr = document.createElement('tr');
+        var tdR = document.createElement('td');
+        tdR.className = 'small text-secondary';
+        tdR.textContent = rotulo;
+        var tdV = document.createElement('td');
+        tdV.className = 'font-monospace small break-all';
+        tdV.textContent = valor;
+        tr.appendChild(tdR);
+        tr.appendChild(tdV);
+        tb.tBodies[0].appendChild(tr);
+    }
+
+    function copiar(alvoId, botaoId, rotuloOriginal) {
+        var botao = sel(botaoId);
+        var texto = sel(alvoId).textContent;
+        function pronto() { botao.textContent = 'Conteúdo copiado'; setTimeout(function () { botao.textContent = rotuloOriginal; }, 1500); }
+        function falhou() { botao.textContent = 'Não foi possível copiar'; setTimeout(function () { botao.textContent = rotuloOriginal; }, 1500); }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(texto).then(pronto).catch(falhou);
+        } else { falhou(); }
+    }
+
+    // ---------------------------------------------------------------- configuração
+    function carregarConfig() {
+        fetch('/TrilhosPagamentoWeb/Config').then(function (r) { return r.json(); }).then(function (resp) {
+            if (!resp.ok) { limparStatus('cfgStatus'); return; }
+            var d = resp.data;
+            if (!d) return;
+            sel('cfgBanco').value = d.bancoCodigo || '';
+            sel('cfgBancoNome').value = d.bancoNome || '';
+            sel('cfgAgencia').value = d.agencia || '';
+            sel('cfgCarteira').value = d.carteira || '';
+            sel('cfgConta').value = d.contaCedente || '';
+            sel('cfgNosso').value = d.nossoNumeroBase || '';
+            sel('cfgChave').value = d.chavePix || '';
+            sel('cfgNome').value = d.beneficiarioNome || '';
+            sel('cfgCidade').value = d.beneficiarioCidade || '';
+        }).catch(function () { limparStatus('cfgStatus'); });
+    }
+
+    function salvarConfig() {
+        limparStatus('cfgStatus');
+        var payload = {
+            bancoCodigo: sel('cfgBanco').value.trim(),
+            bancoNome: sel('cfgBancoNome').value.trim(),
+            agencia: sel('cfgAgencia').value.trim(),
+            carteira: sel('cfgCarteira').value.trim(),
+            contaCedente: sel('cfgConta').value.trim(),
+            nossoNumeroBase: Number(sel('cfgNosso').value || 0),
+            chavePix: sel('cfgChave').value.trim(),
+            beneficiarioNome: sel('cfgNome').value.trim(),
+            beneficiarioCidade: sel('cfgCidade').value.trim()
+        };
+        fetch('/TrilhosPagamentoWeb/SalvarConfig', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            .then(function (r) { return r.json(); })
+            .then(function (resp) {
+                if (!resp.ok) { status('cfgStatus', resp.erro || 'Não foi possível salvar a configuração.', 'erro'); return; }
+                status('cfgStatus', 'Configuração dos trilhos salva.', 'ok');
+            })
+            .catch(function () { status('cfgStatus', 'Falha de conexão ao salvar a configuração.', 'erro'); });
+    }
+
+    // ---------------------------------------------------------------- faturas
+    function carregarFaturas() {
+        fetch('/TrilhosPagamentoWeb/FaturasAbertas?limite=200').then(function (r) { return r.json(); }).then(function (resp) {
+            var box = sel('pixFaturaSel');
+            box.textContent = '';
+            var vazio = document.createElement('option');
+            vazio.value = '';
+            vazio.textContent = 'Selecione uma fatura aberta…';
+            box.appendChild(vazio);
+            if (!resp.ok) { vazio.textContent = 'Faturas indisponíveis'; return; }
+            resp.data.forEach(function (f) {
+                var opt = document.createElement('option');
+                opt.value = f.faturaId;
+                opt.textContent = fmtData(f.vencimento) + ' — R$ ' + fmtMoeda(f.valor) + ' — ' + (f.clienteNome || 'cliente');
+                box.appendChild(opt);
+            });
+        }).catch(function () {
+            var box = sel('pixFaturaSel');
+            box.textContent = '';
+            var opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = 'Faturas indisponíveis';
+            box.appendChild(opt);
+        });
+    }
+
+    // ---------------------------------------------------------------- PIX
+    function mostrarPix(d) {
+        sel('pixResultado').classList.remove('d-none');
+        sel('pixPayload').textContent = d.copiaECola;
+        var detalhe = 'GUI br.gov.bcb.pix · moeda 986 · país BR';
+        if (d.txid) detalhe += ' · valor R$ ' + fmtMoeda(d.valor) + ' · identificador ' + d.txid;
+        if (!d.txid) detalhe += ' · payload estático (sem valor)';
+        sel('pixDetalhe').textContent = detalhe;
+    }
+
+    function gerarPixEstatico() {
+        limparStatus('pixStatus');
+        fetch('/TrilhosPagamentoWeb/PixEstatico').then(function (r) { return r.json(); }).then(function (resp) {
+            if (!resp.ok) { status('pixStatus', resp.erro || 'Não foi possível gerar o payload PIX.', 'erro'); return; }
+            status('pixStatus', 'Payload PIX estático gerado e conferido pelo CRC16.', 'ok');
+            mostrarPix(resp.data);
+        }).catch(function () { status('pixStatus', 'Falha de conexão ao gerar o payload PIX.', 'erro'); });
+    }
+
+    function gerarPixFatura() {
+        var id = sel('pixFaturaSel').value;
+        if (!id) { status('pixStatus', 'Selecione uma fatura aberta antes de gerar o payload.', 'erro'); return; }
+        limparStatus('pixStatus');
+        fetch('/TrilhosPagamentoWeb/PixFatura', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ faturaId: id }) })
+            .then(function (r) { return r.json(); })
+            .then(function (resp) {
+                if (!resp.ok) { status('pixStatus', resp.erro || 'Não foi possível gerar o payload PIX da fatura.', 'erro'); return; }
+                status('pixStatus', 'Payload PIX dinâmico gerado e conferido pelo CRC16.', 'ok');
+                mostrarPix(resp.data);
+            })
+            .catch(function () { status('pixStatus', 'Falha de conexão ao gerar o payload PIX da fatura.', 'erro'); });
+    }
+
+    // ---------------------------------------------------------------- remessa
+    function gerarRemessa() {
+        var ate = sel('remAte').value || null;
+        var limite = Number(sel('remLimite').value || 200);
+        limparStatus('remStatus');
+        fetch('/TrilhosPagamentoWeb/GerarRemessa', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ate: ate, limite: limite }) })
+            .then(function (r) { return r.json(); })
+            .then(function (resp) {
+                if (!resp.ok) { status('remStatus', resp.erro || 'Não foi possível gerar a remessa.', 'erro'); return; }
+                var d = resp.data;
+                status('remStatus', 'Remessa CNAB 400 gerada: ' + d.totalItens + ' título(s), total R$ ' + fmtMoeda(d.totalValor) + '.', 'ok');
+                sel('remResumo').textContent = 'Layout ' + d.layout + ' · banco ' + d.bancoCodigo + ' · agência ' + d.agencia + ' · conta ' + d.contaCedente + ' · arquivo com ' + (d.totalItens + 2) + ' linhas de 400 posições.';
+                var alvo = document.querySelector('[data-alvo="remItens"]');
+                alvo.textContent = '';
+                var tb = document.createElement('table');
+                tb.className = 'table table-sm table-dark table-hover align-middle mb-0';
+                tb.setAttribute('role', 'table');
+                var cab = tb.createTHead();
+                var trh = document.createElement('tr');
+                var titulos = ['Nosso número', 'Vencimento', 'Valor', 'Linha digitável'];
+                titulos.forEach(function (t) {
+                    var th = document.createElement('th');
+                    th.scope = 'col';
+                    th.className = 'small';
+                    th.textContent = t;
+                    trh.appendChild(th);
+                });
+                cab.appendChild(trh);
+                tb.appendChild(cab);
+                var corpo = tb.createTBody();
+                d.itens.forEach(function (it) {
+                    var tr = document.createElement('tr');
+                    var tdNosso = document.createElement('td');
+                    tdNosso.className = 'font-monospace small';
+                    tdNosso.textContent = String(it.nossoNumero);
+                    var tdVenc = document.createElement('td');
+                    tdVenc.textContent = fmtData(it.vencimento);
+                    var tdValor = document.createElement('td');
+                    tdValor.textContent = 'R$ ' + fmtMoeda(it.valor);
+                    var tdLd = document.createElement('td');
+                    tdLd.className = 'font-monospace small break-all';
+                    tdLd.textContent = it.linhaDigitavelExibicao;
+                    tr.appendChild(tdNosso);
+                    tr.appendChild(tdVenc);
+                    tr.appendChild(tdValor);
+                    tr.appendChild(tdLd);
+                    corpo.appendChild(tr);
+                });
+                tb.appendChild(corpo);
+                alvo.appendChild(tb);
+                sel('remArquivo').textContent = d.conteudoArquivo;
+                sel('remResultado').classList.remove('d-none');
+            })
+            .catch(function () { status('remStatus', 'Falha de conexão ao gerar a remessa.', 'erro'); });
+    }
+
+    // ---------------------------------------------------------------- validação
+    function conferenca() {
+        var modo = document.querySelector('input[name="valModo"]:checked').value;
+        var conteudo = sel('valInput').value.trim();
+        if (!conteudo) { status('valStatus', 'Cole o conteúdo recebido antes de conferir.', 'erro'); return; }
+        limparStatus('valStatus');
+        var url = modo === 'pix' ? '/TrilhosPagamentoWeb/ValidarPix' : '/TrilhosPagamentoWeb/ValidarLinha';
+        var corpo = modo === 'pix' ? JSON.stringify({ payload: conteudo }) : JSON.stringify({ linha: conteudo });
+        fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: corpo })
+            .then(function (r) { return r.json(); })
+            .then(function (resp) {
+                if (!resp.ok) { status('valStatus', resp.erro || 'Não foi possível concluir a conferência.', 'erro'); return; }
+                var d = resp.data;
+                if (!d.valida) {
+                    status('valStatus', 'Conferência com pendências:', 'erro');
+                    sel('valDetalhe').textContent = d.erros.join(' ');
+                } else {
+                    status('valStatus', 'Conferência aprovada: todos os dígitos verificadores batem.', 'ok');
+                    sel('valDetalhe').textContent = modo === 'pix'
+                        ? 'Estrutura TLV, campos obrigatórios e CRC16 conferidos.'
+                        : 'Dígitos módulo 10, dígito geral módulo 11, fator e valor extraídos.';
+                }
+                sel('valResultado').classList.remove('d-none');
+                var alvo = document.querySelector('[data-alvo="valCampos"]');
+                alvo.textContent = '';
+                var tb = document.createElement('table');
+                tb.className = 'table table-sm table-dark align-middle mb-0';
+                tb.setAttribute('role', 'table');
+                tb.appendChild(tb.createTBody());
+                alvo.appendChild(tb);
+                if (modo === 'pix') {
+                    linhaCampo('valCampos', 'GUI', d.gui);
+                    linhaCampo('valCampos', 'Chave Pix', d.chave);
+                    linhaCampo('valCampos', 'MCC (campo 52)', d.mcc);
+                    linhaCampo('valCampos', 'Moeda (campo 53)', d.moeda);
+                    linhaCampo('valCampos', 'País (campo 58)', d.pais);
+                    linhaCampo('valCampos', 'Nome (campo 59)', d.nome);
+                    linhaCampo('valCampos', 'Cidade (campo 60)', d.cidade);
+                    linhaCampo('valCampos', 'Valor (campo 54)', d.valor);
+                    linhaCampo('valCampos', 'Identificador (62>05)', d.txid);
+                } else {
+                    linhaCampo('valCampos', 'Banco', d.banco);
+                    linhaCampo('valCampos', 'Moeda', d.moeda);
+                    linhaCampo('valCampos', 'Fator de vencimento', d.fator ? String(d.fator) : null);
+                    linhaCampo('valCampos', 'Vencimento provável', d.vencimentoProvavel ? fmtData(d.vencimentoProvavel) : null);
+                    linhaCampo('valCampos', 'Valor (centavos)', d.valorCentavos ? String(d.valorCentavos) : null);
+                    linhaCampo('valCampos', 'Campo livre', d.campoLivre);
+                }
+            })
+            .catch(function () { status('valStatus', 'Falha de conexão na conferência.', 'erro'); });
+    }
+
+    sel('cfgSalvarBtn').addEventListener('click', salvarConfig);
+    sel('pixEstaticoBtn').addEventListener('click', gerarPixEstatico);
+    sel('pixFaturaBtn').addEventListener('click', gerarPixFatura);
+    sel('btnCopiarPix').addEventListener('click', function () { copiar('pixPayload', 'btnCopiarPix', 'Copiar conteúdo'); });
+    sel('remGerarBtn').addEventListener('click', gerarRemessa);
+    sel('btnCopiarRemessa').addEventListener('click', function () { copiar('remArquivo', 'btnCopiarRemessa', 'Copiar conteúdo'); });
+    sel('valBtn').addEventListener('click', conferenca);
+    carregarConfig();
+    carregarFaturas();
+})();
+</script>
+}

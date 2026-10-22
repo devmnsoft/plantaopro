@@ -325,6 +325,9 @@
   <data name="Nav.DfeNacional" xml:space="preserve">
     <value>DF-e Nacional</value>
   </data>
+  <data name="Nav.TrilhosPagamento" xml:space="preserve">
+    <value>Trilhos de Pagamento</value>
+  </data>
   <data name="Nav.Relatorios" xml:space="preserve">
     <value>Relatórios</value>
   </data>

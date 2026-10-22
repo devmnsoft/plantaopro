@@ -325,6 +325,9 @@
   <data name="Nav.DfeNacional" xml:space="preserve">
     <value>National e-Invoices</value>
   </data>
+  <data name="Nav.TrilhosPagamento" xml:space="preserve">
+    <value>Payment Rails</value>
+  </data>
   <data name="Nav.Relatorios" xml:space="preserve">
     <value>Reports</value>
   </data>

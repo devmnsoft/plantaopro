@@ -1,0 +1,391 @@
+@{ ViewData["Title"] = "Consentimentos de Saúde"; }
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Consentimentos de Saúde", "Consentimento por escopo (prontuário eletrônico e COAM), direitos do titular (listar, exportar, apagar) e retenção mínima legal do prontuário.", "bi-heart-pulse")' />
+
+<div class="row g-3">
+    <div class="col-12">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5">Paciente</h2>
+                <p class="text-muted small mb-2">Localize o paciente para carregar consentimentos, retenção mínima legal e direitos do titular.</p>
+                <div class="row g-2">
+                    <div class="col-md-5">
+                        <input type="text" class="form-control form-control-sm" id="pacTermo" aria-label="Paciente a buscar" placeholder="Nome, CPF ou telefone" />
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary btn-sm" id="pacBtn">Buscar paciente</button>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <select class="form-select form-select-sm" id="pacSel"><option value="">Selecione um paciente…</option></select>
+                    </div>
+                </div>
+                <div class="alert alert-sm py-2 d-none mt-2" role="status" id="pacStatus"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5">Consentimento por escopo</h2>
+                <p class="text-muted small">Dados de saúde são sensíveis (LGPD art. 11): cada uso além da assistência exige consentimento específico e destacado, com canal rastreável e versão do termo.</p>
+                <div class="table-responsive mb-3" id="consTabelaBox"></div>
+                <div class="row g-2 mb-2">
+                    <div class="col-md-4">
+                        <label class="form-label small" for="consEscopo">Escopo</label>
+                        <select class="form-select form-select-sm" id="consEscopo">
+                            <option value="PRONTUARIO">Prontuário eletrônico (uso secundário)</option>
+                            <option value="COAM">Comissão de Avaliação Médica</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small" for="consCanal">Canal</label>
+                        <select class="form-select form-select-sm" id="consCanal">
+                            <option value="RECEPCAO">Recepção</option>
+                            <option value="TELEFONE">Telefone</option>
+                            <option value="DIGITAL">Digital</option>
+                            <option value="PRONTUARIO">Prontuário</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small" for="consVersao">Versão do termo (obrigatória ao conceder)</label>
+                        <input type="text" class="form-control form-control-sm" id="consVersao" maxlength="40" placeholder="Ex.: T-1.0" />
+                    </div>
+                </div>
+                <div class="form-check form-switch d-flex align-items-center gap-2 mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="consConcedido" checked />
+                    <label class="form-check-label small" for="consConcedido">Consentimento concedido (desmarque para revogar)</label>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" id="consBtn">Registrar consentimento</button>
+                <div class="alert alert-sm py-2 d-none mt-2" role="status" id="consStatus"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5">Retenção mínima legal</h2>
+                <p class="text-muted small">O prontuário pode ser eliminado apenas 20 anos após o último registro clínico (Lei 13.787/2018, art. 6).</p>
+                <dl class="row small" id="retDados"></dl>
+                <div class="alert alert-sm py-2 d-none mt-2" role="status" id="retStatus"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5">Direitos do titular</h2>
+                <p class="text-muted small">Listar e exportar mostram os dados com trilha de auditoria. Apagar anonimiza os identificadores (LGPD art. 18, IV), preserva o histórico clínico e respeita a retenção mínima.</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="dirListar">Listar dados</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="dirExportar">Exportar dados</button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" id="dirApagar">Apagar dados</button>
+                </div>
+                <div class="alert alert-sm py-2 d-none mt-2" role="status" id="dirStatus"></div>
+                <div class="d-none mt-3" id="dirResultado">
+                    <div class="table-responsive mb-2" id="dirTabela"></div>
+                    <div class="d-none" id="dirExporte">
+                        <label class="form-label small" for="dirJson">Conteúdo exportado</label>
+                        <pre class="font-monospace small p-2 rounded bg-light border overflow-auto" style="max-height:280px;" id="dirJson"></pre>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="dirCopiar">Copiar conteúdo</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-body small text-muted">
+                <h2 class="h5 text-body">Em linguagem simples</h2>
+                <ul class="ps-3 mb-0">
+                    <li><strong>Prontuário eletrônico</strong> — a assistência em si dispensa prévio consentimento (base: obrigação legal); usos secundários, como pesquisa, ensino e gestão, exigem consentimento específico.</li>
+                    <li><strong>COAM</strong> — Comissão de Avaliação Médica: revisão de casos, segunda opinião e controle de qualidade. Compartilhar os dados de saúde com ela é tratamento por terceiro, com consentimento destacado.</li>
+                    <li><strong>Direitos</strong> — listar (acesso), exportar (portabilidade) e apagar (anonimização) seguem a LGPD art. 18 e deixam trilha auditável em cada exercício.</li>
+                    <li><strong>Retenção</strong> — enquanto o prontuário estiver nos 20 anos contados do último registro (Lei 13.787/2018, art. 6; Resolução CFM 1.821/2007), o apagar é bloqueado e a tela mostra a data em que fica apto.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modApagar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar apaga por anonimização</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Os dados pessoais do paciente serão anonimizados e o histórico clínico será preservado. A ação respeita a retenção mínima legal do prontuário.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger btn-sm" id="modApagarBtn">Anonimizar dados</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    function sel(id) { return document.getElementById(id); }
+
+    function status(id, texto, tipo) {
+        var bar = sel(id);
+        bar.classList.remove('d-none', 'alert-success', 'alert-danger', 'alert-warning');
+        bar.classList.add(tipo === 'erro' ? 'alert-danger' : (tipo === 'aviso' ? 'alert-warning' : 'alert-success'));
+        bar.textContent = texto;
+    }
+
+    function limparStatus(id) { sel(id).classList.add('d-none'); sel(id).textContent = ''; }
+
+    function fmtData(s) {
+        if (!s) return '';
+        var p = String(s).substring(0, 10).split('-');
+        return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : String(s);
+    }
+
+    function payload(resp) {
+        var env = resp && resp.data;
+        if (!env || typeof env !== 'object') return null;
+        return env.data !== undefined ? env.data : env;
+    }
+
+    var pacienteAtual = null;
+
+    // ---------------------------------------------------------------- busca
+    function buscarPaciente() {
+        var termo = sel('pacTermo').value.trim();
+        if (!termo) { status('pacStatus', 'Informe um termo para buscar o paciente.', 'erro'); return; }
+        limparStatus('pacStatus');
+        fetch('/Lgpd/SaudePacientesBuscar?termo=' + encodeURIComponent(termo))
+            .then(function (r) { return r.json(); })
+            .then(function (resp) {
+                var box = sel('pacSel');
+                box.textContent = '';
+                var base = document.createElement('option');
+                base.value = '';
+                base.textContent = 'Selecione um paciente…';
+                box.appendChild(base);
+                if (!resp.ok) { status('pacStatus', resp.erro || 'Não foi possível buscar pacientes agora.', 'erro'); base.textContent = 'Pacientes indisponíveis'; return; }
+                var lista = payload(resp) || [];
+                if (!lista.length) { base.textContent = 'Nenhum paciente encontrado'; status('pacStatus', 'Nenhum paciente encontrado para o termo informado.', 'aviso'); return; }
+                lista.forEach(function (p) {
+                    var opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.nome || p.codigo || p.id;
+                    box.appendChild(opt);
+                });
+            })
+            .catch(function () { status('pacStatus', 'Falha de conexão na busca de pacientes.', 'erro'); });
+    }
+
+    function selecionarPaciente() {
+        var box = sel('pacSel');
+        pacienteAtual = box.value || null;
+        limparStatus('consStatus');
+        limparStatus('retStatus');
+        sel('dirResultado').classList.add('d-none');
+        sel('dirExporte').classList.add('d-none');
+        if (!pacienteAtual) { sel('consTabelaBox').textContent = ''; semDados(); return; }
+        carregarConsentimentos();
+        carregarRetencao();
+    }
+
+    function semDados() {
+        sel('retDados').innerHTML = '<dt class="col-sm-5 text-muted">Situação</dt><dd class="col-sm-7">Selecione um paciente para calcular a retenção.</dd>';
+    }
+
+    // ---------------------------------------------------------------- consentimentos
+    function badgeEstado(texto, cls) {
+        return '<span class="badge ' + cls + '">' + texto + '</span>';
+    }
+
+    function estadoTexto(e) {
+        if (e === 'VIGENTE') return 'Vigente';
+        if (e === 'REVOGADO') return 'Revogado';
+        if (e === 'SUBSTITUIDO') return 'Substituído';
+        return e || '—';
+    }
+
+    function estadoClasse(e) {
+        if (e === 'VIGENTE') return 'bg-success';
+        if (e === 'REVOGADO') return 'bg-warning text-dark';
+        return 'bg-secondary';
+    }
+
+    function carregarConsentimentos() {
+        if (!pacienteAtual) return;
+        fetch('/Lgpd/SaudeConsentimentos/' + pacienteAtual)
+            .then(function (r) { return r.json(); })
+            .then(function (resp) {
+                var box = sel('consTabelaBox');
+                if (!resp.ok) { box.textContent = ''; status('consStatus', resp.erro || 'Não foi possível carregar os consentimentos.', 'erro'); return; }
+                var lista = payload(resp) || [];
+                if (!lista.length) { box.textContent = ''; status('consStatus', 'Nenhum consentimento registrado para este paciente.', 'aviso'); return; }
+                var tb = document.createElement('table');
+                tb.className = 'table table-sm table-hover align-middle mb-0';
+                tb.setAttribute('role', 'table');
+                var cab = ['Escopo', 'Concedido', 'Canal', 'Versão', 'Base legal', 'Situação', 'Data'];
+                var trh = document.createElement('tr');
+                cab.forEach(function (t) { var th = document.createElement('th'); th.scope = 'col'; th.className = 'small'; th.textContent = t; trh.appendChild(th); });
+                tb.createTHead().appendChild(trh);
+                var corpo = tb.createTBody();
+                lista.forEach(function (c) {
+                    var tr = document.createElement('tr');
+                    var valores = [c.finalidade || '—', c.concedido ? 'Sim' : 'Não', c.canal || '—', c.versaoTermo || '—', c.baseLegal || '—', badgeEstado(estadoTexto(c.status), estadoClasse(c.status)), fmtData(c.regDate)];
+                    valores.forEach(function (v) { var td = document.createElement('td'); td.className = 'small'; if (typeof v === 'string' && v.indexOf('<span class="badge') === 0) td.innerHTML = v; else td.textContent = String(v); tr.appendChild(td); });
+                    corpo.appendChild(tr);
+                });
+                tb.appendChild(corpo);
+                box.textContent = '';
+                box.appendChild(tb);
+            })
+            .catch(function () { status('consStatus', 'Falha de conexão ao carregar os consentimentos.', 'erro'); });
+    }
+
+    function registrarConsentimento() {
+        if (!pacienteAtual) { status('consStatus', 'Selecione um paciente antes de registrar.', 'erro'); return; }
+        var concedido = sel('consConcedido').checked;
+        var versao = sel('consVersao').value.trim();
+        if (concedido && !versao) { status('consStatus', 'Informe a versão do termo quando o consentimento é concedido.', 'erro'); return; }
+        var escopoNome = sel('consEscopo').options[sel('consEscopo').selectedIndex].textContent;
+        limparStatus('consStatus');
+        fetch('/Lgpd/SaudeRegistrarConsentimento', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pacienteId: pacienteAtual, escopo: sel('consEscopo').value, canal: sel('consCanal').value, concedido: concedido, versaoTermo: versao || null }) })
+            .then(function (r) { return r.json(); })
+            .then(function (resp) {
+                if (!resp.ok) { status('consStatus', resp.erro || 'Não foi possível registrar o consentimento.', 'erro'); return; }
+                status('consStatus', (concedido ? 'Consentimento concedido' : 'Consentimento revogado') + ' no escopo ' + escopoNome + ', com trilha auditável registrada.', 'ok');
+                carregarConsentimentos();
+            })
+            .catch(function () { status('consStatus', 'Falha de conexão ao registrar o consentimento.', 'erro'); });
+    }
+
+    // ---------------------------------------------------------------- retencao
+    function linhaRet(dt, dd) {
+        var el = document.createElement('div');
+        el.innerHTML = '<dt class="col-sm-5 text-muted">' + dt + '</dt><dd class="col-sm-7">' + dd + '</dd>';
+        return el;
+    }
+
+    function carregarRetencao() {
+        if (!pacienteAtual) return;
+        limparStatus('retStatus');
+        fetch('/Lgpd/SaudeRetencao/' + pacienteAtual)
+            .then(function (r) { return r.json(); })
+            .then(function (resp) {
+                var box = sel('retDados');
+                box.textContent = '';
+                if (!resp.ok) { semDados(); status('retStatus', resp.erro || 'Não foi possível calcular a retenção.', 'erro'); return; }
+                var d = payload(resp);
+                if (!d) { semDados(); return; }
+                var situacao = d.podeEliminarAgora
+                    ? badgeEstado('Eliminação permitida', 'bg-success')
+                    : badgeEstado('Retenção mínima em curso até ' + fmtData(d.aptoDesde), 'bg-primary');
+                box.appendChild(linhaRet('Último registro clínico', d.ultimoRegistro ? fmtData(d.ultimoRegistro) : 'Sem registros'));
+                box.appendChild(linhaRet('Prazo mínimo', (d.prazoMeses || 0) + ' meses (20 anos)'));
+                box.appendChild(linhaRet('Eliminação apta a partir de', d.aptoDesde ? fmtData(d.aptoDesde) : 'Imediata (sem registros)'));
+                box.appendChild(linhaRet('Situação', situacao));
+                box.appendChild(linhaRet('Fonte', d.fonte || ''));
+            })
+            .catch(function () { status('retStatus', 'Falha de conexão ao calcular a retenção.', 'erro'); });
+    }
+
+    // ---------------------------------------------------------------- direitos
+    function tabelaDireito(d) {
+        var tb = document.createElement('table');
+        tb.className = 'table table-sm table-dark table-hover align-middle mb-0';
+        tb.setAttribute('role', 'table');
+        var corpo = tb.createTBody();
+        var linhas = [
+            ['Paciente', d.nome || '—'],
+            ['CPF', d.cpf || '—'],
+            ['Data de nascimento', d.dataNascimento ? fmtData(d.dataNascimento) : '—'],
+            ['E-mail', d.email || '—'],
+            ['Telefone', d.telefone || '—'],
+            ['Último registro clínico', d.ultimoRegistro ? fmtData(d.ultimoRegistro) : 'Sem registros']
+        ];
+        linhas.forEach(function (par) {
+            var tr = document.createElement('tr');
+            var tdR = document.createElement('td');
+            tdR.className = 'small text-secondary';
+            tdR.textContent = par[0];
+            var tdV = document.createElement('td');
+            tdV.className = 'font-monospace small break-all';
+            tdV.textContent = par[1];
+            tr.appendChild(tdR);
+            tr.appendChild(tdV);
+            corpo.appendChild(tr);
+        });
+        tb.appendChild(corpo);
+        return tb;
+    }
+
+    function executarApagar() {
+        if (!pacienteAtual) { status('dirStatus', 'Selecione um paciente antes de exercer o direito.', 'erro'); return; }
+        if (window.bootstrap && window.bootstrap.Modal) bootstrap.Modal.getOrCreateInstance(sel('modApagar')).hide();
+        executarDireito('APAGAR');
+    }
+
+    function executarDireito(direto) {
+        limparStatus('dirStatus');
+        sel('dirResultado').classList.add('d-none');
+        sel('dirExporte').classList.add('d-none');
+        fetch('/Lgpd/SaudeDireitoExercer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pacienteId: pacienteAtual, direto: direto }) })
+            .then(function (r) { return r.json(); })
+            .then(function (resp) {
+                if (!resp.ok) {
+                    status('dirStatus', resp.erro || 'O direito não foi exercido agora.', 'erro');
+                    if (direto === 'APAGAR') carregarRetencao();
+                    return;
+                }
+                var d = payload(resp);
+                if (!d) { status('dirStatus', 'Resposta inesperada da API.', 'erro'); return; }
+                if (direto === 'APAGAR') {
+                    status('dirStatus', 'Dados pessoais anonimizados (' + (d.nome || 'paciente') + '). Histórico clínico preservado; trilha auditável registrada.', 'ok');
+                    carregarRetencao();
+                    return;
+                }
+                var box = sel('dirTabela');
+                box.textContent = '';
+                box.appendChild(tabelaDireito(d));
+                if (direto === 'EXPORTAR') {
+                    sel('dirJson').textContent = JSON.stringify(d, null, 2);
+                    sel('dirExporte').classList.remove('d-none');
+                    status('dirStatus', 'Dados exportados com trilha auditável registrada.', 'ok');
+                } else {
+                    status('dirStatus', 'Dados listados com trilha auditável registrada.', 'ok');
+                }
+                sel('dirResultado').classList.remove('d-none');
+            })
+            .catch(function () { status('dirStatus', 'Falha de conexão ao exercer o direito.', 'erro'); });
+    }
+
+    sel('pacBtn').addEventListener('click', buscarPaciente);
+    sel('pacTermo').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); buscarPaciente(); } });
+    sel('pacSel').addEventListener('change', selecionarPaciente);
+    sel('consBtn').addEventListener('click', registrarConsentimento);
+    sel('dirListar').addEventListener('click', function () { executarDireito('LISTAR'); });
+    sel('dirExportar').addEventListener('click', function () { executarDireito('EXPORTAR'); });
+    sel('dirApagar').addEventListener('click', function () {
+        if (!pacienteAtual) { status('dirStatus', 'Selecione um paciente antes de exercer o direito.', 'erro'); return; }
+        if (window.bootstrap && window.bootstrap.Modal) bootstrap.Modal.getOrCreateInstance(sel('modApagar')).show();
+    });
+    sel('modApagarBtn').addEventListener('click', executarApagar);
+    sel('dirCopiar').addEventListener('click', function () {
+        var botao = sel('dirCopiar');
+        var texto = sel('dirJson').textContent;
+        function pronto() { botao.textContent = 'Conteúdo copiado'; setTimeout(function () { botao.textContent = 'Copiar conteúdo'; }, 1500); }
+        function falhou() { botao.textContent = 'Não foi possível copiar'; setTimeout(function () { botao.textContent = 'Copiar conteúdo'; }, 1500); }
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(pronto).catch(falhou);
+        else falhou();
+    });
+    semDados();
+})();
+</script>
+}

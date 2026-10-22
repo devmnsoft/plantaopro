@@ -374,6 +374,7 @@ PAGINA|JornadaClientes|Funil|JornadaClientes/Funil|ARQ_OK|NOME|
 PAGINA|JornadaClientes|Index|JornadaClientes/Index|ARQ_OK|NOME|
 PAGINA|JornadaClientes|Tarefas|JornadaClientes/Tarefas|ARQ_OK|NOME|
 PAGINA|Lgpd|Consentimentos|Lgpd/Consentimentos|ARQ_OK|NOME|
+PAGINA|Lgpd|ConsentimentosSaude|Lgpd/ConsentimentosSaude|ARQ_OK|NOME|
 PAGINA|Lgpd|Eventos|Lgpd/Eventos|ARQ_OK|NOME|
 PAGINA|Lgpd|ExportarDados|Lgpd/ExportarDados|ARQ_OK|NOME|
 PAGINA|Lgpd|Index|Lgpd/Index|ARQ_OK|NOME|
@@ -694,6 +695,7 @@ ARTIGO|id=medico-meuspagamentos|MinhaAgenda/MeusPagamentos|titulo=Como consultar
 ARTIGO|id=financeiro-pagamento|Financeiro/Index|titulo=Como confirmar pagamento
 ARTIGO|id=hospital-escalas|Escalas/Index|titulo=Como consultar escalas
 ARTIGO|id=lgpd-direitos|Lgpd/MinhaPrivacidade|titulo=Como usar Minha Privacidade
+ARTIGO|id=lgpd-saude-consentimentos|Lgpd/ConsentimentosSaude|titulo=Como registrar consentimentos de saúde e exercer direitos do paciente
 ARTIGO|id=adm-orcamento|Administrativo360/Orcamentos|titulo=Como criar orçamento
 ARTIGO|id=adm-compras|Administrativo360/PedidosCompra|titulo=Como registrar pedido de compra
 ARTIGO|id=adm-estoque|Administrativo360/Estoque|titulo=Como acompanhar estoque e inventário
@@ -1142,6 +1144,7 @@ SEM_ARTIGO|JornadaClientes|Funil
 SEM_ARTIGO|JornadaClientes|Index
 SEM_ARTIGO|JornadaClientes|Tarefas
 SEM_ARTIGO|Lgpd|Consentimentos
+COBERTA|Lgpd|ConsentimentosSaude|artigo lgpd-saude-consentimentos
 SEM_ARTIGO|Lgpd|Eventos
 SEM_ARTIGO|Lgpd|ExportarDados
 SEM_ARTIGO|Lgpd|Index
@@ -1446,5 +1449,5 @@ POTE_QUEBRA|WorkflowSaude360|Index|WorkflowSaude360/Index|pagina GET sem arquivo
 POTE_QUEBRA|WorkflowSaude360|ProximaAcao|WorkflowSaude360/ProximaAcao|pagina GET sem arquivo resolvido
 ACO_AUX|WorkflowSaude360|Salvar|WorkflowSaude360/Salvar|submissao dinamica ou helper herdado
 
-RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=679|FILE_OK=621|ARTIGOS=87|COBERTAS=85|FORA_ESCOPO=19|GAP_SEM_ARTIGO=517|ACO_AUX=29|POTE_QUEBRA=29
+RESUMO|RETURNS_VIEW_BRUTOS=321|ACOES_EFETIVAS_RESOLVIDAS=680|FILE_OK=622|ARTIGOS=88|COBERTAS=86|FORA_ESCOPO=19|GAP_SEM_ARTIGO=517|ACO_AUX=29|POTE_QUEBRA=29
 ARTIGOS_ORFAOS=NENHUM

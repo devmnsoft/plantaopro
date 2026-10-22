@@ -1484,6 +1484,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2370_r87_lgpd_saude",
+                            "source":  "database/migrations/2026_10_v2370_r87_lgpd_saude.sql",
+                            "checksum":  "fd2c4569f2ad79c6481bcf7f7a5d09c10cb85def20e0b8c360e3d86eb75d2612",
+                            "dependsOn":  [
+                                              "2026_10_v2369_r86_trilhos_pagamento"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

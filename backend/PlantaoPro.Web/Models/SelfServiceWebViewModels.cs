@@ -41,6 +41,10 @@ public sealed class CadastroSelfServiceWebViewModel
     [Required] public string EmailCorporativo { get; set; } = string.Empty;
     public Guid PlanoId { get; set; }
     public string Periodicidade { get; set; } = "MENSAL";
+    /// <summary>R96: como começar no funil — TRIAL (teste grátis, padrão do funil) ou ATIVA (assinar agora).</summary>
+    public string TipoContrato { get; set; } = "TRIAL";
+    /// <summary>R96: duração do teste grátis em dias (explícita, 1..90 — espelha a regra da API).</summary>
+    public int DiasTrial { get; set; } = 30;
     [Required] public string ResponsavelNome { get; set; } = string.Empty;
     [Required] public string ResponsavelEmail { get; set; } = string.Empty;
     public string ResponsavelTelefone { get; set; } = string.Empty;

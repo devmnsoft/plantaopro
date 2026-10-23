@@ -1,0 +1,1 @@
+assinatura_id=591ec7e9-4641-4c9b-ad05-cfad1f3690dd status=TRIAL data_inicio=2026-10-23 data_trial_fim=2026-11-06 data_fim=2026-12-06 cobranca_inicial_linhas=0 lgpd_base_legal=consentimento aceito=true linhas=1 onboarding_status=EM_ANDAMENTO checklist_linhas=6 tenant_nome=R96 Drill Trial

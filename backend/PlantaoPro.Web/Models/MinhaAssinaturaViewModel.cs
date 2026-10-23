@@ -6,6 +6,8 @@ public sealed class MinhaAssinaturaViewModel
     public string? Status { get; set; }
     public string? Ciclo { get; set; }
     public DateTimeOffset? Vencimento { get; set; }
+    /// <summary>R96: presente somente em assinatura TRIAL (fim do período testado).</summary>
+    public DateTimeOffset? FimDoTeste { get; set; }
     public string? ResponsavelFinanceiro { get; set; }
     public IReadOnlyList<AssinaturaMetricaViewModel> Limites { get; set; } = Array.Empty<AssinaturaMetricaViewModel>();
     public IReadOnlyList<AssinaturaMetricaViewModel> Uso { get; set; } = Array.Empty<AssinaturaMetricaViewModel>();

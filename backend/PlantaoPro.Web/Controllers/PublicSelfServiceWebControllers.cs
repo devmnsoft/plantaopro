@@ -124,6 +124,17 @@ public sealed class CadastroController : Controller
         {
             ModelState.AddModelError(string.Empty, "Aceite os termos e a política de privacidade para continuar.");
         }
+        // R96: o tipo de contrato vai no MESMO payload público da API — TRIAL
+        // exige dias explícitos (1..90), espelhando a regra do serviço.
+        if (!string.IsNullOrWhiteSpace(model.TipoContrato)) model.TipoContrato = model.TipoContrato.Trim().ToUpperInvariant();
+        if (model.TipoContrato is not ("TRIAL" or "ATIVA"))
+        {
+            ModelState.AddModelError(nameof(CadastroSelfServiceWebViewModel.TipoContrato), "Escolha entre começar com teste grátis ou assinar agora.");
+        }
+        else if (model.TipoContrato == "TRIAL" && (model.DiasTrial is < 1 or > 90))
+        {
+            ModelState.AddModelError(nameof(CadastroSelfServiceWebViewModel.DiasTrial), "Informe os dias de teste (entre 1 e 90).");
+        }
         if (!ModelState.IsValid)
         {
             model.Planos = await PlanosPublicosController.CatalogoAsync(_factory, _logger);
@@ -167,7 +178,9 @@ public sealed class CadastroController : Controller
                     telefone = model.ResponsavelTelefone,
                     cargo = model.ResponsavelCargo,
                     senha = model.Senha
-                }
+                },
+                statusAssinatura = model.TipoContrato,
+                diasTrial = model.TipoContrato == "TRIAL" ? model.DiasTrial : (int?)null
             };
             using var response = await client.PostAsJsonAsync("api/public/cadastro/finalizar", payload);
             var body = await response.Content.ReadAsStringAsync();
@@ -177,6 +190,12 @@ public sealed class CadastroController : Controller
                 TempData["Error"] = ExtrairMensagemApi(body) ?? "Não foi possível concluir o cadastro. Revise os dados.";
                 return View("Cadastro", model);
             }
+            // R96: a tela de sucesso mostra o que foi contratado (fim do teste +
+            // janela de conversão, ou a primeira fatura) — nunca um genérico.
+            if (model.TipoContrato == "TRIAL")
+                TempData["ContratoResumo"] = $"trial|{DateTime.Today.AddDays(model.DiasTrial):dd/MM/yyyy}|{DateTime.Today.AddDays(model.DiasTrial + 30):dd/MM/yyyy}";
+            else
+                TempData["ContratoResumo"] = "ativa";
             TempData["Success"] = "Cadastro finalizado com sucesso. Faça login para começar.";
             return RedirectToAction(nameof(Sucesso));
         }

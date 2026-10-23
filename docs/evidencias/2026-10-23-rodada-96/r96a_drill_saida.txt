@@ -1,0 +1,13 @@
+R96A_DRILL data=20261023-062342 db=plantaopro_test porta=51977
+PORTAS_LIVRES_INICIO=SIM
+ESTAGEM_1_API_NO_AR ok=SIM pid=21036
+ESTAGEM_2_CATALOGO_OK planos=4 plano=Profissional faq_trial=SIM
+PRE_LIMPEZA_RERUN ok=SIM
+PA_TRIAL_CRIADO solicitacao=7ecedc09-215b-460e-9c67-d8bcc5325237 tenant=00730695-3512-475d-9e4d-120a54f7529b cliente=3b816a7f-7da5-4809-a289-fbf8c24bfca1 assinatura=591ec7e9-4641-4c9b-ad05-cfad1f3690dd
+PA_TRIAL_OK status=TRIAL trial_fim_ok=SIM fim_conv_ok=SIM cobranca_inicial=0 lgpd=consentimento onboarding=EM_ANDAMENTO checklist=6
+FUNCIONAL_API_OK login_dono=SIM onboarding_http=200 minha_assinatura_http=200 minha_status=TRIAL dataTrialFim=2026-11-06 dataFim=2026-12-06
+PA_DUPLICATA_OK http=400 msg_cnpj=SIM residuo=0
+PA_VALIDACAO_OK casos=4 http_todos=400 residuos=0
+PA_ATIVA_OK status=ATIVA trial_fim_nulo=SIM fim_1mes=SIM cobranca=ABERTO faturas_api=1 login_dono=SIM
+PORTAS_LIVRES=SIM
+RESULTADO=PASSEI

@@ -216,17 +216,38 @@ limit 50")).ToList();
         }
     }
 
+    /// <summary>
+    /// Cadastro público (funil self-service). R96 (B6): o teste grátis chega
+    /// na mesma requisição pública com as MESMAS regras do provisionamento
+    /// manual B2B — status explícito, TRIAL exige DiasTrial 1..90 (sem padrão
+    /// silencioso) e nunca gera cobrança inicial; data_fim do TRIAL = teste +
+    /// 30 dias de janela de conversão (documentado: o gatilho de trial dispara
+    /// antes do de vigência). Status ausente = ATIVA com cobrança inicial
+    /// (comportamento B5 preservado).
+    /// </summary>
     public async Task<ApiResponse<CadastroSelfServiceResultadoDto>> FinalizarCadastroAsync(CadastroSelfServiceRequest request, string? ip, string? userAgent)
     {
         var erros = ValidarCadastro(request);
         if (erros.Count > 0) return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("Verifique os dados do cadastro.", 400, erros);
+        var status = string.IsNullOrWhiteSpace(request.StatusAssinatura) ? "ATIVA" : request.StatusAssinatura.Trim().ToUpperInvariant();
+        if (status is not ("TRIAL" or "ATIVA")) return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("Status da assinatura deve ser TRIAL ou ATIVA.", 400);
+        DateTime? trialFim = null;
+        if (status == "TRIAL")
+        {
+            if (!request.DiasTrial.HasValue || request.DiasTrial.Value is < 1 or > 90) return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("Informe os dias de teste (entre 1 e 90) para começar o teste grátis.", 400);
+            // R96: calendario LOCAL (fuso da operacao do tenant / do banco), nunca
+            // UtcNow.Date: coluna `date` + sessao America/Sao_Paulo faria o UTC
+            // virar um dia a menos (off-by-one do trial).
+            trialFim = DateTime.Today.AddDays(request.DiasTrial.Value);
+        }
         // B5: slug único global (ux_tenants_slug) com retry limitado: dois cadastros
         // simultâneos com o mesmo nome fantasia não viram 500 — o segundo tenta
         // com sufixo; duplicata real (CNPJ/e-mail) vira 409 honesto.
         for (var tentativa = 0; tentativa < 3; tentativa++)
         {
-            var resultado = await TentarProvisionarAsync(request, null, "ATIVA", null,
-                "Criada via self-service", true, "SELF_SERVICE", "ADMINISTRADOR_CLIENTE", ip, userAgent,
+            var resultado = await TentarProvisionarAsync(request, null, status, trialFim,
+                status == "TRIAL" ? "Criada via self-service (teste gratuito)" : "Criada via self-service",
+                status == "ATIVA", "SELF_SERVICE", "ADMINISTRADOR_CLIENTE", ip, userAgent,
                 tentativa > 0);
             if (resultado is not null) return resultado;
         }
@@ -260,7 +281,7 @@ limit 50")).ToList();
         var status = (request.StatusInicial ?? "TRIAL").Trim().ToUpperInvariant();
         if (status is not ("TRIAL" or "ATIVA")) return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("Status inicial deve ser TRIAL ou ATIVA.", 400);
         if (status == "TRIAL" && (request.DiasTrial is < 1 or > 90)) return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("DiasTrial deve estar entre 1 e 90 para TRIAL.", 400);
-        var trialFim = status == "TRIAL" ? DateTime.UtcNow.Date.AddDays(request.DiasTrial) : (DateTime?)null;
+        var trialFim = status == "TRIAL" ? DateTime.Today.AddDays(request.DiasTrial) : (DateTime?)null;
         for (var tentativa = 0; tentativa < 3; tentativa++)
         {
             var resultado = await TentarProvisionarAsync(mapped, _tenantContext.ObterUsuarioId(), status, trialFim,
@@ -306,7 +327,7 @@ limit 50")).ToList();
             var slugBase = TenantContextService.Slug(request.Empresa.NomeFantasia);
             var slug = comSufixo ? $"{slugBase}-{solicitacaoId.ToString("N")[..4]}" : slugBase;
             var senhaHash = Security.PasswordHashService.Hash(request.UsuarioAdmin.Senha);
-            var fim = DateTime.UtcNow.Date.AddMonths(1);
+            var fim = DateTime.Today.AddMonths(1);
             if (statusAssinatura == "TRIAL" && dataTrialFim.HasValue) fim = dataTrialFim.Value.AddDays(30);
 
             await cn.ExecuteAsync(@"insert into plantaopro.cadastro_cliente_solicitacoes(id,plano_id,nome_fantasia,razao_social,cnpj,segmento,qtd_medicos,qtd_hospitais,volume_plantoes_mes,cidade,uf,telefone,email_corporativo,responsavel_nome,responsavel_email,responsavel_telefone,responsavel_cargo,periodicidade,aceite_termos,aceite_privacidade,consentimento_lgpd,status,reg_date,reg_status)
@@ -317,8 +338,8 @@ values(@solicitacaoId,@PlanoId,@NomeFantasia,@RazaoSocial,@Cnpj,@Segmento,@Quant
 values(@clienteId,@RazaoSocial,@NomeFantasia,@Cnpj,@Email,@Telefone,@Cidade,@Uf,@PlanoId,'ATIVO','A',now())", new { clienteId, request.Empresa.RazaoSocial, request.Empresa.NomeFantasia, Cnpj = cnpjLimpo, Email = request.Empresa.EmailCorporativo, request.Empresa.Telefone, request.Empresa.Cidade, request.Empresa.Uf, request.Plano.PlanoId }, tx);
             await cn.ExecuteAsync(@"insert into plantaopro.assinaturas(id,tenant_id,cliente_id,plano_id,data_inicio,data_fim,data_trial_fim,status,valor_contratado,dia_vencimento,observacoes,periodicidade,reg_status,reg_date)
 values(@assinaturaId,@tenantId,@clienteId,@PlanoId,current_date,@Fim,@TrialFim,@Status,@Valor,@Dia,@Observacoes,@Periodicidade,'A',now())", new { assinaturaId, tenantId, clienteId, request.Plano.PlanoId, Fim = fim, TrialFim = (DateTime?)dataTrialFim, Status = statusAssinatura, Valor = plano.ValorMensal, Dia = DateTime.UtcNow.Day, Observacoes = observacaoAssinatura, request.Plano.Periodicidade }, tx);
-            await cn.ExecuteAsync(@"insert into plantaopro.usuarios(id,nome,email,email_normalizado,telefone,senha_hash,senha_alteracao_obrigatoria,preferencias_notificacao,cliente_id,status,reg_status,reg_date)
-values(@usuarioId,@Nome,@Email,upper(@Email),@Telefone,@SenhaHash,false,'{}',@clienteId,'ATIVO','A',now())", new { usuarioId, request.UsuarioAdmin.Nome, request.UsuarioAdmin.Email, request.UsuarioAdmin.Telefone, SenhaHash = senhaHash, clienteId }, tx);
+            await cn.ExecuteAsync(@"insert into plantaopro.usuarios(id,nome,email,email_normalizado,telefone,senha_hash,senha_alteracao_obrigatoria,preferencias_notificacao,cliente_id,tenant_id,status,reg_status,reg_date)
+values(@usuarioId,@Nome,@Email,upper(@Email),@Telefone,@SenhaHash,false,'{}',@clienteId,@tenantId,'ATIVO','A',now())", new { usuarioId, request.UsuarioAdmin.Nome, request.UsuarioAdmin.Email, request.UsuarioAdmin.Telefone, SenhaHash = senhaHash, clienteId, tenantId }, tx);
 
             var perfilId = await GarantirPerfilAdminClienteAsync(cn, tx, tenantId, clienteId);
             await cn.ExecuteAsync("insert into plantaopro.usuarios_perfis(id,tenant_id,cliente_id,usuario_id,perfil_id,reg_date,reg_status) values(gen_random_uuid(),@tenantId,@clienteId,@usuarioId,@perfilId,now(),'A')", new { tenantId, clienteId, usuarioId, perfilId }, tx);
@@ -555,7 +576,7 @@ and plantaopro.modulo_efetivo(@tenantId,m.codigo)", new { permissionIds, tenantI
         // explícito: 404 honesto, propagado por uso/faturas/solicitações.
         if (ctx.Data?.ClienteId is null) return ApiResponse<MinhaAssinaturaDto>.Fail("Organização sem cliente vinculado para a assinatura.", 404);
         await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-        var dto = await cn.QueryFirstOrDefaultAsync<MinhaAssinaturaDto>(@"select a.id as ""AssinaturaId"", a.cliente_id as ""ClienteId"", a.plano_id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", coalesce(a.status,'') as ""Status"", a.valor_contratado as ""ValorContratado"", a.data_inicio::timestamptz as ""DataInicio"", a.data_fim::timestamptz as ""DataFim"" from plantaopro.assinaturas a join plantaopro.planos p on p.id=a.plano_id where a.cliente_id=@clienteId and a.reg_status='A' order by a.reg_date desc limit 1", new { clienteId = ctx.Data.ClienteId.Value });
+        var dto = await cn.QueryFirstOrDefaultAsync<MinhaAssinaturaDto>(@"select a.id as ""AssinaturaId"", a.cliente_id as ""ClienteId"", a.plano_id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", coalesce(a.status,'') as ""Status"", a.valor_contratado as ""ValorContratado"", a.data_inicio::timestamptz as ""DataInicio"", a.data_fim::timestamptz as ""DataFim"", a.data_trial_fim::timestamptz as ""DataTrialFim"" from plantaopro.assinaturas a join plantaopro.planos p on p.id=a.plano_id where a.cliente_id=@clienteId and a.reg_status='A' order by a.reg_date desc limit 1", new { clienteId = ctx.Data.ClienteId.Value });
         return dto is null ? ApiResponse<MinhaAssinaturaDto>.Fail("Assinatura não encontrada.", 404) : ApiResponse<MinhaAssinaturaDto>.Ok(dto);
     }
 

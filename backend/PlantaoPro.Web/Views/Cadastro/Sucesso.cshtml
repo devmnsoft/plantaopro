@@ -1,5 +1,7 @@
 @{
     ViewData["Title"] = "Cadastro recebido";
+    var resumo = TempData["ContratoResumo"] as string;
+    var partes = resumo is { } r && r.StartsWith("trial|", StringComparison.Ordinal) ? r.Split('|') : null;
 }
 <section class="container py-5 text-center">
     <div class="card shadow-sm mx-auto pp-success-card">
@@ -7,6 +9,18 @@
             <span class="display-5 text-success">✓</span>
             <h1>Cadastro self-service recebido</h1>
             <p class="text-muted">O fluxo cria a instituição, a assinatura, o primeiro administrador, o aceite LGPD, a aparência padrão e a lista de verificação inicial.</p>
+            @if (partes is not null && partes.Length == 3)
+            {
+                <ul class="list-unstyled mb-3" style="max-width: 420px; margin-inline: auto;">
+                    <li><strong>Teste grátis até:</strong> @partes[1]</li>
+                    <li><strong>Janela para decidir após o teste:</strong> até @partes[2] (30 dias)</li>
+                    <li>Sem cobrança durante o período testado — você já pode usar a plataforma.</li>
+                </ul>
+            }
+            else
+            {
+                <p class="text-muted">A fatura inicial ficará disponível na página <strong>Minha assinatura</strong> para pagamento em 7 dias.</p>
+            }
             <a class="btn btn-primary" asp-controller="Account" asp-action="Login">Ir para login</a>
         </div>
     </div>

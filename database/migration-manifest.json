@@ -1534,6 +1534,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2375_r96_onboarding_selfservice_trial",
+                            "source":  "database/migrations/2026_10_v2375_r96_onboarding_selfservice_trial.sql",
+                            "checksum":  "e02809a9d67457fc774b4cb80d6ab44fdff9305a10f98bf8d4c879854ffc04ec",
+                            "dependsOn":  [
+                                              "2026_10_v2374_r93_erros_negocio"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

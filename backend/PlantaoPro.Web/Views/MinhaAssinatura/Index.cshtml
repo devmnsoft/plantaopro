@@ -21,6 +21,7 @@
             @if (!string.IsNullOrWhiteSpace(Model.Status)) { <article class="pp-kpi-card"><span>Status</span><strong>@Model.Status</strong><small>Situação atual</small></article> }
             @if (!string.IsNullOrWhiteSpace(Model.Ciclo)) { <article class="pp-kpi-card"><span>Ciclo</span><strong>@Model.Ciclo</strong><small>Periodicidade contratual</small></article> }
             @if (Model.Vencimento.HasValue) { <article class="pp-kpi-card"><span>Próximo vencimento</span><strong>@Model.Vencimento.Value.ToString("dd/MM/yyyy")</strong><small>Data combinada no contrato.</small></article> }
+            @if (Model.FimDoTeste.HasValue) { <article class="pp-kpi-card"><span>Fim do teste grátis</span><strong>@Model.FimDoTeste.Value.ToString("dd/MM/yyyy")</strong><small>Após o teste você ainda tem 30 dias para decidir sobre a assinatura.</small></article> }
         </section>
 
         <div class="pp-subscription-layout">

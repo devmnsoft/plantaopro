@@ -256,6 +256,28 @@ static async Task ExecuteManifest(string cs, string manifest, string label)
                     applied.Remove(migration.Version);
                     Console.WriteLine($"{label}: recuperação controlada de checksum em {migration.Version}; reaplicando conteúdo atual.");
                 }
+                // Recuperação excepcional controlada (R96): o arquivo recebeu edição na R68 sem
+                // atualização do manifest (drift arquivo x manifest descoberto pelo drill da R95,
+                // que alinhou o hash); bancos legados ainda carregam o checksum antigo abaixo. O
+                // script é idempotente (create/alter/dedupe com guarda) — a linha antiga é removida
+                // para que o conteúdo atual seja reaplicado e re-registrado com o hash executado.
+                else if (migration.Version == "2026_v1186_schema_permissoes_compatibilidade" &&
+                    string.Equals(previous, "7a64ca1e899ba4d0aaf99dbc0e128a4f21c8128ec2526bda50a45cd3f4f4f7d7", StringComparison.OrdinalIgnoreCase))
+                {
+                    await cn.ExecuteAsync("DELETE FROM plantaopro.schema_migrations WHERE COALESCE(version, id::text)=@Version AND success=true", new { migration.Version });
+                    applied.Remove(migration.Version);
+                    Console.WriteLine($"{label}: recuperação controlada de checksum em {migration.Version}; reaplicando conteúdo atual.");
+                }
+                // Recuperação excepcional controlada (R96): mesma classe de drift da v1186 —
+                // edição posterior ao registro original (reaplicação idempotente: DO com guarda
+                // de criação do papel + CREATE OR REPLACE das funções trigger).
+                else if (migration.Version == "2026_10_v2305_administrativo360_imutabilidade_por_papel" &&
+                    string.Equals(previous, "4b4e31a9a37edd2670d2cb566b39a49cb278ff721efc5b1d47616693cc017ee4", StringComparison.OrdinalIgnoreCase))
+                {
+                    await cn.ExecuteAsync("DELETE FROM plantaopro.schema_migrations WHERE COALESCE(version, id::text)=@Version AND success=true", new { migration.Version });
+                    applied.Remove(migration.Version);
+                    Console.WriteLine($"{label}: recuperação controlada de checksum em {migration.Version}; reaplicando conteúdo atual.");
+                }
                 else
                 {
                     throw new InvalidOperationException($"Checksum aplicado diverge em {migration.Version}.");

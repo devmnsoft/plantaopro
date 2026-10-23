@@ -88,6 +88,16 @@ public sealed class CadastroSelfServiceRequest
     public CadastroEmpresaRequest Empresa { get; set; } = new CadastroEmpresaRequest();
     public CadastroPlanoRequest Plano { get; set; } = new CadastroPlanoRequest();
     public CadastroUsuarioAdminRequest UsuarioAdmin { get; set; } = new CadastroUsuarioAdminRequest();
+
+    /// <summary>
+    /// R96 (B6 onboarding self-service): TRIAL ou ATIVA. Ausente = ATIVA com
+    /// cobrança inicial (compatibilidade com o fluxo público B5). TRIAL exige
+    /// DiasTrial explícito (1..90, sem padrão silencioso), nunca gera cobrança
+    /// inicial e ganha data_fim = teste + 30 dias de janela de conversão —
+    /// MESMO núcleo do provisionamento manual B2B.
+    /// </summary>
+    public string? StatusAssinatura { get; set; }
+    public int? DiasTrial { get; set; }
 }
 
 public sealed class CadastroSelfServiceResultadoDto
@@ -232,6 +242,8 @@ public sealed class MinhaAssinaturaDto
     public decimal ValorContratado { get; set; }
     public DateTime DataInicio { get; set; }
     public DateTime? DataFim { get; set; }
+    /// <summary>R96: presente só em assinatura TRIAL (fim do período testado, sem a janela de conversão).</summary>
+    public DateTime? DataTrialFim { get; set; }
 }
 
 public sealed class SolicitacaoMudancaPlanoRequest

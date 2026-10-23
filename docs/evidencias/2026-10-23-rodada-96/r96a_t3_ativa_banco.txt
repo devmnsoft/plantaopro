@@ -1,0 +1,1 @@
+assinatura_id=be2cd5f9-57f7-4ee6-8261-63317dd7c11c status=ATIVA data_trial_fim=null data_fim=2026-11-23 cobranca_inicial_status=ABERTO faturas_api_total=1 faturas_api_cadastro=1

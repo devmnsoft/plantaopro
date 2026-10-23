@@ -30,6 +30,9 @@ public sealed class MinhaAssinaturaController : BaseWebController
             model.Plano = result.Data.PlanoNome;
             model.Status = result.Data.Status;
             model.Vencimento = result.Data.DataFim.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(result.Data.DataFim.Value, DateTimeKind.Utc)) : null;
+            // R96: fim do teste grátis só existe em assinatura TRIAL — a tela mostra
+            // a data real, nunca estimada.
+            model.FimDoTeste = result.Data.DataTrialFim.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(result.Data.DataTrialFim.Value, DateTimeKind.Utc)) : null;
         }
         else if (!string.IsNullOrWhiteSpace(result.Error))
             model.ErrorMessage = result.Error;
@@ -297,7 +300,7 @@ public sealed class MinhaAssinaturaController : BaseWebController
         return RedirectToAction(nameof(Index));
     }
 
-    private sealed record AssinaturaDto(Guid AssinaturaId, Guid ClienteId, Guid PlanoId, string PlanoNome, string Status, decimal ValorContratado, DateTime DataInicio, DateTime? DataFim);
+    private sealed record AssinaturaDto(Guid AssinaturaId, Guid ClienteId, Guid PlanoId, string PlanoNome, string Status, decimal ValorContratado, DateTime DataInicio, DateTime? DataFim, DateTime? DataTrialFim);
     private sealed record FaturaDto(Guid Id, Guid ClienteId, Guid AssinaturaId, DateTime Vencimento, decimal Valor, string Status, string Descricao, string Origem);
     private sealed record FaturaCobrancaCriadaDto(Guid CobrancaId, string Referencia, string CheckoutPath, decimal Valor, string Status, bool JaExistia);
     private sealed record SolicitarMudancaPlanoRequest(Guid PlanoDestinoId, string Motivo);

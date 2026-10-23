@@ -1,0 +1,24 @@
+R102A_DRILL data=20261023-201325 db=plantaopro_test api=52086 web=52085
+PORTAS_LIVRES_INICIO=SIM
+ESTAGEM_1_API_NO_AR ok=SIM pid=31512
+ESTAGEM_1_WEB_NO_AR ok=SIM pid=19060
+PRE_LIMPEZA_RERUN ok=SIM
+MIGRACAO_OK v2379 colunas_regulacao=2 fk_validadas=t orfaas=0|0
+PLANO_OK drill=7ee25518-3c78-4940-bab3-15194ad5a78a b=cf2fa584-d858-4ff2-945e-83efcaa58dd2 mensal=100/250 anual=1188/2880
+REG_MODULO_OK saude360 tenant=ae07a736-2014-4def-b595-088e41992fb2 origem=CONTRATO
+REG_PERMISSAO_OK TRIAGEM.EDITAR via usuario_permissoes_especiais
+REG_FIXTURE_OK medico=90cf4bf0-61b9-4226-a1b9-1ad715ef7b3d paciente=e12db3fa-f49e-498a-9f14-f372210bfe57 agendamento=0eacbbdc-7805-46fc-90ed-ab27135fb205 triagem=be40571e-730e-46d9-b037-9e3c36916c6f
+REG_409_OK http=409 motivo=sem_check-in
+REG_400_OK http=400 motivo=sem_orientacao
+REG_SUCESSO_OK http=200 agendamento=AGUARDANDO_CONSULTA medico_destino=SIM encaminhamento=1 historico=1 auditoria=+1
+T1_DUMP_OK arquivo=r102a_t1_regularizar_api.json acao=regularizar triagem=FINALIZADA
+BIL_CFG_OK M=ATIVA_MENSAL A=ATIVA_ANUAL F=ATIVA_FIM_2026_09 T=TRIAL_VENCIDO
+GERAR_SET_OK 2026-09 M=1x100 A=1x1188 F=1x100 T=0
+GERAR_OUT_CYCLE_OK 2026-10 M=1x100 A=0 (ciclo anual) F=0 (gate data_fim)
+TRIAL_EXPIRAR_OK primeira>=1 status=VENCIDA historico=1 segunda=0 expiradas_primeira=1
+ALTERAR_PLANO_OK M=250+ciclo_1m A=2880+ciclo_1y TRIAL=datas_preservadas VENCIDA=400
+PWA_ASSETS_OK sw=v2_network_first offline.html=PT pwa-install.js=beforeinstallprompt manifest=200
+WEB_REG_EDIT_OK http=200 botao=Regularizar acao=/Triagem/Regularizar
+PWA_LAYOUT_OK _Layout da triagem referencia pwa-install.js + manifest.json + service-worker-registration
+PORTAS_LIVRES=SIM
+RESULTADO=PASSEI

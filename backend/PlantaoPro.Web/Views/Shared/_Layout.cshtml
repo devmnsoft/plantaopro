@@ -25,6 +25,9 @@
     <meta name="theme-color" content="#09243c" />
     <meta name="antiforgery-token" content="@antiforgeryToken" />
     <link rel="manifest" href="~/manifest.json" />
+    <!-- R102: instalacao PWA em modo standalone no iOS (android usa o manifest + prompt proprio) -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="PlantãoPro" />
     <title>@(ViewData["Title"] ?? "PlantãoPro")</title>
     <link rel="icon" type="image/svg+xml" href="~/media/brand/favicon.svg" />
     <link rel="apple-touch-icon" href="~/media/brand/apple-touch-icon.png" />
@@ -152,6 +155,7 @@
         <script src="~/js/command-palette.js" asp-append-version="true"></script>
     }
     <script src="~/js/service-worker-registration.js" asp-append-version="true"></script>
+    <script src="~/js/pwa-install.js" asp-append-version="true"></script>
     @if (isAuthenticated) { <script type="module" src="~/js/core/app-shell.js" asp-append-version="true"></script> }
     @if (isAuthenticated) { <script src="~/js/session-health.js" asp-append-version="true"></script> }
     <script src="~/js/v2139-premium-library.js" asp-append-version="true"></script>

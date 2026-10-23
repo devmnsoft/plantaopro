@@ -108,7 +108,15 @@
             {
                 <button type="button" class="btn btn-success" disabled title="@UiText.L("Clinical.TriageFinishDisabledTitle")">@UiText.L("Clinical.ButtonFinishTriage")</button>
             }
-            <button type="button" class="btn btn-outline-primary" disabled title="@UiText.L("Clinical.TriageReferDisabledTitle")">@UiText.L("Clinical.ButtonReferConsult")</button>
+            @if (vm.Id.HasValue)
+            {
+                // R102: regulação da triagem — finaliza e registra a decisão (medico opcional + orientacao obrigatoria).
+                <button type="submit" class="btn btn-outline-primary" asp-controller="Triagem" asp-action="Regularizar" data-loading-text="@UiText.L("Clinical.LoadingSaving")" title="@UiText.L("Clinical.TriageReferTitle")"><i class="bi bi-signpost-split me-1" aria-hidden="true"></i>@UiText.L("Clinical.ButtonRegulateTriage")</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-outline-primary" disabled title="@UiText.L("Clinical.TriageReferDisabledTitle")">@UiText.L("Clinical.ButtonReferConsult")</button>
+            }
         }
     </div>
 </form>

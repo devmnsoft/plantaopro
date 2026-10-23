@@ -1498,6 +1498,12 @@
   <data name="Clinical.TriageReferDisabledTitle" xml:space="preserve">
     <value>The referral will be enabled once the system records the linked consult.</value>
   </data>
+  <data name="Clinical.ButtonRegulateTriage" xml:space="preserve">
+    <value>Regulate</value>
+  </data>
+  <data name="Clinical.TriageReferTitle" xml:space="preserve">
+    <value>Finishes triage and records the patient regulation: destination doctor optional, guidance required.</value>
+  </data>
   <data name="Clinical.LookupSelected" xml:space="preserve">
     <value>Selected record</value>
   </data>

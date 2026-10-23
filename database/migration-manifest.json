@@ -1574,6 +1574,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2379_r102_regulacao_triagem_integridade_adm360",
+                            "source":  "database/migrations/2026_10_v2379_r102_regulacao_triagem_integridade_adm360.sql",
+                            "checksum":  "df3dd62b4561e3359e3902609a33cefaf001d2bae01e0b2277fa07f44b611e53",
+                            "dependsOn":  [
+                                              "2026_10_v2378_r100_notificacoes_calendario_fiscal"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

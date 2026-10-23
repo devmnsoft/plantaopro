@@ -135,7 +135,7 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
         await GarantirBaseClinicaAsync();
         await using var cn = Cn();
         // P0 (homologação): acesso clínico SOMENTE por vínculo médico explícito (medicos.usuario_id).
-        // Autoria (created_by) e correspondência de e-mail NÃO são regras de autorização —
+        // Autoria (created_by) e correspondência de e-mail não são regras de autorização —
         // um mesmo UUID não implica necessariamente no mesmo médico.
         var ownDoctorSql = currentUser.IsDoctor() && (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase))
             ? " and t.medico_id in (select m.id from plantaopro.medicos m where m.reg_status='A' and m.usuario_id=@uid and (@tenantId is null or m.cliente_id=@tenantId))"
@@ -274,6 +274,8 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
         var imprimir = string.Equals(acao, "imprimir", StringComparison.OrdinalIgnoreCase);
         if (string.Equals(tableKey, "painel", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase)) status = "FINALIZADO";
         if (string.Equals(tableKey, "triagens", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase)) status = "FINALIZADA";
+        // R102: regularizar = finalizar tipado + regulação (a triagem termina; a decisão fica no encaminhamento).
+        if (string.Equals(tableKey, "triagens", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "regularizar", StringComparison.OrdinalIgnoreCase)) status = "FINALIZADA";
         if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "iniciar", StringComparison.OrdinalIgnoreCase)) status = "EM_ATENDIMENTO";
         if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase)) status = "FINALIZADA";
         if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "cancelar", StringComparison.OrdinalIgnoreCase)) status = "CANCELADA";
@@ -334,7 +336,7 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
             // R7-A1: reserva concorrente segura — dois operadores não assumem o mesmo item da fila.
             // A atualização é condicional ao estado lido; o perdedor da corrida recebe 409 de conflito.
             esperadoStatus = currentPainel;
-            // R8-A1: ancora o estado-fonte permitido POR AÇÃO no predicado do UPDATE. Sem isso, uma
+            // R8-A1: ancora o estado-fonte permitido por ação no predicado do UPDATE. Sem isso, uma
             // chamada que lê a linha depois do commit da mais rápida (ex.: já CHAMADO) revalida a
             // própria transição (CHAMADO→CHAMADO) e vira sucesso duplicado: ações de uso único
             // (chamar/finalizar) passam a perder com 409 também nesse entrelaçamento leitura→commit.
@@ -350,6 +352,21 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
             // Retry seguro: não repete histórico nem encaminhamento.
             if (currentStatus == "FINALIZADA") return await ObterAsync(tableKey, id);
             esperadoStatus = currentStatus;
+        }
+        // R102: regulação — retry seguro (triagem já finalizada devolve o registro), e o
+        // agendamento, quando existir, precisa estar no fluxo pós-check-in (ou já aguardando
+        // consulta): sem check-in não há paciente em triagem para regular.
+        if (string.Equals(tableKey, "triagens", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "regularizar", StringComparison.OrdinalIgnoreCase))
+        {
+            var statusTriagem = await cn.ExecuteScalarAsync<string>("select status from plantaopro.triagens where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))", new { id, tenantId = TenantId, isGlobal = IsGlobal });
+            if (string.IsNullOrWhiteSpace(statusTriagem)) return ApiResponse<Saude360RegistroDto>.Fail("Triagem não encontrada para regulação.", 404);
+            if (statusTriagem == "FINALIZADA") return await ObterAsync(tableKey, id);
+            esperadoStatus = statusTriagem;
+            var statusAgendamento = await cn.ExecuteScalarAsync<string?>(@"select a.status
+from plantaopro.triagens t join plantaopro.agendamentos a on a.id=t.agendamento_id and a.reg_status='A'
+where t.id=@id and t.reg_status='A' and (@isGlobal or (@tenantId is not null and t.cliente_id=@tenantId))", new { id, tenantId = TenantId, isGlobal = IsGlobal });
+            if (!string.IsNullOrWhiteSpace(statusAgendamento) && !new[] { "CHECKIN_REALIZADO", "EM_TRIAGEM", "AGUARDANDO_CONSULTA" }.Contains(statusAgendamento, StringComparer.OrdinalIgnoreCase))
+                return ApiResponse<Saude360RegistroDto>.Fail("Regulação exige o paciente no fluxo de atendimento (após o check-in).", 409);
         }
         var actionUpdateSql = string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase)
             ? $"update plantaopro.{table} set status=@status, data_inicio=case when @status='EM_ATENDIMENTO' then coalesce(data_inicio, now()) else data_inicio end, data_fim=case when @status='FINALIZADA' then coalesce(data_fim, now()) else data_fim end, finalizada_em=case when @status='FINALIZADA' then now() else finalizada_em end, cancelada_em=case when @status='CANCELADA' then now() else cancelada_em end, motivo_cancelamento=case when @status='CANCELADA' then coalesce(nullif(@motivo,''), nullif(@justificativa,''), motivo_cancelamento) else motivo_cancelamento end, updated_by=@uid, reg_update=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and (@esperado is null or status=@esperado)"
@@ -900,11 +917,26 @@ select gen_random_uuid(), cliente_id, paciente_id, id, 'AGUARDANDO', @uid from p
 select gen_random_uuid(), cliente_id, id, 'CONSULTA', 'ENCAMINHADA' from plantaopro.triagens where id=@id
 on conflict (cliente_id,triagem_id,destino) where destino='CONSULTA' and reg_status='A' do nothing", new { id }, tx);
         }
+        // R102: regulação — move o agendamento para AGUARDANDO_CONSULTA (somente se já está no
+        // fluxo pós-check-in; o estado-fonte foi pré-validado em AcaoAsync) registrando o médico
+        // de destino quando informado e upserta o encaminhamento CONSULTA com a orientação.
+        if (key == "triagens" && acao.Equals("regularizar", StringComparison.OrdinalIgnoreCase))
+        {
+            await cn.ExecuteAsync(@"update plantaopro.agendamentos set status='AGUARDANDO_CONSULTA', medico_id=case when @medicoId is not null then @medicoId else medico_id end, updated_by=@uid, updated_at=now()
+where id=(select agendamento_id from plantaopro.triagens where id=@id) and reg_status='A' and status in ('CHECKIN_REALIZADO','EM_TRIAGEM','AGUARDANDO_CONSULTA')", new { id, uid, medicoId = request.MedicoId }, tx);
+            await cn.ExecuteAsync(@"insert into plantaopro.triagem_encaminhamentos(id,cliente_id,triagem_id,destino,status,medico_id,observacao)
+select gen_random_uuid(), cliente_id, id, 'CONSULTA', 'ENCAMINHADA', @medicoId, @obs from plantaopro.triagens where id=@id
+on conflict (cliente_id,triagem_id,destino) where destino='CONSULTA' and reg_status='A'
+do update set medico_id=coalesce(excluded.medico_id, triagem_encaminhamentos.medico_id), observacao=excluded.observacao, updated_at=now()", new { id, obs = request.Observacoes ?? string.Empty, medicoId = request.MedicoId }, tx);
+        }
     }
 
     private async Task InsertHistoricoAsync(IDbConnection cn, string key, Guid id, string acao, Saude360ActionRequest request, IDbTransaction? tx = null)
     {
-        var detalhes = JsonSerializer.Serialize(new { acao, request.Motivo, request.Justificativa, request.Valor, request.FormaPagamento });
+        // R102: a trilha da regulação carrega o medico de destino e a orientação (conteudo da decisao).
+        var detalhes = string.Equals(acao, "regularizar", StringComparison.OrdinalIgnoreCase)
+            ? JsonSerializer.Serialize(new { acao, medicoDestino = request.MedicoId, orientacao = request.Observacoes, request.Motivo, request.Justificativa })
+            : JsonSerializer.Serialize(new { acao, request.Motivo, request.Justificativa, request.Valor, request.FormaPagamento });
         var tenantId = TenantId;
         var uid = currentUser.UserId;
         if (key == "pacientes") await cn.ExecuteAsync("insert into plantaopro.paciente_historico(id,cliente_id,tenant_id,paciente_id,acao,detalhes,usuario_id) values(gen_random_uuid(),@tenantId,(select tco.tenant_id from plantaopro.clientes tco where tco.id=@tenantId),@id,@acao,cast(@detalhes as jsonb),@uid)", new { tenantId, id, acao, detalhes, uid }, tx);
@@ -965,6 +997,8 @@ where id=@id", new { id, acao, evento = acao, detalhe = detalhes, uid }, tx);
         if ((normalized == "cancelar" || normalized == "ausente" || normalized == "negar" || normalized == "estornar") && string.IsNullOrWhiteSpace(r.Motivo) && string.IsNullOrWhiteSpace(r.Justificativa)) return "A ação exige motivo ou justificativa.";
         if (normalized == "recorrer" && string.IsNullOrWhiteSpace(r.Justificativa)) return "Recurso de glosa exige justificativa.";
         if (normalized == "receber" && (r.Valor.GetValueOrDefault() <= 0 || string.IsNullOrWhiteSpace(r.FormaPagamento))) return "Recebimento exige valor e forma de pagamento.";
+        // R102: a regulação só existe com a orientação registrada (o medico de destino e opcional).
+        if (key == "triagens" && normalized == "regularizar" && string.IsNullOrWhiteSpace(r.Observacoes)) return "Regulação exige orientação registrada nas observações.";
         return null;
     }
 

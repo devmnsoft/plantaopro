@@ -228,6 +228,30 @@ public sealed class TriagemController : Saude360WebControllerBase
         form.Titulo = "Revise os dados antes de finalizar a triagem";
         return View("~/Views/Saude360/Formulario.cshtml", form);
     }
+    // R102: regulação da triagem — mesma validacao tipada do finalizar + orientacao obrigatoria
+    // (campo observacoes); o medico de destino e opcional e segue no payload da regulação.
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Regularizar(Saude360FormViewModel form)
+    {
+        foreach (var validationError in form.ValidarTriagem()) ModelState.AddModelError(string.Empty, validationError);
+        if (!form.Id.HasValue || form.Id == Guid.Empty) ModelState.AddModelError(string.Empty, "Salve a triagem antes de regularizá-la.");
+        if (!form.PacienteId.HasValue || form.PacienteId == Guid.Empty) ModelState.AddModelError(string.Empty, "Selecione o paciente da triagem.");
+        if (string.IsNullOrWhiteSpace(form.Descricao)) ModelState.AddModelError(string.Empty, "Regulação exige orientação do encaminhamento (observações).");
+        if (!ModelState.IsValid)
+        {
+            form.Titulo = "Revise os dados antes de regularizar a triagem";
+            return View("~/Views/Saude360/Formulario.cshtml", form);
+        }
+        var token = GetJwtToken();
+        if (string.IsNullOrWhiteSpace(token)) return HandleUnauthorized();
+        var idTriagem = form.Id.GetValueOrDefault();
+        var result = await service.RegularizarTriagemAsync(token, idTriagem, form);
+        TempData[result.Success ? "Success" : "Error"] = result.Message;
+        if (result.Success) return RedirectToAction(nameof(Details), new { id = idTriagem });
+        ModelState.AddModelError(string.Empty, result.Message);
+        form.Titulo = "Revise os dados antes de regularizar a triagem";
+        return View("~/Views/Saude360/Formulario.cshtml", form);
+    }
     public Task<IActionResult> Details(Guid id) { return ModuloAsync("Detalhes da triagem", "Triagem", "Resumo assistencial auditado da triagem.", "api/triagens/" + id, Links(Link("Triagens", "Index", "bi-arrow-left"))); }
     public Task<IActionResult> Fila() { return ModuloAsync("Fila de triagem", "Triagem", "Pacientes aguardando classificação e encaminhamento.", "api/triagens/fila", Links(Link("Nova", "Create", "bi-plus-circle"))); }
     public Task<IActionResult> HistoricoPaciente() { return ModuloAsync("Histórico do paciente", "Triagem", "Histórico de triagens por paciente com acesso auditado e sem exposição desnecessária de dados sensíveis.", "api/triagens/historico-paciente", Links(Link("Fila", "Fila", "bi-people"))); }

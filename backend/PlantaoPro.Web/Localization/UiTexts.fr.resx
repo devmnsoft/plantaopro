@@ -1498,6 +1498,12 @@
   <data name="Clinical.TriageReferDisabledTitle" xml:space="preserve">
     <value>L'orientation sera activée lorsque le système enregistrera la consultation liée.</value>
   </data>
+  <data name="Clinical.ButtonRegulateTriage" xml:space="preserve">
+    <value>Réguler</value>
+  </data>
+  <data name="Clinical.TriageReferTitle" xml:space="preserve">
+    <value>Termine la triage et enregistre la régulation du patient : médecin de destination facultatif et orientation obligatoire.</value>
+  </data>
   <data name="Clinical.LookupSelected" xml:space="preserve">
     <value>Enregistrement sélectionné</value>
   </data>

@@ -89,6 +89,8 @@ public sealed class TriagemUpdateRequest
 {
     public Guid AtendimentoId { get; set; }
     public Guid PacienteId { get; set; }
+    // R102: medico de destino da regulação (opcional — a orientação registrada e que define o fluxo).
+    public Guid MedicoId { get; set; }
     public string QueixaPrincipal { get; set; } = string.Empty;
     public decimal? PressaoSistolica { get; set; }
     public decimal? PressaoDiastolica { get; set; }

@@ -112,6 +112,21 @@ public sealed class TriagensController : ControllerBase
         var result = await service.AcaoAsync("triagens", id, "finalizar", new Saude360ActionRequest());
         return StatusCode(result.StatusCode, result);
     }
+    // R102: regulação da triagem — finaliza a triagem com os dados tipados e registra a decisão
+    // de regulação/orientacao (medico de destino opcional + orientacao obrigatica), avancando o
+    // agendamento para AGUARDANDO_CONSULTA quando o paciente ja esta no fluxo pos-check-in.
+    [HttpPost("{id:guid}/regularizar")]
+    public async Task<IActionResult> Regularizar(Guid id, [FromBody] TriagemUpdateRequest request)
+    {
+        var errors = ClinicalMeasurements.Validar(request, true);
+        if (request.PacienteId == Guid.Empty) errors = errors.Concat(new[] { "Paciente é obrigatório." }).ToList();
+        if (errors.Count > 0) return BadRequest(ApiResponse<object>.Fail(string.Join(" ", errors), 400));
+        if (string.IsNullOrWhiteSpace(request.Observacoes)) return BadRequest(ApiResponse<object>.Fail("Regulação exige orientação registrada.", 400));
+        var saved = await service.AtualizarAsync("triagens", id, ToClinicalRequest(request));
+        if (!saved.Success) return StatusCode(saved.StatusCode, saved);
+        var result = await service.AcaoAsync("triagens", id, "regularizar", new Saude360ActionRequest { MedicoId = request.MedicoId == Guid.Empty ? null : request.MedicoId, Observacoes = request.Observacoes });
+        return StatusCode(result.StatusCode, result);
+    }
     [HttpPost("{id:guid}/cancelar")] public async Task<IActionResult> Cancelar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("triagens", id, "cancelar", request); return StatusCode(r.StatusCode, r); }
     [HttpGet("fila")] public async Task<IActionResult> Fila() { var r = await service.ListarAsync("triagens", "AGUARDANDO"); return StatusCode(r.StatusCode, r); }
     [HttpGet("paciente/{pacienteId:guid}")] public async Task<IActionResult> Paciente(Guid pacienteId) { var r = await service.ListarAsync("triagens", pacienteId: pacienteId); return StatusCode(r.StatusCode, r); }

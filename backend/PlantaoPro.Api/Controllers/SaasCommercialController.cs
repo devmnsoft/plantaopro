@@ -518,11 +518,17 @@ values(@id,@tenantDaAssinatura,@ClienteId,@PlanoId,@DataInicio,@DataFim,'ATIVA',
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             await cn.OpenAsync();
             await using var tx = await cn.BeginTransactionAsync();
-            var atual = await cn.QueryFirstOrDefaultAsync<(Guid ClienteId, Guid PlanoId, string Status)>("select cliente_id as ClienteId, plano_id as PlanoId, coalesce(status,'') as Status from plantaopro.assinaturas where id=@id and reg_status='A'", new { id }, tx);
+            var atual = await cn.QueryFirstOrDefaultAsync<(Guid ClienteId, Guid PlanoId, string Status, string? Periodicidade)>("select cliente_id as ClienteId, plano_id as PlanoId, coalesce(status,'') as Status, coalesce(periodicidade,'MENSAL') as Periodicidade from plantaopro.assinaturas where id=@id and reg_status='A'", new { id }, tx);
             if (atual == default)
             {
                 await tx.RollbackAsync();
                 return NotFound(ApiResponse<string>.Fail("Assinatura não encontrada.", 404));
+            }
+            // R102: apenas assinaturas vivas aceitam mudança de plano (as demais guardam o histórico).
+            if (!string.Equals(atual.Status, "ATIVA", StringComparison.OrdinalIgnoreCase) && !string.Equals(atual.Status, "TRIAL", StringComparison.OrdinalIgnoreCase))
+            {
+                await tx.RollbackAsync();
+                return BadRequest(ApiResponse<string>.Fail("Apenas assinaturas ativas ou em trial aceitam mudança de plano.", 400));
             }
             var planoAtivo = await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.planos where id=@PlanoId and reg_status='A' and upper(status)='ATIVO')", request, tx);
             if (!planoAtivo)
@@ -530,7 +536,16 @@ values(@id,@tenantDaAssinatura,@ClienteId,@PlanoId,@DataInicio,@DataFim,'ATIVA',
                 await tx.RollbackAsync();
                 return BadRequest(ApiResponse<string>.Fail("Plano inativo não pode ser usado na assinatura.", 400));
             }
-            await cn.ExecuteAsync("update plantaopro.assinaturas set plano_id=@PlanoId, reg_update=now() where id=@id", new { id, request.PlanoId }, tx);
+            // R102 (pendência herdada): a mudança de plano recalcula o valor contratado pela fonte
+            // única PrecosPlano (plano de destino x periodicidade da assinatura) e reinicia o ciclo
+            // de cobrança para assinaturas ativas (data_inicio=hoje; data_fim=+1 mês/+1 ano). TRIAL
+            // mantém as datas do teste (o fim do trial segue valendo até a conversão).
+            var precoDestino = await cn.QueryFirstOrDefaultAsync<(decimal ValorMensal, decimal ValorAnual)>("select coalesce(valor_mensal,0) as ValorMensal, coalesce(valor_anual,0) as ValorAnual from plantaopro.planos where id=@PlanoId and reg_status='A'", request, tx);
+            var valorNovo = PrecosPlano.ValorContratado(precoDestino.ValorMensal, precoDestino.ValorAnual, atual.Periodicidade);
+            var isAnual = string.Equals((atual.Periodicidade ?? "MENSAL").Trim(), "ANUAL", StringComparison.OrdinalIgnoreCase);
+            var hoje = DateTime.Today;
+            var fim = isAnual ? hoje.AddYears(1) : hoje.AddMonths(1);
+            await cn.ExecuteAsync("update plantaopro.assinaturas set plano_id=@PlanoId, valor_contratado=@valorNovo, data_inicio=case when upper(@statusAtual)='ATIVA' then @hoje else data_inicio end, data_fim=case when upper(@statusAtual)='ATIVA' then @fim else data_fim end, reg_update=now() where id=@id", new { id, request.PlanoId, valorNovo, statusAtual = atual.Status, hoje, fim }, tx);
             await cn.ExecuteAsync(@"insert into plantaopro.assinatura_historico(id, assinatura_id, cliente_id, plano_id_anterior, plano_id_novo, acao, justificativa, status_novo, reg_status, reg_date)
 values(gen_random_uuid(), @id, @ClienteId, @PlanoAnterior, @PlanoNovo, 'ALTERAR_PLANO', @Justificativa, @Status, 'A', now())", new { id, atual.ClienteId, PlanoAnterior = atual.PlanoId, PlanoNovo = request.PlanoId, request.Justificativa, atual.Status }, tx);
             await tx.CommitAsync();
@@ -549,6 +564,39 @@ values(gen_random_uuid(), @id, @ClienteId, @PlanoAnterior, @PlanoNovo, 'ALTERAR_
     {
         var response = await _guard.ObterAssinaturaAtualAsync(clienteId);
         return StatusCode(response.StatusCode, response);
+    }
+
+    // R102: expiração de trials vencidos sem conversão — marca VENCIDA (status permitido pelo
+    // check ck_assinaturas_status_saas), grava histórico TRIAL_EXPIRADO e liberta o slot único
+    // ATIVA/TRIAL do cliente para nova conversão/reativação. Idempotente (segunda chamada = 0).
+    // Trial expirado nunca gera fatura (gerar-mensal só cobra ATIVA); o caminho de volta é a
+    // conversão/reativação com justificativa.
+    [HttpPost("trials/expirar-vencidos")]
+    public async Task<IActionResult> ExpirarTrialsVencidos()
+    {
+        try
+        {
+            if (!_currentUser.IsGlobalAdmin()) return Forbid();
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            var expiradas = (await cn.QueryAsync<(Guid Id, Guid ClienteId, Guid PlanoId)>(@"update plantaopro.assinaturas set status='VENCIDA', reg_update=now()
+where reg_status='A' and upper(status)='TRIAL' and data_trial_fim is not null and data_trial_fim::date < @hoje
+returning id, cliente_id, plano_id", new { hoje = DateTime.Today }, tx)).ToArray();
+            foreach (var item in expiradas)
+            {
+                await cn.ExecuteAsync(@"insert into plantaopro.assinatura_historico(id, assinatura_id, cliente_id, plano_id_anterior, plano_id_novo, acao, justificativa, status_novo, reg_status, reg_date)
+values(gen_random_uuid(), @id, @clienteId, @planoId, @planoId, 'TRIAL_EXPIRADO', 'Trial vencido sem conversao para o plano pago.', 'VENCIDA', 'A', now())", new { id = item.Id, clienteId = item.ClienteId, planoId = item.PlanoId }, tx);
+            }
+            await tx.CommitAsync();
+            await _audit.RegistrarAsync(null, null, AuditoriaConstants.Entidades.Assinatura, null, AuditoriaConstants.Acoes.AlterarStatus, new { expiradas = expiradas.Length, status = "VENCIDA" }, true, HttpContext.Connection.RemoteIpAddress?.ToString(), "ADMINISTRADOR_GLOBAL");
+            return Ok(ApiResponse<int>.Ok(expiradas.Length, expiradas.Length == 0 ? "Nenhum trial vencido para expirar." : "Trials vencidos expirados com sucesso."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao expirar trials vencidos");
+            return StatusCode(500, ApiResponse<string>.Fail("Não foi possível expirar trials vencidos.", 500));
+        }
     }
 
     private async Task<IActionResult> AlterarStatus(Guid id, string status, string justificativa, string mensagem)
@@ -714,6 +762,10 @@ from plantaopro.assinaturas a
 join plantaopro.clientes c on c.id=a.cliente_id
 where a.reg_status='A' and upper(a.status)='ATIVA' and c.reg_status='A' and upper(c.status) not in ('SUSPENSO','CANCELADO')
   and not exists (select 1 from plantaopro.faturas_saas f where f.assinatura_id=a.id and f.competencia=@competencia and f.reg_status='A')
+  -- R102 (pendencia R97): ciclo de cobranca por periodicidade — ANUAL fatura somente no mes de
+  -- renovacao (mes do inicio do ciclo contratado) e nenhuma fatura nasce apos o fim do periodo.
+  and (upper(coalesce(a.periodicidade,'MENSAL')) <> 'ANUAL' or extract(month from a.data_inicio::date) = extract(month from @competencia::date))
+  and (a.data_fim is null or extract(year from a.data_fim::date) * 12 + extract(month from a.data_fim::date) >= extract(year from @competencia::date) * 12 + extract(month from @competencia::date))
 returning id as ""Id"", cliente_id as ""ClienteId"" ", new { competencia }, tx)).ToArray();
             foreach (var fatura in faturas)
             {

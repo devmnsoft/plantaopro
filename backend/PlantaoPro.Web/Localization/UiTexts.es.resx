@@ -1498,6 +1498,12 @@
   <data name="Clinical.TriageReferDisabledTitle" xml:space="preserve">
     <value>El envío se habilitará cuando el sistema registre la consulta vinculada.</value>
   </data>
+  <data name="Clinical.ButtonRegulateTriage" xml:space="preserve">
+    <value>Regular</value>
+  </data>
+  <data name="Clinical.TriageReferTitle" xml:space="preserve">
+    <value>Finaliza la triage y registra la regulación del paciente: médico de destino opcional y orientación obligatoria.</value>
+  </data>
   <data name="Clinical.LookupSelected" xml:space="preserve">
     <value>Registro seleccionado</value>
   </data>

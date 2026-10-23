@@ -9,6 +9,12 @@ public sealed class PlanoPublicoWebViewModel
     public string Slug { get; set; } = string.Empty;
     public string Descricao { get; set; } = string.Empty;
     public decimal ValorMensal { get; set; }
+    /// <summary>R97: preço anual efetivo vindo do catálogo (valor_anual quando &gt; 0, senão 12× mensal).</summary>
+    public decimal ValorAnualEfetivo { get; set; }
+    /// <summary>R97: o plano oferece teste grátis (entitlement do plano, configurável pela administração).</summary>
+    public bool PermiteTrial { get; set; } = true;
+    /// <summary>R97: teto de dias de teste do plano; 0 = sem teto (permanece o teto de 90 por requisição).</summary>
+    public int DiasTrial { get; set; }
     public int LimiteMedicos { get; set; }
     public int LimiteHospitais { get; set; }
     public int LimitePlantoesMes { get; set; }

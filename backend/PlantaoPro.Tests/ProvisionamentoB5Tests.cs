@@ -487,9 +487,9 @@ delete from plantaopro.planos where id in (@plano,@planoOff);";
 insert into plantaopro.tenants (id, tenant_id, codigo, nome, status, reg_status) values
   (@tenant, @tenant, 'B5TENT', 'B5 Tenant Convites', 'ATIVO', 'A'),
   (@outro, @outro, 'B5TEN2', 'B5 Outro Tenant', 'ATIVO', 'A');
-insert into plantaopro.planos (id, nome, valor_mensal, limite_medicos, limite_hospitais, limite_plantoes_mes, limite_usuarios, status, reg_status) values
-  (@plano, 'B5 Plano', 0, 0, 0, 0, 0, 'ATIVO', 'A'),
-  (@planoOff, 'B5 Plano Off', 0, 0, 0, 0, 0, 'INATIVO', 'A');
+insert into plantaopro.planos (id, nome, valor_mensal, limite_medicos, limite_hospitais, limite_plantoes_mes, limite_usuarios, dias_trial, status, reg_status) values
+  (@plano, 'B5 Plano', 0, 0, 0, 0, 0, 0, 'ATIVO', 'A'),
+  (@planoOff, 'B5 Plano Off', 0, 0, 0, 0, 0, 0, 'INATIVO', 'A');
 insert into plantaopro.clientes (id, razao_social, cnpj, status, reg_status) values
   (@clienteDup, 'B5 Cliente Dup', @cnpjDup, 'ATIVO', 'A');
 insert into plantaopro.usuarios (id, nome, email, email_normalizado, senha_hash, status, reg_status, senha_alteracao_obrigatoria, preferencias_notificacao, reg_date) values

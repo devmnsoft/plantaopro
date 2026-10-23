@@ -1,0 +1,20 @@
+R97A_DRILL data=20261023-082250 db=plantaopro_test porta=52077
+PORTAS_LIVRES_INICIO=SIM
+ESTAGEM_1_API_NO_AR ok=SIM pid=45012
+PRE_LIMPEZA_RERUN ok=SIM
+PA_PLANO_ADMIN_OK http=200 plano=cf1252ae-72a9-4090-95bb-e9b26b6908c9
+PA_DUPLICA_CODIGO_OK http=409 msg_em_uso=SIM
+PA_PLANO_EDIT_OK http=200 valor_anual=1250.00 dias_trial=7
+PA_PLANO_EDIT2_OK http=200 dias_trial=5
+PA_CATALOGO_OK total=5 tem_r97=SIM anual_efetivo=1250.00 interno=NAO
+PA_TRIAL_TETO_OK http=400 msg_teto=SIM residuo=0
+PA_TRIAL_SEM_PERMISSAO_OK http=400 msg_sem_trial=SIM residuo=0
+PA_TRIAL_OK tenant=09128386-93b3-410d-bfc0-98c836d572cd assinatura=eb98d599-cefe-4503-ab10-26591a7739f4 status=TRIAL trial_fim_ok=SIM cob_inicial=0
+PA_ANUAL_OK tenant=0254c3a8-3731-4e6b-a90c-d897556816a4 assinatura=539b4fea-dafb-4f54-ad2f-c57a142f8851 status=ATIVA periodicidade=ANUAL valor=1250.00 cob=1250.00 fim_1ano=SIM
+PA_GATE_ATIVO_OK minha_http=200 minha_status=TRIAL uso_http=200
+PA_GATE_VENCIDO_OK uso_http=403 msg_encerrado=SIM
+PA_CONVERSAO_OK http=200 status=ATIVA trial_fim=nulo valor=100.00 fim_1mes=SIM historico=1
+PA_CONVERSAO_DUPLO_OK http=400 msg_apenas_trial=SIM
+PA_GATE_ABERTO_OK minha_http=200 minha_status=ATIVA uso_http=200
+PORTAS_LIVRES=SIM
+RESULTADO=PASSEI

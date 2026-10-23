@@ -1544,6 +1544,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2376_r97_planos_configuraveis_entitlements",
+                            "source":  "database/migrations/2026_10_v2376_r97_planos_configuraveis_entitlements.sql",
+                            "checksum":  "775a8835202f3a49ef397a7a7c7b9aaff00e2093cb58d562c67ec058e29694b4",
+                            "dependsOn":  [
+                                              "2026_10_v2375_r96_onboarding_selfservice_trial"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

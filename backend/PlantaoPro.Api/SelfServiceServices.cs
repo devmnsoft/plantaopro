@@ -159,7 +159,7 @@ public sealed class SelfServiceSaasService
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var planos = (await cn.QueryAsync<PlanoPublicoDto>(@"select id as ""Id"", coalesce(nome,'') as ""Nome"", coalesce(slug,'') as ""Slug"", coalesce(descricao,'') as ""Descricao"", valor_mensal as ""ValorMensal"", limite_medicos as ""LimiteMedicos"", limite_hospitais as ""LimiteHospitais"", limite_plantoes_mes as ""LimitePlantoesMes"", coalesce(limite_usuarios,0) as ""LimiteUsuarios"", coalesce(permite_mobile,false) as ""PermiteMobile"", coalesce(permite_bi,false) as ""PermiteBi"", coalesce(permite_white_label,false) as ""PermiteWhiteLabel"", coalesce(destaque,false) as ""Destaque""
+            var planos = (await cn.QueryAsync<PlanoPublicoDto>(@"select id as ""Id"", coalesce(nome,'') as ""Nome"", coalesce(slug,'') as ""Slug"", coalesce(descricao,'') as ""Descricao"", valor_mensal as ""ValorMensal"", coalesce(valor_anual,0) as ""ValorAnual"", case when coalesce(valor_anual,0) > 0 then valor_anual else round(valor_mensal*12,2) end as ""ValorAnualEfetivo"", limite_medicos as ""LimiteMedicos"", limite_hospitais as ""LimiteHospitais"", limite_plantoes_mes as ""LimitePlantoesMes"", coalesce(limite_usuarios,0) as ""LimiteUsuarios"", coalesce(permite_mobile,false) as ""PermiteMobile"", coalesce(permite_bi,false) as ""PermiteBi"", coalesce(permite_white_label,false) as ""PermiteWhiteLabel"", coalesce(destaque,false) as ""Destaque"", coalesce(permite_trial,true) as ""PermiteTrial"", coalesce(dias_trial,0) as ""DiasTrial""
 from plantaopro.planos where reg_status='A' and coalesce(publico,true)=true and upper(coalesce(status,'ATIVO'))='ATIVO' order by coalesce(ordem,999), valor_mensal limit 20")).ToList();
             foreach (var plano in planos)
             {
@@ -276,6 +276,9 @@ limit 50")).ToList();
             },
             UsuarioAdmin = request.UsuarioAdmin
         };
+        // R97: sem isso o provisionamento B2B escapava do teto de dias de teste por
+        // plano (o núcleo valida request.DiasTrial; aqui ele vinha nulo).
+        mapped.DiasTrial = request.DiasTrial;
         var erros = ValidarCadastro(mapped);
         if (erros.Count > 0) return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("Verifique os dados do provisionamento.", 400, erros);
         var status = (request.StatusInicial ?? "TRIAL").Trim().ToUpperInvariant();
@@ -316,8 +319,28 @@ limit 50")).ToList();
             if (existeCnpj) { await tx.RollbackAsync(); return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("CNPJ já cadastrado.", 400); }
             var existeEmail = await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.usuarios where lower(email)=lower(@email) and reg_status='A')", new { email = request.UsuarioAdmin.Email }, tx);
             if (existeEmail) { await tx.RollbackAsync(); return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("E-mail do administrador já cadastrado.", 400); }
-            var plano = await cn.QueryFirstOrDefaultAsync<PlanoPublicoDto>(@"select id as ""Id"", coalesce(nome,'') as ""Nome"", coalesce(slug,'') as ""Slug"", coalesce(descricao,'') as ""Descricao"", valor_mensal as ""ValorMensal"", limite_medicos as ""LimiteMedicos"", limite_hospitais as ""LimiteHospitais"", limite_plantoes_mes as ""LimitePlantoesMes"", coalesce(limite_usuarios,0) as ""LimiteUsuarios"", coalesce(permite_mobile,false) as ""PermiteMobile"", coalesce(permite_bi,false) as ""PermiteBi"", coalesce(permite_white_label,false) as ""PermiteWhiteLabel"", coalesce(destaque,false) as ""Destaque"" from plantaopro.planos where id=@id and reg_status='A' and upper(coalesce(status,'ATIVO'))='ATIVO'", new { id = request.Plano.PlanoId }, tx);
+            var plano = await cn.QueryFirstOrDefaultAsync<PlanoPublicoDto>(@"select id as ""Id"", coalesce(nome,'') as ""Nome"", coalesce(slug,'') as ""Slug"", coalesce(descricao,'') as ""Descricao"", valor_mensal as ""ValorMensal"", coalesce(valor_anual,0) as ""ValorAnual"", case when coalesce(valor_anual,0) > 0 then valor_anual else round(valor_mensal*12,2) end as ""ValorAnualEfetivo"", limite_medicos as ""LimiteMedicos"", limite_hospitais as ""LimiteHospitais"", limite_plantoes_mes as ""LimitePlantoesMes"", coalesce(limite_usuarios,0) as ""LimiteUsuarios"", coalesce(permite_mobile,false) as ""PermiteMobile"", coalesce(permite_bi,false) as ""PermiteBi"", coalesce(permite_white_label,false) as ""PermiteWhiteLabel"", coalesce(destaque,false) as ""Destaque"", coalesce(permite_trial,true) as ""PermiteTrial"", coalesce(dias_trial,0) as ""DiasTrial"" from plantaopro.planos where id=@id and reg_status='A' and upper(coalesce(status,'ATIVO'))='ATIVO'", new { id = request.Plano.PlanoId }, tx);
             if (plano is null) { await tx.RollbackAsync(); return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("Plano escolhido não está ativo.", 400); }
+            // R97: o trial é entitlement do PLANO (configurável via api/planos):
+            // permite_trial=false barra o teste grátis e dias_trial>0 impõe o
+            // teto por plano (o teto genérico de 90 segue valendo).
+            if (statusAssinatura == "TRIAL")
+            {
+                if (!plano.PermiteTrial)
+                {
+                    await tx.RollbackAsync();
+                    return ApiResponse<CadastroSelfServiceResultadoDto>.Fail($"O plano {plano.Nome} não oferece teste gratuito.", 400);
+                }
+                var diasPedidos = request.DiasTrial ?? 0;
+                if (plano.DiasTrial > 0 && diasPedidos > plano.DiasTrial)
+                {
+                    await tx.RollbackAsync();
+                    return ApiResponse<CadastroSelfServiceResultadoDto>.Fail($"O plano {plano.Nome} oferece teste gratuito de até {plano.DiasTrial} dias.", 400);
+                }
+            }
+            // R97: preço por periodicidade na fonte única PrecosPlano (antes o
+            // ANUAL contratava o valor mensal — coluna valor_anual era morta).
+            var valorContratado = PrecosPlano.ValorContratado(plano.ValorMensal, plano.ValorAnual ?? 0m, request.Plano.Periodicidade);
 
             var solicitacaoId = Guid.NewGuid();
             var tenantId = Guid.NewGuid();
@@ -327,7 +350,11 @@ limit 50")).ToList();
             var slugBase = TenantContextService.Slug(request.Empresa.NomeFantasia);
             var slug = comSufixo ? $"{slugBase}-{solicitacaoId.ToString("N")[..4]}" : slugBase;
             var senhaHash = Security.PasswordHashService.Hash(request.UsuarioAdmin.Senha);
-            var fim = DateTime.Today.AddMonths(1);
+            // R97: o fim do contrato respeita a periodicidade contratada — ANUAL cobra o
+            // preço anual (PrecosPlano) e corre pelo ciclo de 1 ano; MENSAL segue 1 mês.
+            var fim = string.Equals(request.Plano.Periodicidade, "ANUAL", StringComparison.OrdinalIgnoreCase)
+                ? DateTime.Today.AddYears(1)
+                : DateTime.Today.AddMonths(1);
             if (statusAssinatura == "TRIAL" && dataTrialFim.HasValue) fim = dataTrialFim.Value.AddDays(30);
 
             await cn.ExecuteAsync(@"insert into plantaopro.cadastro_cliente_solicitacoes(id,plano_id,nome_fantasia,razao_social,cnpj,segmento,qtd_medicos,qtd_hospitais,volume_plantoes_mes,cidade,uf,telefone,email_corporativo,responsavel_nome,responsavel_email,responsavel_telefone,responsavel_cargo,periodicidade,aceite_termos,aceite_privacidade,consentimento_lgpd,status,reg_date,reg_status)
@@ -337,7 +364,7 @@ values(@solicitacaoId,@PlanoId,@NomeFantasia,@RazaoSocial,@Cnpj,@Segmento,@Quant
             await cn.ExecuteAsync(@"insert into plantaopro.clientes(id,razao_social,nome_fantasia,cnpj,email,telefone,cidade,estado,plano_id,status,reg_status,reg_date)
 values(@clienteId,@RazaoSocial,@NomeFantasia,@Cnpj,@Email,@Telefone,@Cidade,@Uf,@PlanoId,'ATIVO','A',now())", new { clienteId, request.Empresa.RazaoSocial, request.Empresa.NomeFantasia, Cnpj = cnpjLimpo, Email = request.Empresa.EmailCorporativo, request.Empresa.Telefone, request.Empresa.Cidade, request.Empresa.Uf, request.Plano.PlanoId }, tx);
             await cn.ExecuteAsync(@"insert into plantaopro.assinaturas(id,tenant_id,cliente_id,plano_id,data_inicio,data_fim,data_trial_fim,status,valor_contratado,dia_vencimento,observacoes,periodicidade,reg_status,reg_date)
-values(@assinaturaId,@tenantId,@clienteId,@PlanoId,current_date,@Fim,@TrialFim,@Status,@Valor,@Dia,@Observacoes,@Periodicidade,'A',now())", new { assinaturaId, tenantId, clienteId, request.Plano.PlanoId, Fim = fim, TrialFim = (DateTime?)dataTrialFim, Status = statusAssinatura, Valor = plano.ValorMensal, Dia = DateTime.UtcNow.Day, Observacoes = observacaoAssinatura, request.Plano.Periodicidade }, tx);
+values(@assinaturaId,@tenantId,@clienteId,@PlanoId,current_date,@Fim,@TrialFim,@Status,@Valor,@Dia,@Observacoes,@Periodicidade,'A',now())", new { assinaturaId, tenantId, clienteId, request.Plano.PlanoId, Fim = fim, TrialFim = (DateTime?)dataTrialFim, Status = statusAssinatura, Valor = valorContratado, Dia = DateTime.UtcNow.Day, Observacoes = observacaoAssinatura, request.Plano.Periodicidade }, tx);
             await cn.ExecuteAsync(@"insert into plantaopro.usuarios(id,nome,email,email_normalizado,telefone,senha_hash,senha_alteracao_obrigatoria,preferencias_notificacao,cliente_id,tenant_id,status,reg_status,reg_date)
 values(@usuarioId,@Nome,@Email,upper(@Email),@Telefone,@SenhaHash,false,'{}',@clienteId,@tenantId,'ATIVO','A',now())", new { usuarioId, request.UsuarioAdmin.Nome, request.UsuarioAdmin.Email, request.UsuarioAdmin.Telefone, SenhaHash = senhaHash, clienteId, tenantId }, tx);
 
@@ -355,7 +382,7 @@ values(gen_random_uuid(),@tenantId,@clienteId,@usuarioId,@Email,'cadastro_self_s
             if (pagamentoInicial)
             {
                 await cn.ExecuteAsync(@"insert into plantaopro.cadastro_cliente_pagamentos_iniciais(id,solicitacao_id,cliente_id,assinatura_id,valor,status,vencimento,reg_date,reg_status)
-values(gen_random_uuid(),@solicitacaoId,@clienteId,@assinaturaId,@Valor,'ABERTO',current_date+7,now(),'A')", new { solicitacaoId, clienteId, assinaturaId, Valor = plano.ValorMensal }, tx);
+values(gen_random_uuid(),@solicitacaoId,@clienteId,@assinaturaId,@Valor,'ABERTO',current_date+7,now(),'A')", new { solicitacaoId, clienteId, assinaturaId, Valor = valorContratado }, tx);
             }
 
             await tx.CommitAsync();

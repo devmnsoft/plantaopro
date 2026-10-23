@@ -191,6 +191,7 @@ builder.Services.AddScoped<ITenantAccessService, ModulePermissionService>();
 builder.Services.AddScoped<TenantGuardService>();
 builder.Services.AddScoped<PermissionGuardService>();
 builder.Services.AddScoped<AssinaturaGuardService>();
+builder.Services.AddScoped<ConversaoTrialService>();
 builder.Services.AddScoped<SaasIntelligenceService>();
 builder.Services.AddScoped<ILogOperacionalService, LogOperacionalService>();
 builder.Services.AddScoped<ILgpdAuditService, LgpdAuditService>();

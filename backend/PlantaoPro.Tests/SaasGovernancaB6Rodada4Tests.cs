@@ -341,6 +341,8 @@ from plantaopro.tenant_modulos tm where tm.tenant_id=@tenantId and tm.modulo_id=
     private static AssinaturasController NovaAssinaturasController(IConfiguration cfg) =>
         new(cfg,
             new AssinaturaGuardService(cfg, new B6FakeAuditService(), NullLogger<AssinaturaGuardService>.Instance),
+            new ConversaoTrialService(cfg, new B6FakeAuditService(), NullLogger<ConversaoTrialService>.Instance),
+            new B6FakeCurrentUser(Guid.NewGuid(), true),
             new B6FakeAuditService(),
             NullLogger<AssinaturasController>.Instance)
         { ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() } };

@@ -1,5 +1,6 @@
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using PlantaoPro.Api.Data;
@@ -37,9 +38,9 @@ public sealed class PlanosController : ControllerBase
             var where = string.IsNullOrWhiteSpace(status) ? "reg_status='A'" : "reg_status='A' and upper(status)=upper(@status)";
             var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.planos where " + where, new { status });
             var items = await cn.QueryAsync<PlanoComercialDto>(@"select id as ""Id"",
-       coalesce(nome,'') as ""Nome"",
+       coalesce(codigo,'') as ""Codigo"", coalesce(slug,'') as ""Slug"", coalesce(nome,'') as ""Nome"",
        coalesce(descricao,'') as ""Descricao"",
-       valor_mensal as ""ValorMensal"",
+       valor_mensal as ""ValorMensal"", coalesce(valor_anual,0) as ""ValorAnual"",
        limite_medicos as ""LimiteMedicos"",
        limite_hospitais as ""LimiteHospitais"",
        limite_plantoes_mes as ""LimitePlantoesMes"",
@@ -51,6 +52,8 @@ public sealed class PlanosController : ControllerBase
        coalesce(permite_integracoes, permite_api, false) as ""PermiteIntegracoes"",
        coalesce(permite_operacao_assistida,false) as ""PermiteOperacaoAssistida"",
        coalesce(permite_suporte_prioritario,false) as ""PermiteSuportePrioritario"",
+       coalesce(permite_white_label,false) as ""PermiteWhiteLabel"", coalesce(permite_trial,true) as ""PermiteTrial"", coalesce(dias_trial,0) as ""DiasTrial"",
+       coalesce(publico,true) as ""Publico"", coalesce(destaque,false) as ""Destaque"", coalesce(ordem,999) as ""Ordem"",
        coalesce(status,'') as ""Status""
 from plantaopro.planos
 where " + where + @"
@@ -72,12 +75,14 @@ limit @s offset @offset", new { status, s, offset = (p - 1) * s });
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var item = await cn.QueryFirstOrDefaultAsync<PlanoComercialDto>(@"select id as ""Id"", coalesce(nome,'') as ""Nome"", coalesce(descricao,'') as ""Descricao"", valor_mensal as ""ValorMensal"",
+            var item = await cn.QueryFirstOrDefaultAsync<PlanoComercialDto>(@"select id as ""Id"", coalesce(codigo,'') as ""Codigo"", coalesce(nome,'') as ""Nome"", coalesce(slug,'') as ""Slug"", coalesce(descricao,'') as ""Descricao"", valor_mensal as ""ValorMensal"", coalesce(valor_anual,0) as ""ValorAnual"",
        limite_medicos as ""LimiteMedicos"", limite_hospitais as ""LimiteHospitais"", limite_plantoes_mes as ""LimitePlantoesMes"",
        coalesce(limite_usuarios,0) as ""LimiteUsuarios"", coalesce(limite_convites_mes,0) as ""LimiteConvitesMes"",
        coalesce(permite_mobile, permite_api, false) as ""PermiteMobile"", coalesce(permite_bi, permite_relatorios, false) as ""PermiteBi"",
        coalesce(permite_relatorios_avancados, permite_relatorios, false) as ""PermiteRelatoriosAvancados"", coalesce(permite_integracoes, permite_api, false) as ""PermiteIntegracoes"",
        coalesce(permite_operacao_assistida,false) as ""PermiteOperacaoAssistida"", coalesce(permite_suporte_prioritario,false) as ""PermiteSuportePrioritario"",
+       coalesce(permite_white_label,false) as ""PermiteWhiteLabel"", coalesce(permite_trial,true) as ""PermiteTrial"", coalesce(dias_trial,0) as ""DiasTrial"",
+       coalesce(publico,true) as ""Publico"", coalesce(destaque,false) as ""Destaque"", coalesce(ordem,999) as ""Ordem"",
        coalesce(status,'') as ""Status""
 from plantaopro.planos where id=@id and reg_status='A'", new { id });
             return item is null ? NotFound(ApiResponse<string>.Fail("Plano não encontrado.", 404)) : Ok(ApiResponse<PlanoComercialDto>.Ok(item));
@@ -97,12 +102,23 @@ from plantaopro.planos where id=@id and reg_status='A'", new { id });
         {
             var validacao = ValidarPlano(request);
             if (!validacao.Success) return BadRequest(validacao);
+            // R97: codigo/slug normalizados (indices unicos casam por upper/lower); nulo preserva "nao configurado".
+            var codigo = string.IsNullOrWhiteSpace(request.Codigo) ? null : request.Codigo.Trim().ToUpperInvariant();
+            var slug = string.IsNullOrWhiteSpace(request.Slug) ? null : request.Slug.Trim().ToLowerInvariant();
 
             var id = Guid.NewGuid();
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            await cn.ExecuteAsync(@"insert into plantaopro.planos(id,nome,descricao,valor_mensal,limite_medicos,limite_hospitais,limite_plantoes_mes,limite_usuarios,limite_convites_mes,permite_relatorios,permite_api,permite_mobile,permite_bi,permite_relatorios_avancados,permite_integracoes,permite_operacao_assistida,permite_suporte_prioritario,status,reg_status,reg_date)
-values(@id,@Nome,@Descricao,@ValorMensal,@LimiteMedicos,@LimiteHospitais,@LimitePlantoesMes,@LimiteUsuarios,@LimiteConvitesMes,@PermiteRelatoriosAvancados,@PermiteIntegracoes,@PermiteMobile,@PermiteBi,@PermiteRelatoriosAvancados,@PermiteIntegracoes,@PermiteOperacaoAssistida,@PermiteSuportePrioritario,'ATIVO','A',now())", new { id, request.Nome, request.Descricao, request.ValorMensal, request.LimiteMedicos, request.LimiteHospitais, request.LimitePlantoesMes, request.LimiteUsuarios, request.LimiteConvitesMes, request.PermiteMobile, request.PermiteBi, request.PermiteRelatoriosAvancados, request.PermiteIntegracoes, request.PermiteOperacaoAssistida, request.PermiteSuportePrioritario });
-            await AuditarAsync(AuditoriaConstants.Entidades.Plano, id, AuditoriaConstants.Acoes.Criar, new { request.Nome, request.ValorMensal });
+            try
+            {
+                await cn.ExecuteAsync(@"insert into plantaopro.planos(id,codigo,slug,nome,descricao,valor_mensal,valor_anual,publico,destaque,ordem,permite_white_label,permite_trial,dias_trial,limite_medicos,limite_hospitais,limite_plantoes_mes,limite_usuarios,limite_convites_mes,permite_relatorios,permite_api,permite_mobile,permite_bi,permite_relatorios_avancados,permite_integracoes,permite_operacao_assistida,permite_suporte_prioritario,status,reg_status,reg_date)
+values(@id,@Codigo,@Slug,@Nome,@Descricao,@ValorMensal,@ValorAnual,@Publico,@Destaque,@Ordem,@PermiteWhiteLabel,@PermiteTrial,@DiasTrial,@LimiteMedicos,@LimiteHospitais,@LimitePlantoesMes,@LimiteUsuarios,@LimiteConvitesMes,@PermiteRelatoriosAvancados,@PermiteIntegracoes,@PermiteMobile,@PermiteBi,@PermiteRelatoriosAvancados,@PermiteIntegracoes,@PermiteOperacaoAssistida,@PermiteSuportePrioritario,'ATIVO','A',now())", new { id, Codigo = codigo, Slug = slug, request.Nome, request.Descricao, request.ValorMensal, request.ValorAnual, request.Publico, request.Destaque, request.Ordem, request.PermiteWhiteLabel, request.PermiteTrial, request.DiasTrial, request.LimiteMedicos, request.LimiteHospitais, request.LimitePlantoesMes, request.LimiteUsuarios, request.LimiteConvitesMes, request.PermiteMobile, request.PermiteBi, request.PermiteRelatoriosAvancados, request.PermiteIntegracoes, request.PermiteOperacaoAssistida, request.PermiteSuportePrioritario });
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23505")
+            {
+                var qual = string.Equals(ex.ConstraintName, "ux_planos_slug", StringComparison.OrdinalIgnoreCase) ? "Slug de plano" : "Código de plano";
+                return Conflict(ApiResponse<string>.Fail($"{qual} já está em uso por outro plano.", 409));
+            }
+            await AuditarAsync(AuditoriaConstants.Entidades.Plano, id, AuditoriaConstants.Acoes.Criar, new { request.Nome, request.ValorMensal, Codigo = codigo });
             return Ok(ApiResponse<Guid>.Ok(id, "Plano criado com sucesso."));
         }
         catch (Exception ex)
@@ -120,9 +136,17 @@ values(@id,@Nome,@Descricao,@ValorMensal,@LimiteMedicos,@LimiteHospitais,@Limite
         {
             var validacao = ValidarPlano(request);
             if (!validacao.Success) return BadRequest(validacao);
+            // R97: codigo/slug normalizados (indices unicos casam por upper/lower); nulo preserva "nao configurado".
+            var codigoEd = string.IsNullOrWhiteSpace(request.Codigo) ? null : request.Codigo.Trim().ToUpperInvariant();
+            var slugEd = string.IsNullOrWhiteSpace(request.Slug) ? null : request.Slug.Trim().ToLowerInvariant();
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var rows = await cn.ExecuteAsync(@"update plantaopro.planos
-set nome=@Nome, descricao=@Descricao, valor_mensal=@ValorMensal, limite_medicos=@LimiteMedicos,
+            try
+            {
+                var rows = await cn.ExecuteAsync(@"update plantaopro.planos
+set codigo=@Codigo, slug=@Slug, nome=@Nome, descricao=@Descricao, valor_mensal=@ValorMensal, valor_anual=@ValorAnual,
+    publico=@Publico, destaque=@Destaque, ordem=@Ordem,
+    permite_white_label=@PermiteWhiteLabel, permite_trial=@PermiteTrial, dias_trial=@DiasTrial,
+    limite_medicos=@LimiteMedicos,
     limite_hospitais=@LimiteHospitais, limite_plantoes_mes=@LimitePlantoesMes,
     limite_usuarios=@LimiteUsuarios, limite_convites_mes=@LimiteConvitesMes,
     permite_relatorios=@PermiteRelatoriosAvancados, permite_api=@PermiteIntegracoes,
@@ -130,8 +154,14 @@ set nome=@Nome, descricao=@Descricao, valor_mensal=@ValorMensal, limite_medicos=
     permite_relatorios_avancados=@PermiteRelatoriosAvancados, permite_integracoes=@PermiteIntegracoes,
     permite_operacao_assistida=@PermiteOperacaoAssistida, permite_suporte_prioritario=@PermiteSuportePrioritario,
     reg_update=now()
-where id=@id and reg_status='A'", new { id, request.Nome, request.Descricao, request.ValorMensal, request.LimiteMedicos, request.LimiteHospitais, request.LimitePlantoesMes, request.LimiteUsuarios, request.LimiteConvitesMes, request.PermiteMobile, request.PermiteBi, request.PermiteRelatoriosAvancados, request.PermiteIntegracoes, request.PermiteOperacaoAssistida, request.PermiteSuportePrioritario });
-            if (rows == 0) return NotFound(ApiResponse<string>.Fail("Plano não encontrado.", 404));
+where id=@id and reg_status='A'", new { id, Codigo = codigoEd, Slug = slugEd, request.Nome, request.Descricao, request.ValorMensal, request.ValorAnual, request.Publico, request.Destaque, request.Ordem, request.PermiteWhiteLabel, request.PermiteTrial, request.DiasTrial, request.LimiteMedicos, request.LimiteHospitais, request.LimitePlantoesMes, request.LimiteUsuarios, request.LimiteConvitesMes, request.PermiteMobile, request.PermiteBi, request.PermiteRelatoriosAvancados, request.PermiteIntegracoes, request.PermiteOperacaoAssistida, request.PermiteSuportePrioritario });
+                if (rows == 0) return NotFound(ApiResponse<string>.Fail("Plano não encontrado.", 404));
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23505")
+            {
+                var qual = string.Equals(ex.ConstraintName, "ux_planos_slug", StringComparison.OrdinalIgnoreCase) ? "Slug de plano" : "Código de plano";
+                return Conflict(ApiResponse<string>.Fail($"{qual} já está em uso por outro plano.", 409));
+            }
             await AuditarAsync(AuditoriaConstants.Entidades.Plano, id, AuditoriaConstants.Acoes.Editar, new { request.Nome });
             return Ok(ApiResponse<string>.Ok("ok", "Plano atualizado com sucesso."));
         }
@@ -185,7 +215,7 @@ order by codigo", new { id });
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var plano = await cn.QueryFirstOrDefaultAsync<PlanoComercialDto>(@"select id as ""Id"", coalesce(nome,'') as ""Nome"", coalesce(descricao,'') as ""Descricao"", valor_mensal as ""ValorMensal"",
+            var plano = await cn.QueryFirstOrDefaultAsync<PlanoComercialDto>(@"select id as ""Id"", coalesce(codigo,'') as ""Codigo"", coalesce(nome,'') as ""Nome"", coalesce(slug,'') as ""Slug"", coalesce(descricao,'') as ""Descricao"", valor_mensal as ""ValorMensal"", coalesce(valor_anual,0) as ""ValorAnual"",
        limite_medicos as ""LimiteMedicos"", limite_hospitais as ""LimiteHospitais"", limite_plantoes_mes as ""LimitePlantoesMes"",
        coalesce(limite_usuarios,0) as ""LimiteUsuarios"", coalesce(limite_convites_mes,0) as ""LimiteConvitesMes"",
        coalesce(permite_mobile, permite_api, false) as ""PermiteMobile"",
@@ -194,6 +224,8 @@ order by codigo", new { id });
        coalesce(permite_integracoes, permite_api, false) as ""PermiteIntegracoes"",
        coalesce(permite_operacao_assistida,false) as ""PermiteOperacaoAssistida"",
        coalesce(permite_suporte_prioritario,false) as ""PermiteSuportePrioritario"",
+       coalesce(permite_white_label,false) as ""PermiteWhiteLabel"", coalesce(permite_trial,true) as ""PermiteTrial"", coalesce(dias_trial,0) as ""DiasTrial"",
+       coalesce(publico,true) as ""Publico"", coalesce(destaque,false) as ""Destaque"", coalesce(ordem,999) as ""Ordem"",
        coalesce(status,'') as ""Status""
 from plantaopro.planos where id=@id and reg_status='A'", new { id });
             if (plano is null) return NotFound(ApiResponse<string>.Fail("Plano não encontrado.", 404));
@@ -278,8 +310,13 @@ values(gen_random_uuid(), @id, upper(@Codigo), @Nome, @Descricao, @Habilitado, @
     {
         var erros = new List<string>();
         if (string.IsNullOrWhiteSpace(request.Nome)) erros.Add("Nome do plano é obrigatório.");
+        if (!string.IsNullOrWhiteSpace(request.Codigo) && !Regex.IsMatch(request.Codigo.Trim().ToUpperInvariant(), "^[A-Z][A-Z0-9_]{0,39}$")) erros.Add("O código do plano deve começar com letra e usar apenas letras maiúsculas, números e sublinhado (máximo de 40 caracteres).");
+        if (!string.IsNullOrWhiteSpace(request.Slug) && !Regex.IsMatch(request.Slug.Trim().ToLowerInvariant(), "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$")) erros.Add("O slug do plano deve usar apenas letras minúsculas, números e hífens.");
         if (request.ValorMensal < 0) erros.Add("Valor mensal não pode ser negativo.");
+        if (request.ValorAnual < 0) erros.Add("Valor anual não pode ser negativo.");
         if (request.LimiteMedicos < 0 || request.LimiteHospitais < 0 || request.LimitePlantoesMes < 0 || request.LimiteUsuarios < 0 || request.LimiteConvitesMes < 0) erros.Add("Limites não podem ser negativos.");
+        if (request.DiasTrial is < 0 or > 90) erros.Add("Os dias de teste do plano devem estar entre 0 (sem teto) e 90.");
+        if (request.Ordem is < 1 or > 9999) erros.Add("A ordem no catálogo deve estar entre 1 e 9999.");
         return erros.Count == 0 ? ApiResponse<string>.Ok("ok") : ApiResponse<string>.Fail("Verifique os dados do plano.", 400, erros);
     }
 
@@ -295,15 +332,31 @@ public sealed class AssinaturasController : ControllerBase
 {
     private readonly IConfiguration _cfg;
     private readonly AssinaturaGuardService _guard;
+    private readonly ConversaoTrialService _conversao;
+    private readonly ICurrentUserService _currentUser;
     private readonly IAuditService _audit;
     private readonly ILogger<AssinaturasController> _logger;
 
-    public AssinaturasController(IConfiguration cfg, AssinaturaGuardService guard, IAuditService audit, ILogger<AssinaturasController> logger)
+    public AssinaturasController(IConfiguration cfg, AssinaturaGuardService guard, ConversaoTrialService conversao, ICurrentUserService currentUser, IAuditService audit, ILogger<AssinaturasController> logger)
     {
         _cfg = cfg;
         _guard = guard;
+        _conversao = conversao;
+        _currentUser = currentUser;
         _audit = audit;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// R97: conversão trial→pago (pendência herdada da R96): vira a assinatura para
+    /// ATIVA, limpa o fim do teste e recalcula datas/preço pelo plano configurável.
+    /// </summary>
+    [HttpPost("{id:guid}/converter-para-paga")]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador)]
+    public async Task<IActionResult> ConverterParaPago(Guid id, [FromBody] ConverterTrialParaPagoRequest request)
+    {
+        var result = await _conversao.ConverterAsync(id, request.PlanoId, request.Periodicidade, request.Justificativa, _currentUser.UserId, HttpContext.Connection.RemoteIpAddress?.ToString());
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet]

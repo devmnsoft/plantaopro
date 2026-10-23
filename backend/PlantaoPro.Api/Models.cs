@@ -325,9 +325,14 @@ public record DashboardOverviewDto(DashboardDto Indicadores,IEnumerable<PlantaoR
 public sealed class PlanoComercialDto
 {
     public Guid Id { get; set; }
+    /// <summary>R97: identificador comercial canônico (ex.: HOMOLOGACAO_360); vazio = não configurado.</summary>
+    public string Codigo { get; set; } = string.Empty;
     public string Nome { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
     public string Descricao { get; set; } = string.Empty;
     public decimal ValorMensal { get; set; }
+    /// <summary>R97: preço anual configurável; 0 = usar 12× valor mensal (PrecosPlano).</summary>
+    public decimal ValorAnual { get; set; }
     public int LimiteMedicos { get; set; }
     public int LimiteHospitais { get; set; }
     public int LimitePlantoesMes { get; set; }
@@ -339,10 +344,42 @@ public sealed class PlanoComercialDto
     public bool PermiteIntegracoes { get; set; }
     public bool PermiteOperacaoAssistida { get; set; }
     public bool PermiteSuportePrioritario { get; set; }
+    public bool PermiteWhiteLabel { get; set; }
+    /// <summary>R97: plano aceita cadastro TRIAL pelo funil self-service.</summary>
+    public bool PermiteTrial { get; set; }
+    /// <summary>R97: teto de dias de teste do plano; 0 = sem teto (teto de 90 por requisição).</summary>
+    public int DiasTrial { get; set; }
+    public bool Publico { get; set; } = true;
+    public bool Destaque { get; set; }
+    public int Ordem { get; set; } = 999;
     public string Status { get; set; } = string.Empty;
 }
 
-public record PlanoComercialRequest(string Nome,string Descricao,decimal ValorMensal,int LimiteMedicos,int LimiteHospitais,int LimitePlantoesMes,bool PermiteMobile,bool PermiteBi,bool PermiteRelatoriosAvancados,bool PermiteIntegracoes,int LimiteUsuarios = 0,int LimiteConvitesMes = 0,bool PermiteOperacaoAssistida = false,bool PermiteSuportePrioritario = false);
+/// <summary>
+/// R97: campos opcionais novos (catálogo/entitlements) entram no fim para
+/// preservar compatibilidade com o payload legado e com quem já chama o
+/// construtor posicional (rodadas anteriores).
+/// </summary>
+public record PlanoComercialRequest(string Nome,string Descricao,decimal ValorMensal,int LimiteMedicos,int LimiteHospitais,int LimitePlantoesMes,bool PermiteMobile,bool PermiteBi,bool PermiteRelatoriosAvancados,bool PermiteIntegracoes,int LimiteUsuarios = 0,int LimiteConvitesMes = 0,bool PermiteOperacaoAssistida = false,bool PermiteSuportePrioritario = false,string? Codigo = null,string? Slug = null,decimal ValorAnual = 0m,bool Publico = true,bool Destaque = false,int Ordem = 999,bool PermiteWhiteLabel = false,bool PermiteTrial = true,int DiasTrial = 0);
+
+/// <summary>
+/// R97: conversão trial→pago sobre a assinatura existente. PlanoId nulo
+/// mantém o plano atual; periodicidade nula mantém a vigente da assinatura.
+/// </summary>
+public record ConverterTrialParaPagoRequest(Guid? PlanoId = null,string? Periodicidade = null,string? Justificativa = null);
+
+/// <summary>
+/// R97: fonte única do valor contratado por periodicidade. ANUAL usa o
+/// valor_anual configurado quando > 0 e senão 12× valor mensal (fallback
+/// honesto, nunca preço inventado); MENSAL (ou ausente) usa valor mensal.
+/// </summary>
+public static class PrecosPlano
+{
+    public static decimal ValorContratado(decimal valorMensal, decimal valorAnual, string? periodicidade) =>
+        string.Equals(periodicidade?.Trim().ToUpperInvariant(), "ANUAL", StringComparison.OrdinalIgnoreCase)
+            ? (valorAnual > 0m ? valorAnual : valorMensal * 12m)
+            : valorMensal;
+}
 
 public sealed class AssinaturaComercialDto
 {

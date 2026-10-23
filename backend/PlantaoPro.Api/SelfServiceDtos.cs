@@ -21,6 +21,10 @@ public sealed class PlanoPublicoDto
     public string Slug { get; set; } = string.Empty;
     public string Descricao { get; set; } = string.Empty;
     public decimal ValorMensal { get; set; }
+    /// <summary>R97: preço anual efetivo (valor_anual quando > 0, senão 12× mensal) — sempre preenchido pelo catálogo.</summary>
+    public decimal ValorAnualEfetivo { get; set; }
+    /// <summary>R97: valor_anual bruto configurado no plano; nulo/0 = usar 12× mensal (PrecosPlano).</summary>
+    public decimal? ValorAnual { get; set; }
     public int LimiteMedicos { get; set; }
     public int LimiteHospitais { get; set; }
     public int LimitePlantoesMes { get; set; }
@@ -29,6 +33,10 @@ public sealed class PlanoPublicoDto
     public bool PermiteBi { get; set; }
     public bool PermiteWhiteLabel { get; set; }
     public bool Destaque { get; set; }
+    /// <summary>R97: plano aceita cadastro TRIAL (entitlement do plano, configurável via api/planos).</summary>
+    public bool PermiteTrial { get; set; } = true;
+    /// <summary>R97: teto de dias de teste do plano; 0 = sem teto (teto de 90 por requisição).</summary>
+    public int DiasTrial { get; set; }
     public IEnumerable<string> Recursos { get; set; } = Array.Empty<string>();
 }
 

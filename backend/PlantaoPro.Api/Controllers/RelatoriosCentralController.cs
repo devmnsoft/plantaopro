@@ -14,14 +14,24 @@ public sealed class RelatoriosCentralController : ControllerBase
     private readonly IReportCatalogService catalog;
     private readonly IReportQueryService query;
     private readonly IReportExportService export;
+    private readonly RelatorioBenchmarkService benchmark;
 
-    public RelatoriosCentralController(IReportCatalogService catalog, IReportQueryService query, IReportExportService export)
+    public RelatoriosCentralController(IReportCatalogService catalog, IReportQueryService query, IReportExportService export, RelatorioBenchmarkService benchmark)
     {
-        this.catalog = catalog; this.query = query; this.export = export;
+        this.catalog = catalog; this.query = query; this.export = export; this.benchmark = benchmark;
     }
 
     [HttpGet("catalogo")]
     public IActionResult Catalogo() { return Ok(ApiResponse<IReadOnlyCollection<ReportDefinition>>.Ok(catalog.Listar(), "Catálogo de relatórios carregado.")); }
+
+    // R101: benchmark "seus indicadores vs o segmento" (pares do mesmo plano) para o mês pedido.
+    [HttpGet("benchmark")]
+    public async Task<IActionResult> Benchmark([FromQuery] string? mes, CancellationToken cancellationToken)
+    {
+        var resultado = await benchmark.ObterAsync(mes, cancellationToken);
+        if (!resultado.Success) return StatusCode(resultado.StatusCode == 0 ? 500 : resultado.StatusCode, resultado);
+        return Ok(resultado);
+    }
 
     [HttpGet("{codigo}/preview")]
     public async Task<IActionResult> Preview(string codigo, [FromQuery] ReportFilterRequest filtros, CancellationToken cancellationToken)

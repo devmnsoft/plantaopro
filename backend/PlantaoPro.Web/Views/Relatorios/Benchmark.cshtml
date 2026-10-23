@@ -1,0 +1,46 @@
+@model PlantaoPro.Web.Models.BenchmarkPageViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Benchmark do plano";
+    var r = Model.Resultado;
+    var PtBr = CultureInfo.GetCultureInfo("pt-BR");
+    string FormatarValor(decimal? v, string unidade) => unidade == "R$" ? (v?.ToString("C", PtBr) ?? "—") : (v?.ToString("N2", PtBr) ?? "—");
+    string FormatarEstatistica(double? v) => v?.ToString("N2", PtBr) ?? "—";
+}
+<link rel="stylesheet" href="~/css/pages/operational-reports.css" asp-append-version="true" />
+<main class="pp-operational-report">
+<header class="report-head"><div><span>PlantãoPro · MNSOFT</span><h1>@ViewData["Title"]</h1><p>Seus indicadores do mês comparados com o seu segmento: os pares contratados no mesmo plano.</p></div><div class="report-actions"><button type="button" class="btn btn-outline-light" onclick="window.print()" aria-label="Imprimir relatório"><i class="bi bi-printer"></i> Imprimir</button></div></header>
+<form method="get" class="filter-grid" aria-label="Mês de referência"><label>Mês de referência<input class="form-control" type="month" name="mes" value="@(Model.MesSolicitada ?? r?.MesReferencia)" required aria-label="Mês de referência"></label><div class="filter-actions"><button class="btn btn-primary" type="submit">Aplicar</button></div></form>
+@if(Model.Erro is not null)
+{
+    <div class="alert alert-danger" role="alert"><strong>Não foi possível carregar o benchmark.</strong> @Model.Erro Nenhum valor foi substituído por zero.</div>
+}
+else if(r is null)
+{
+    <div class="empty-state">O benchmark não respondeu para o período pedido. Nada mudou nos seus dados: tente outro mês ou volte em instantes.</div>
+}
+else
+{
+<section class="print-meta" aria-label="Contexto do relatório"><strong>Mês de referência:</strong> @r.MesReferencia · <strong>Plano:</strong> @r.PlanoCodigo (@r.PlanoNome) · <strong>Amostra mínima:</strong> @r.AmostraMinimaPeers pares ativos no plano<p>Comparação somente com estatísticas agregadas dos pares do seu plano (mediana, média, posição e tamanho da amostra). A contagem de pares exclui a sua própria organização e nenhum valor individual de vizinho é exposto.</p></section>
+@if(r.AmostraInsuficiente)
+{
+    <div class="alert alert-warning" role="alert"><strong>Amostra insuficiente neste mês.</strong> Há menos de @r.AmostraMinimaPeers pares com assinatura ativa no seu plano e dados no período. Para não expor números individuais de vizinhos, as estatísticas de comparação ficam suspensas até a amostra crescer.</div>
+}
+if(!r.TemDadosProprios && !r.AmostraInsuficiente)
+{
+    <p class="active-filters"><strong>Sem atividade própria no mês.</strong> Sua organização não registrou nenhum dado relevante em @r.MesReferencia, então “seu valor” permanece em branco enquanto os pares seguem comparáveis entre si.</p>
+}
+<section class="indicator-grid" aria-label="Indicadores com benchmark">@foreach(var i in r.Indicadores)
+{
+    <article data-kpi="@i.Codigo"><span>@i.Rotulo</span><strong>@FormatarValor(i.MeuValor, i.Unidade)</strong><small>você · @i.Unidade</small>
+    <dl class="bench-compare">
+        <div><dt>Mediana do plano</dt><dd>@FormatarEstatistica(i.MedianaPlano) @i.Unidade</dd></div>
+        <div><dt>Média do plano</dt><dd>@FormatarEstatistica(i.MediaPlano) @i.Unidade</dd></div>
+        <div><dt>Sua posição</dt><dd>@(i.PercentilMeu.HasValue ? i.PercentilMeu.Value.ToString(PtBr) + "% da amostra" : "—")</dd></div>
+        <div><dt>Pares na amostra</dt><dd>@i.PeersNaAmostra</dd></div>
+    </dl>
+    <p>@i.Definicao</p></article>
+}</section>
+<details class="report-help"><summary>Como interpretar este relatório</summary><p>O “segmento” da comparação é o seu plano: só entram na amostra organizações com assinatura ativa (ou trial vigente) no mesmo plano que a sua, sempre sem a sua própria organização. Cada indicador usa o mês calendário (UTC) escolhido; plantões contam pelo início dentro do mês e pagamentos pela data de pagamento dentro do mês.</p><p>A mediana é o valor central da amostra; a média, o valor médio. “Sua posição” é a porcentual de organizações da amostra (inclusive você, quando você tem dado) cujo valor fica abaixo do seu: 50% significa posição mediana. Com menos pares que a amostra mínima, a comparação é suspensa — proteção de LGPD e de dados individuais de vizinhos. Este relatório é uma fotografia do mês pedido, não uma série histórica.</p></details>
+}
+</main>

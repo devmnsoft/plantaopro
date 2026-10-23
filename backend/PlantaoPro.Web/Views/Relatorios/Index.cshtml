@@ -2,6 +2,7 @@
     ViewData["Title"] = "Central de Relatórios e BI";
     var reports = new[]
     {
+        new { Title = "Benchmark do plano", Description = "Compare seus indicadores do mês com os pares contratados no mesmo plano: mediana, média e sua posição na amostra.", Icon = "bi-bar-chart-steps", Action = "Benchmark", Category = "Executivo", Scope = "Pares do mesmo plano", Formats = "Tela" },
         new { Title = "Plantões por período", Description = "Investigue cobertura e riscos operacionais por período com dados autorizados da sua instituição.", Icon = "bi-calendar2-check", Action = "Cobertura", Category = "Escalas e plantões", Scope = "Sua instituição", Formats = "Tela · CSV · impressão" },
         new { Title = "Execução e conferência", Description = "Acompanhe registros, incompletos, conferência, correções e aprovações.", Icon = "bi-clipboard2-check", Action = "Execucao", Category = "Operacional", Scope = "Sua instituição", Formats = "Tela · CSV · impressão" },
         new { Title = "Apuração por período", Description = "Separe valores apurados, fechados, pagos, ajustes e impedimentos.", Icon = "bi-cash-stack", Action = "Apuracao", Category = "Financeiro", Scope = "Perfil financeiro", Formats = "Tela · CSV · impressão" },

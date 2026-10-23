@@ -32,6 +32,20 @@ public class RelatoriosController : BaseWebController
 
     public async Task<IActionResult> ExportarOperacional(string kind, DateOnly inicio, DateOnly fim, Guid? unidadeId, Guid? especialidadeId, Guid? profissionalId, string? situacao)
     { using var client=CreateApiClient(); if(!AddBearerToken(client)) return HandleUnauthorized(); var query=Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString($"api/relatorios-operacionais/{kind}/csv",new Dictionary<string,string?>{{"inicio",inicio.ToString("yyyy-MM-dd")},{"fim",fim.ToString("yyyy-MM-dd")},{"unidadeId",unidadeId?.ToString()},{"especialidadeId",especialidadeId?.ToString()},{"profissionalId",profissionalId?.ToString()},{"situacao",situacao}}.Where(x=>x.Value is not null).ToDictionary(x=>x.Key,x=>x.Value!)); var response=await client.GetAsync(query); if(!response.IsSuccessStatusCode){TempData["Error"]="A exportação foi negada ou falhou; atualize o relatório.";return RedirectToAction(kind,new{inicio,fim,unidadeId,especialidadeId,profissionalId,situacao});} return File(await response.Content.ReadAsByteArrayAsync(),"text/csv; charset=utf-8",$"{kind.ToLowerInvariant()}-{DateTime.UtcNow:yyyyMMddHHmmss}.csv"); }
+
+    // R101: benchmark mensal "seus indicadores vs o segmento" (pares do mesmo plano), BFF
+    // server-side para api/relatorios/benchmark.
+    public async Task<IActionResult> Benchmark(string? mes)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        IDictionary<string, string?> queryArgs = new Dictionary<string, string?>();
+        if (!string.IsNullOrWhiteSpace(mes)) queryArgs["mes"] = mes.Trim();
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString("api/relatorios/benchmark", queryArgs);
+        var result = await ReadApiResponse<PlantaoPro.Web.Models.BenchmarkResultadoViewModel>(client, query);
+        return View("Benchmark", new PlantaoPro.Web.Models.BenchmarkPageViewModel(mes, result.Data, result.Error));
+    }
+
     public IActionResult ProdutividadeMedica() => View();
     public IActionResult FaturamentoSaas() => View();
     public IActionResult Operacional() => View("Index");

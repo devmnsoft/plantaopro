@@ -165,6 +165,7 @@ builder.Services.AddScoped<MedicoAreaService>();
 builder.Services.AddScoped<ProfessionalPortalService>();
 builder.Services.AddScoped<ExecutionConferenceService>();
 builder.Services.AddScoped<OperationalReportService>();
+builder.Services.AddScoped<RelatorioBenchmarkService>();
 builder.Services.AddScoped<ManagerCommandCenterService>();
 builder.Services.AddScoped<UnitDashboardService>();
 builder.Services.AddScoped<ShiftRequestService>();

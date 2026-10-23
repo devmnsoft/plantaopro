@@ -1,0 +1,18 @@
+R101A_DRILL data=20261023-140827 db=plantaopro_test api=52086 web=52085
+PORTAS_LIVRES_INICIO=SIM
+ESTAGEM_1_API_NO_AR ok=SIM pid=41204
+ESTAGEM_1_WEB_NO_AR ok=SIM pid=42484
+PRE_LIMPEZA_RERUN ok=SIM
+PA_PLANO_OK plano=e3dda2c5-5831-4d2c-a32c-9b0fcad5a53c vinculos=0
+PA_MUNDOS_OK adm_tenant=5efbb727-bb19-4513-81f7-2357d6ea3119 adm_status=TRIAL ctrl_tenant=f6427ae1-f2d4-40fb-ac80-253a6e673a19 ctrl_status=TRIAL
+PA_RELATORIOS_OK http=200 origem=CONTRATO historico=1 efetivos=[RELATORIOS]
+PA_PERMISSAO_OK usuario=donoA permissao=RELATORIOS.VER escopo=tenant
+PEERS_FIXTURE_OK adm_eventos=22 ctrl_eventos=6 p1_eventos=11 p2_eventos=30 total=69
+T1_DUMP_OK arquivo=r101a_t1_benchmark_api.json plano=R101_PLANO_DRILL mes=2026-09 kpis=5
+BENCHMARK_VAZIO_OK http=200 mes=2025-01 insuficiente=SIM valores_nulos=5
+WEB_LOGIN_OK http=200
+WEB_HUB_OK http=200 cartao=SIM
+WEB_BENCHMARK_OK http=200 kpi=SIM plano=SIM valor=SIM percentil=SIM
+CONTROLE_WEB_OK http=200 motivo=MODULO_NAO_CONTRATADO
+PORTAS_LIVRES=SIM
+RESULTADO=PASSEI

@@ -36,6 +36,10 @@ public sealed class AiWebService
     public Task<AiOutcomeViewModel> AnaliseCotacaoAsync(string token, Guid cotacaoId, CancellationToken ct)
         => PostOutcomeAsync(token, "api/ai/tarefas/analise-cotacao", new { cotacaoId }, ct);
 
+    /// <summary>R98 — resumo do pendente em linguagem simples + orientação ao usuário final.</summary>
+    public Task<AiOutcomeViewModel> ResumoPendenteAsync(string token, CancellationToken ct)
+        => PostOutcomeAsync(token, "api/ai/tarefas/resumo-pendente", null, ct);
+
     /// <summary>Teste de conexão autorizado (não consome cota da tarefa).</summary>
     public Task<AiOutcomeViewModel> TestarConexaoAsync(string token, string provider, CancellationToken ct)
         => PostOutcomeAsync(token, "api/ai/test-conexao", new { provedor = provider }, ct);

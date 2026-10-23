@@ -24,6 +24,18 @@
             @if (Model.FimDoTeste.HasValue) { <article class="pp-kpi-card"><span>Fim do teste grátis</span><strong>@Model.FimDoTeste.Value.ToString("dd/MM/yyyy")</strong><small>Após o teste você ainda tem 30 dias para decidir sobre a assinatura.</small></article> }
         </section>
 
+        <section class="pp-ai-panel" data-ai-panel data-ai-url="/MinhaAssinatura/ResumoIa" data-ai-method="GET" aria-labelledby="ppAiAssinaturaTitulo">
+            <div class="pp-ai-panel__head">
+                <div><span class="pp-ai-panel__kicker">Assistente · opcional</span><h2 id="ppAiAssinaturaTitulo" class="pp-ai-panel__title"><i class="bi bi-stars me-1" aria-hidden="true"></i>O que você precisa saber agora</h2></div>
+                <button type="button" class="btn btn-sm btn-primary" data-ai-run><i class="bi bi-lightning me-1" aria-hidden="true"></i>Pedir resumo</button>
+            </div>
+            <p class="small text-muted">Resumo em linguagem simples do que está pendente na sua organização — contrato ou teste grátis, configuração inicial e operação — e a ordem prática para resolver. O assistente não aplica nada sozinho: cada ação é feita nas telas indicadas.</p>
+            <p class="pp-ai-panel__meta" data-ai-meta aria-live="polite"></p>
+            <p class="pp-ai-panel__output" data-ai-output role="status">Nenhuma geração nesta sessão.</p>
+            <pre class="pp-ai-panel__text" data-ai-text hidden></pre>
+            <p class="pp-ai-panel__note">Precisa de ajuste? <a href="/AssistenteIa">Configurar assistente</a> (administradores).</p>
+        </section>
+
         <div class="pp-subscription-layout">
             <main class="pp-subscription-main">
                 <section class="pp-card pp-subscription-section" aria-labelledby="usage-title"><div class="pp-section-header"><div><span class="pp-eyebrow">Capacidade</span><h2 id="usage-title">Limites e uso</h2><p>Valores disponibilizados pela fonte contratual, sem projeções.</p></div></div>
@@ -45,3 +57,11 @@
         </div>
     }
 </div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/design-system/assistente-ia.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script type="module" src="~/js/ai-assistant-panel.js" asp-append-version="true"></script>
+}

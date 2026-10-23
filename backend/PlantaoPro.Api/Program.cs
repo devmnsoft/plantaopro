@@ -351,6 +351,8 @@ builder.Services.AddScoped<IAiConfigRepository, AiConfigRepository>();
 builder.Services.AddScoped<IAiGateway, AiGateway>();
 builder.Services.AddScoped<AiJornadaMeuDia>();
 builder.Services.AddScoped<AiJornadaCotacao>();
+// R98 — assistente em linguagem simples (resumo do pendente + orientacao ao usuario final).
+builder.Services.AddScoped<AiJornadaResumoPendente>();
 
 // B7: reconciliação periódica de respostas presas em ENVIANDO (complemento à recovery de boot;
 // pulada no Testing e desligada quando Adm360:TransmissaoRecovery:IntervaloSegundos <= 0).

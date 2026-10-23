@@ -4,13 +4,18 @@ namespace PlantaoPro.Api.Ai;
 
 /// <summary>
 /// P2 IA — contratos canônicos da camada de assistentes.
-/// Tarefas da entrega inicial: MEU_DIA_RESUMO e COTACAO_ANALISE
-/// (novas tarefas entram no backlog após homologação).
+/// Tarefas habilitáveis por tenant: MEU_DIA_RESUMO, COTACAO_ANALISE e
+/// RESUMO_PENDENTE (R98 — resumo do pendente em linguagem simples para o
+/// usuário final).
 /// </summary>
 public static class AiTaskCodes
 {
     public const string MeuDiaResumo = "MEU_DIA_RESUMO";
     public const string CotacaoAnalise = "COTACAO_ANALISE";
+
+    /// <summary>R98 — assistente em linguagem simples: resumo do pendente (contrato/
+    /// configuração/operação) com orientação prática ao usuário final.</summary>
+    public const string ResumoPendente = "RESUMO_PENDENTE";
 
     /// <summary>Registro de auditoria apenas (sem configuração por tenant):
     /// teste de conexão do admin. Não consome a cota mensal das tarefas.</summary>
@@ -21,7 +26,7 @@ public static class AiTaskCodes
         taskCode = string.Empty;
         if (value is null) return false;
         var v = value.Trim().ToUpperInvariant();
-        if (v != MeuDiaResumo && v != CotacaoAnalise) return false;
+        if (v != MeuDiaResumo && v != CotacaoAnalise && v != ResumoPendente) return false;
         taskCode = v;
         return true;
     }

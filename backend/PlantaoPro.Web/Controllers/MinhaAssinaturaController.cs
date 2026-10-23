@@ -1,14 +1,17 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
+using PlantaoPro.Web.Services;
 
 namespace PlantaoPro.Web.Controllers;
 
 [Route("MinhaAssinatura")]
 public sealed class MinhaAssinaturaController : BaseWebController
 {
-    public MinhaAssinaturaController(IHttpClientFactory factory, ILogger<MinhaAssinaturaController> logger)
-        : base(factory, logger) { }
+    private readonly AiWebService _ai;
+
+    public MinhaAssinaturaController(IHttpClientFactory factory, ILogger<MinhaAssinaturaController> logger, AiWebService ai)
+        : base(factory, logger) => _ai = ai;
 
     [HttpGet("")]
     [HttpGet("Index")]
@@ -41,6 +44,18 @@ public sealed class MinhaAssinaturaController : BaseWebController
         model.Solicitacoes = solicitacoes.Data.ToArray();
 
         return View(model);
+    }
+
+    /// <summary>R98 — resumo do pendente em linguagem simples + orientação ao usuário final.
+    /// BFF GET opcional: o contexto e o tenant ficam no servidor (API); nenhum prompt é montado na UI.</summary>
+    [HttpGet("ResumoIa")]
+    public async Task<IActionResult> ResumoIa(CancellationToken ct)
+    {
+        var token = HttpContext.Session.GetString("JwtToken") ?? string.Empty;
+        var resultado = await _ai.ResumoPendenteAsync(token, ct);
+        if (resultado.StatusKind == AiWebService.StatusNaoAutenticado)
+            return Unauthorized(new { mensagem = resultado.Mensagem });
+        return Json(resultado);
     }
 
     [HttpGet("Uso")]

@@ -1554,6 +1554,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2377_r98_ai_resumo_pendente",
+                            "source":  "database/migrations/2026_10_v2377_r98_ai_resumo_pendente.sql",
+                            "checksum":  "eb358852d1a71b2839a9fcfb1a001dfb7fafbc1b152c61a6e2e84502bdae7287",
+                            "dependsOn":  [
+                                              "2026_10_v2376_r97_planos_configuraveis_entitlements"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

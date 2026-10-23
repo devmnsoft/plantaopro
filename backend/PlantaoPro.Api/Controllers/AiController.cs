@@ -20,6 +20,7 @@ public sealed class AiController : ControllerBase
     private readonly IAiGateway _gateway;
     private readonly AiJornadaMeuDia _meuDia;
     private readonly AiJornadaCotacao _cotacao;
+    private readonly AiJornadaResumoPendente _resumoPendente;
     private readonly ICurrentUserService _current;
     private readonly ILogger<AiController> _logger;
 
@@ -27,12 +28,14 @@ public sealed class AiController : ControllerBase
         IAiGateway gateway,
         AiJornadaMeuDia meuDia,
         AiJornadaCotacao cotacao,
+        AiJornadaResumoPendente resumoPendente,
         ICurrentUserService current,
         ILogger<AiController> logger)
     {
         _gateway = gateway;
         _meuDia = meuDia;
         _cotacao = cotacao;
+        _resumoPendente = resumoPendente;
         _current = current;
         _logger = logger;
     }
@@ -131,6 +134,31 @@ public sealed class AiController : ControllerBase
             return Ok(new AiOutcome(true, AiErrorKinds.Vazio,
                 "Não há pendências no período. Nada para resumir."));
         return Ok(await _gateway.ExecutarTarefaAsync(AiTaskCodes.MeuDiaResumo, exec, ct));
+    }
+
+    /// <summary>R98 — resumo do pendente em linguagem simples + orientação ao usuário final.
+    /// Autenticado com tenant na sessão; o contexto é montado no servidor e a resposta
+    /// segue o mesmo contrato de outcome das demais tarefas (VAZIO sem gastar cota).</summary>
+    [HttpPost("tarefas/resumo-pendente")]
+    public async Task<IActionResult> ResumoPendente(CancellationToken ct)
+    {
+        if (!_TemTenant())
+            return Ok(NaoHabilitado("Selecione um cliente/instituição para usar o assistente."));
+        AiTaskExecution? exec;
+        try
+        {
+            exec = await _resumoPendente.ConstruirAsync(ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "IA: falha ao montar o contexto do resumo do pendente.");
+            return Ok(new AiOutcome(false, AiErrorKinds.RespostaInvalida,
+                "Não foi possível carregar as informações para montar o resumo."));
+        }
+        if (exec is null)
+            return Ok(new AiOutcome(true, AiErrorKinds.Vazio,
+                "Tudo em dia: nada pendente para resumir neste momento."));
+        return Ok(await _gateway.ExecutarTarefaAsync(AiTaskCodes.ResumoPendente, exec, ct));
     }
 
     /// <summary>Análise de cotação (Administrativo 360) — mesma política do módulo.</summary>

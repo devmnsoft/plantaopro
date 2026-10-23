@@ -513,7 +513,7 @@ public sealed class AiGateway : IAiGateway
         var rows = await _repo.ObterTodasAsync(tenant.Value, ct);
         var mesAtual = MesReferenciaAgora();
         var views = new List<AiConfigView>(2);
-        foreach (var code in new[] { AiTaskCodes.MeuDiaResumo, AiTaskCodes.CotacaoAnalise })
+        foreach (var code in new[] { AiTaskCodes.MeuDiaResumo, AiTaskCodes.CotacaoAnalise, AiTaskCodes.ResumoPendente })
         {
             var row = rows.FirstOrDefault(r => r.TaskCode == code);
             if (row is null)

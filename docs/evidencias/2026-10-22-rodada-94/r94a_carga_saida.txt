@@ -1,0 +1,22 @@
+R94A_CARGA data=20261022_204603 host=DESKTOP-CK86BSC cpu=12
+VOLUME adm360_orcamentos=11436 adm360_saldos=9370 adm360_movimentos=18038 adm360_reservas=2648 adm360_produtos=1295
+APPS api_pid=6272
+LOGIN_OK
+WARMUP_SEG=15 descartados=608
+-- por rota (janela medida) --
+POR_ROTA nome=orcamentos rota=/api/administrativo360/orcamentos peso=40 n=1990 err=0 media_ms=126.1 p50=171.3 p90=217.3 p99=247.7
+POR_ROTA nome=orcamentos_p2 rota=/api/administrativo360/orcamentos?pagina=2 peso=20 n=983 err=0 media_ms=124.3 p50=170.9 p90=217.3 p99=245.7
+POR_ROTA nome=estoque rota=/api/administrativo360/estoque peso=25 n=1241 err=0 media_ms=205.2 p50=203.6 p90=235.9 p99=255.7
+POR_ROTA nome=fiscal_notas rota=/api/administrativo360/fiscal/notas peso=10 n=450 err=0 media_ms=121.8 p50=169.1 p90=217.3 p99=247.4
+POR_ROTA nome=saude rota=/api/health peso=5 n=248 err=0 media_ms=117.3 p50=171.2 p90=213.7 p99=240.7
+-- geral --
+GERAL n=4912 rps=40.91 erro_pct=0 media_ms=144.9 p50=183.9 p90=226.4 p99=250.6
+METADES h1_n=2432 h1_p50=184.8 h1_p90=228.9 h2_n=2480 h2_p50=183.2 h2_p90=220.8 degradacao_x=0.96
+AMOSTRAS_CONEXAO n=38 min=9 max=9 delta=0
+MEMORIA_API_MB min=232 max=244
+AMOSTRA_t=3s conns=9 ws_mb=238
+AMOSTRA_t=118s conns=9 ws_mb=232
+THRESHOLD p50_max_ms=250 p90_max_ms=700 p99_max_ms=1500 erro_max_pct=1 rps_min=8 degradacao_max_x=1.5 conexao_delta_max=4
+CHECK p50_ok=SIM p90_ok=SIM p99_ok=SIM erro_ok=SIM rps_ok=SIM degradacao_ok=SIM conexao_ok=SIM
+RESULTADO=PASSEI
+PORTAS_LIVRES=SIM

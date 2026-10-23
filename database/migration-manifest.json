@@ -1564,6 +1564,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2378_r100_notificacoes_calendario_fiscal",
+                            "source":  "database/migrations/2026_10_v2378_r100_notificacoes_calendario_fiscal.sql",
+                            "checksum":  "251866a1d02fe88f90b5aa0a80d010589f66b2288a145688a35043e4e9ff9f38",
+                            "dependsOn":  [
+                                              "2026_10_v2377_r98_ai_resumo_pendente"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

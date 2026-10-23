@@ -1,0 +1,2 @@
+T1_MUNDO_A tenant=38c68d01-59b5-436f-af4a-7c95de3faef5 efetivos=[ADM360] bases=5 escal=3 total=8 lida_falsa=8 dist_id=8
+T1_MUNDO_B tenant=63abb3d5-74b0-446d-a89b-9ee3688012ed efetivos=[vazio] bases=0 escal=0 total=0 lida_falsa=0 dist_id=0

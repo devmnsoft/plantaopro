@@ -118,17 +118,17 @@ public sealed class R90ContratosLegaisContratoTests
     }
 
     [Fact]
-    public async Task Bateria_particiona_os_116_parametros_ativos_de_2026_sem_perder_codigo()
+    public async Task Bateria_particiona_os_117_parametros_ativos_de_2026_sem_perder_codigo()
     {
         await GarantirSchemaAsync();
         var servico = new BateriaLegalService(new ParametrosLegaisRepository(TestDatabase.ConnectionString));
         var bateria = await servico.ObterBateriaAsync(2026);
 
         Assert.Equal(2026, bateria.Ano);
-        Assert.Equal(116, bateria.TotalParametros);
+        Assert.Equal(117, bateria.TotalParametros);
         var planos = bateria.Grupos.SelectMany(g => g.Parametros).ToList();
-        Assert.Equal(116, planos.Count);
-        Assert.Equal(116, planos.Select(p => p.Codigo).Distinct().Count());
+        Assert.Equal(117, planos.Count);
+        Assert.Equal(117, planos.Select(p => p.Codigo).Distinct().Count());
         // Os 10 temas fixos na ordem do catalogo; sem grupo "DIVERSOS" (tudo classificado).
         Assert.Equal(
             new[] { "PF_TRIBUTACAO", "FOLHA_RESCISAO", "FGTS", "SIMPLES_NACIONAL", "CALENDARIO_FISCAL",

@@ -1,3 +1,4 @@
+@model PlantaoPro.Web.Models.CalendarioFiscalWebViewModel
 @{
     ViewData["Title"] = "Calendário Fiscal";
 }
@@ -49,6 +50,35 @@
                         <li><strong>Marcar concluída</strong> — registre que a entrega foi feita; o estado vira Concluída e pode ser desfeito.</li>
                     </ul>
                     <p class="mb-0"><em>Calendário de planejamento com datas oficiais consolidadas. Alguns prazos variam por estado ou órgão (o eSocial usa dias úteis e a EFD segue as regras da Sefaz do estado): confirme sempre o calendário oficial antes de entregar. O registro de conclusões serve para o controle interno da equipe.</em></p>
+                </div>
+            </div>
+
+            <div class="card bg-dark border-secondary text-light">
+                <div class="card-header bg-dark border-secondary">SLA e escalonamento</div>
+                <div class="card-body small text-secondary">
+                    @if (Model.Alertas.Count == 0)
+                    {
+                        <p class="mb-0">Nenhuma pendência de obrigações fiscais em <strong>@($"{Model.MesExibicao:D2}/{Model.AnoExibicao}")</strong>. Os avisos antecipados chegam à caixa de notificações dentro da janela oficial.</p>
+                    }
+                    else
+                    {
+                        <p class="mb-2">Pendências do mês <strong>@($"{Model.MesExibicao:D2}/{Model.AnoExibicao}")</strong> com nível de SLA derivado do prazo fiscal. Os avisos entram na caixa de notificações dos gestores da organização.</p>
+                        <ul class="list-unstyled ps-0 mb-2">
+                            @foreach (var a in Model.Alertas)
+                            {
+                                <li class="mb-2">
+                                    <span class="badge @(a.SlaNivel == "CRITICO" ? "text-bg-danger" : (a.SlaNivel == "ALTA" ? "text-bg-warning" : "text-bg-info"))" title="@($"SLA {a.SlaNivel}")">@a.SlaNivel</span>
+                                    <strong>@a.Nome</strong>
+                                    @if (a.Escalonada)
+                                    {
+                                        <span class="badge text-bg-danger" title="Escalonado para o dono da organizacao">ESCALONADO</span>
+                                    }
+                                    <div class="text-secondary">@($"{(a.DiasRestantes < 0 ? $"{-a.DiasRestantes} dia(s) de atraso" : (a.DiasRestantes == 0 ? "vence hoje" : $"{a.DiasRestantes} dia(s) restantes"))} · vencimento {a.DataVencimento:dd/MM/yyyy}.")</div>
+                                </li>
+                            }
+                        </ul>
+                        <p class="mb-0 small">Níveis: CRITICO já passou do vencimento, ALTA vence hoje, MEDIA está dentro da janela oficial. ESCALONADO indica que o atraso superou o limite operacional e o alerta subiu para o dono da organização.</p>
+                    }
                 </div>
             </div>
         </div>

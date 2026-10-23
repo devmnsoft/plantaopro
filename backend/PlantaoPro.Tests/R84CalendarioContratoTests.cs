@@ -124,10 +124,10 @@ public sealed class R84CalendarioContratoTests
             "select count(*) from plantaopro.parametros_legais where ano=2026 and reg_status='A' and codigo like 'OBRIGAC%' and (fonte_oficial is null or btrim(fonte_oficial)='')");
         Assert.Equal(0, semFonte);
 
-        // Regras fixas do plano (datas consolidadas e janela operacional): todas com vigencia nula.
+        // Regras fixas do plano (datas consolidadas e janelas operacionais): todas com vigencia nula.
         var fixos = await cn.ExecuteScalarAsync<int>(
             "select count(*) from plantaopro.parametros_legais where ano=2026 and reg_status='A' and codigo like 'OBRIGAC%' and vigencia_inicio is null and vigencia_fim is null");
-        Assert.Equal(7, fixos);
+        Assert.Equal(8, fixos);
     }
 
     [Fact]

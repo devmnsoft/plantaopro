@@ -249,6 +249,7 @@ builder.Services.AddScoped<ISimplesNacionalService>(sp => new SimplesNacionalSer
 builder.Services.AddScoped<IBateriaLegalService>(sp => new BateriaLegalService(sp.GetRequiredService<IParametrosLegaisRepository>()));
 builder.Services.AddScoped<ObrigacoesFiscaisRepository>(sp => new ObrigacoesFiscaisRepository(GetConn(sp)));
 builder.Services.AddScoped<ICalendarioFiscalService>(sp => new CalendarioFiscalService(sp.GetRequiredService<IParametrosLegaisRepository>(), sp.GetRequiredService<ObrigacoesFiscaisRepository>()));
+builder.Services.AddScoped<ICalendarioFiscalAlertasService>(sp => new CalendarioFiscalAlertasService(sp.GetRequiredService<ICalendarioFiscalService>(), sp.GetRequiredService<IParametrosLegaisRepository>(), sp.GetRequiredService<NotificacaoService>(), sp.GetRequiredService<IConfiguration>()));
 builder.Services.AddScoped<IDfeNacionalService>(sp => new DfeNacionalService(sp.GetRequiredService<IParametrosLegaisRepository>()));
 builder.Services.AddScoped<IGestaoDashboardRepository>(sp => new GestaoDashboardRepository(GetConn(sp)));
 builder.Services.AddScoped<OperationalAutomationService>();

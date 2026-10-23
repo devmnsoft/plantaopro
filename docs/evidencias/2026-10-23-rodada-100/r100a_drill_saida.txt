@@ -1,0 +1,20 @@
+R100A_DRILL data=20261023-121642 db=plantaopro_test api=52084 web=52083
+PORTAS_LIVRES_INICIO=SIM
+ESTAGEM_1_API_NO_AR ok=SIM pid=22956
+ESTAGEM_1_WEB_NO_AR ok=SIM pid=8460
+PRE_LIMPEZA_RERUN ok=SIM
+PA_PLANO_OK plano=581d498b-65ef-4149-a8eb-d7c733809ee0 vinculos=0
+PA_MUNDOS_OK adm_tenant=38c68d01-59b5-436f-af4a-7c95de3faef5 adm_status=TRIAL ctrl_tenant=63abb3d5-74b0-446d-a89b-9ee3688012ed ctrl_status=TRIAL
+PA_ADM360_OK http=200 origem=CONTRATO historico=1 efetivos=[ADM360]
+CALENDARIO_PAUTA_OK http=200 itens=5 atrasadas=5
+T1_DUMP_OK arquivo=r100a_t1_alertas_banco.txt linhas=2
+GERAR_IDEMPOTENTE_OK http=200 criadas=0 alertas=5 total_mantido=8
+CAIXA_OK http=200 fiscais=8 escalonado=SIM base=SIM
+NOVEMBRO_AGENDADO_OK http=200 agendadas=5 criadas=0 total_mantido=8
+CONCLUIDA_OK http=200 alertas_apos=4 total_mantido=8
+CONTROLE_OK http=200 criadas=0 alertas=5 total=0
+WEB_LOGIN_OK http=200
+WEB_CALENDARIO_OK http=200 cartao=SIM escalonado=SIM critico=SIM
+WEB_NOTIFICACOES_OK http=200
+PORTAS_LIVRES=SIM
+RESULTADO=PASSEI

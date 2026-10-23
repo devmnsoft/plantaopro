@@ -350,7 +350,7 @@
                        {
                            "version":  "2026_v1186_schema_permissoes_compatibilidade",
                            "source":  "database/migrations/2026_v1186_schema_permissoes_compatibilidade.sql",
-                           "checksum":  "7a64ca1e899ba4d0aaf99dbc0e128a4f21c8128ec2526bda50a45cd3f4f4f7d7",
+                           "checksum":  "cc846ee3fb7501745f2bfc2c4af213aa2e129eb4ccb811022e2ff6fffa4af0e2",
                            "dependsOn":  [
                                              "2026_v117_hardening_v116_runtime"
                                          ],
@@ -1388,7 +1388,7 @@
                        {
                            "version":  "2026_10_v2360_r66_gap_instalacao_convergencia",
                            "source":  "database/migrations/2026_10_v2360_r66_gap_instalacao_convergencia.sql",
-                           "checksum":  "86b387c2bbcdc1b543a1e6bb07a38a79f1135f5bc76836485fdc89d69ab69fb9",
+                           "checksum":  "c83229ad0867bf34866f18009469ecc15927b1bb1138edf97ba135fa99ca525c",
                            "dependsOn":  [
 
                                          ],

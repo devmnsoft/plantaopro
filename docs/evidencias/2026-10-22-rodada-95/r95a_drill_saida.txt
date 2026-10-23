@@ -1,0 +1,23 @@
+R95A_DRILL data=20261023_001350 host=DESKTOP-CK86BSC cpu=12
+SRC_BANCO=plantaopro_test
+PRE_CONDICOES_OK conexoes_ativas_outros=0
+ESTAGEM_1_BASELINE_OK tabelas=729 linhas_totais=402071 fks=206 indices=2890 sequencias=8 extensoes=btree_gist,pgcrypto,plpgsql,unaccent,uuid-ossp digest_tabelas=10
+ESTAGEM_2_DUMP_OK arquivo=C:\Users\NCELL-~1\AppData\Local\Temp\opencode\r95_backup_plantaopro_test.dump tamanho_bytes=31879780 sha256=06fe1bf785ce02ab7af6ccc5b3414c01d881599a608c0c21f76b930c6ad1766a tempo_seg=5
+ESTAGEM_3_DROP_RECREATE_OK tempo_seg=6
+ESTAGEM_4_RESTORE_OK tempo_seg=18 avisos_pg_restore=0 fks_recriadas=0 fks_nao_validas=0 fks_faltando_fim=0
+DIF_TABELAS faltando=0 extra=0 amostra=[]
+DIF_INDICES faltando=0 extra=0 amostra=[]
+DIF_SEQUENCIAS faltando=0 extra=0 amostra=[]
+DIF_CONTAGENS faltando=0 extra=0 amostra=[]
+ESTAGEM_5_PARIDADE extensoes_iguais=SIM digest_ok=10/10 fn_bypass=f
+PARIDADE_COMPLETA_OK
+ESTAGEM_6_FUNCIONAL_API_OK porta=51977 login_gestor=SIM orcamentos_http=200 orcamentos_total=10332
+PA_CONCLUIDO
+ESTAGEM_7_SCRIPT_UNICO_APROVADO banco=plantaopro_r95_script modo=CLEAN tempo_seg=15
+ESTAGEM_8_MIGRACOES_UPGRADE_OK Migrations: aplicadas=148 esperadas=144 falhas=0 pendentes=0
+ESTAGEM_9_AUTO_CURA_E_LOGIN_OK login_superadmin=SIM
+DIF_SCRIPT_UNICO_VS_ORIGINAL faltando=2 extra=32 amostra=[plantao_pro_demo_premium ; setores ; alerta_operacional_historico ; alertas_operacionais ; chamado_mensagens]
+CLASSIFICACAO_DELTA_ESTRUTURAL_OK extra_classificado=32 faltante_classificado=2 inesperados=0
+PB_CONCLUIDO
+PORTAS_LIVRES=SIM
+RESULTADO=PASSEI

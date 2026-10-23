@@ -17,6 +17,8 @@ public sealed class MinhaAssinaturaViewModel
     /// <summary>Solicitações de plano pendentes/decididas (estado honesto no Index).</summary>
     public IReadOnlyList<MinhaSolicitacaoPlanoWebViewModel> Solicitacoes { get; set; } = Array.Empty<MinhaSolicitacaoPlanoWebViewModel>();
     public string? ErrorMessage { get; set; }
+    /// <summary>R99: andamento da jornada guiada de implantação (melhor esforço; null oculta o aviso).</summary>
+    public OnboardingStatusWebModel? JornadaImplantacao { get; set; }
     public bool HasSubscription => !string.IsNullOrWhiteSpace(Plano) || !string.IsNullOrWhiteSpace(Status);
 }
 

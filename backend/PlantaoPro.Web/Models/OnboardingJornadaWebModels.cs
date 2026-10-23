@@ -19,6 +19,11 @@ public sealed class OnboardingJornadaWebViewModel
     public int Progresso { get; set; }
     public string ProximaAcao { get; set; } = string.Empty;
 
+    /// <summary>R99: tela canônica da próxima etapa (link do catálogo; vazio quando finalizado ou sem link).</summary>
+    public string ProximaAcaoLink { get; set; } = string.Empty;
+    /// <summary>R99: true quando a próxima etapa está BLOQUEADO por pré-requisito.</summary>
+    public bool ProximaAcaoBloqueada { get; set; }
+
     /// <summary>Grupo 1 = "Implantacao geral"; depois um grupo por modulo contratado. Ja ordenado.</summary>
     public List<OnboardingGrupoWebModel> Grupos { get; set; } = new();
 }
@@ -29,6 +34,11 @@ public sealed class OnboardingGrupoWebModel
     public string ModuloCodigo { get; set; } = string.Empty;
     public string ModuloNome { get; set; } = string.Empty;
     public List<OnboardingEtapaWebModel> Itens { get; set; } = new();
+
+    /// <summary>R99: etapas obrigatórias do grupo em escopo (mesma fórmula do resumo global do serviço).</summary>
+    public int Obrigatorias { get; set; }
+    /// <summary>R99: quantas das obrigatórias já foram verificadas em dados reais (CONCLUIDO).</summary>
+    public int Feitas { get; set; }
 }
 
 public sealed class OnboardingEtapaWebModel

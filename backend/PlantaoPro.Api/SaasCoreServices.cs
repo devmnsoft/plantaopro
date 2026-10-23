@@ -259,10 +259,14 @@ where coalesce(tenant_id,cliente_id)=@tenantId and revogada_em is null", new { t
         if (!currentUser.IsGlobalAdmin()) return ApiResponse<Guid>.Fail("Somente o Super Administrador MNSOFT pode alterar planos.", 403);
         if (request.PlanoId == Guid.Empty || request.PrecoAdicional < 0 || request.Limite < 0) return ApiResponse<Guid>.Fail("Plano, preço e limite inválidos.", 400);
         await using var connection = Connection();
-        var id = await connection.QuerySingleOrDefaultAsync<Guid>(new CommandDefinition(@"insert into plantaopro.plano_modulos(id,plano_id,modulo_id,incluido,limite,preco_adicional,reg_status,reg_date,created_by)
-select gen_random_uuid(),@planoId,@moduleId,@incluido,@limite,@preco,'A',now(),@userId
-where exists(select 1 from plantaopro.planos where id=@planoId and reg_status='A') and exists(select 1 from plantaopro.modulos_sistema where id=@moduleId and reg_status='A')
-on conflict (plano_id,modulo_id) where reg_status='A' do update set incluido=@incluido,limite=@limite,preco_adicional=@preco,reg_update=now(),updated_by=@userId returning id", new { planoId = request.PlanoId, moduleId, request.Incluido, request.Limite, preco = request.PrecoAdicional, userId = currentUser.UserId }, cancellationToken: ct));
+        // R99: o insert usava o shape anterior de plano_modulos (faltavam codigo_modulo/
+        // habilitado/status/metadata NOT NULL e apontava created_by/updated_by que nao existem
+        // na coluna atual) — nenhum plano conseguia receber modulo pela governanca desde R6a.
+        var id = await connection.QuerySingleOrDefaultAsync<Guid>(new CommandDefinition(@"insert into plantaopro.plano_modulos(id,plano_id,modulo_id,codigo_modulo,habilitado,status,metadata,incluido,limite,preco_adicional,reg_status,reg_date)
+select gen_random_uuid(),@planoId,@moduleId,m.codigo,true,'ATIVO','{}'::jsonb,@incluido,@limite,@preco,'A',now()
+from plantaopro.modulos_sistema m
+where m.id=@moduleId and m.reg_status='A' and exists(select 1 from plantaopro.planos where id=@planoId and reg_status='A')
+on conflict (plano_id,modulo_id) where reg_status='A' and modulo_id is not null do update set incluido=@incluido,limite=@limite,preco_adicional=@preco,reg_update=now() returning id", new { planoId = request.PlanoId, moduleId, request.Incluido, request.Limite, preco = request.PrecoAdicional }, cancellationToken: ct));
         if (id == Guid.Empty) return ApiResponse<Guid>.Fail("Plano ou módulo não encontrado.", 404);
         await audit.RegistrarAsync(currentUser.UserId, null, "PLANO_MODULO", id, "VINCULAR", new { request.PlanoId, moduleId, request.Incluido, request.PrecoAdicional, request.Limite }, true, ip, "ADMINISTRADOR_GLOBAL", ct);
         return ApiResponse<Guid>.Ok(id, "Módulo vinculado ao plano.");

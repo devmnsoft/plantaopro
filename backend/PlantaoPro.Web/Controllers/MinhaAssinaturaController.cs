@@ -43,6 +43,13 @@ public sealed class MinhaAssinaturaController : BaseWebController
         var solicitacoes = await ReadApiListResponseAsync<MinhaSolicitacaoPlanoWebViewModel>(client, "api/minha-assinatura/solicitacoes");
         model.Solicitacoes = solicitacoes.Data.ToArray();
 
+        // R99: orientacao da jornada guiada para tenants novos — melhor esforço (a pagina segue
+        // normal se a leitura falhar) e visivel so enquanto a implantacao nao esta FINALIZADA.
+        var jornada = await ReadApiResponseAsync<OnboardingStatusWebModel>(client, "api/onboarding/status");
+        if (jornada.Data is not null
+            && !string.Equals(jornada.Data.Status, "FINALIZADO", StringComparison.OrdinalIgnoreCase))
+            model.JornadaImplantacao = jornada.Data;
+
         return View(model);
     }
 

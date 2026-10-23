@@ -1588,6 +1588,15 @@
   <data name="Onboarding.NextStepLabel" xml:space="preserve">
     <value>Próximo paso:</value>
   </data>
+  <data name="Onboarding.NextStepCta" xml:space="preserve">
+    <value>Comenzar ahora</value>
+  </data>
+  <data name="Onboarding.NextStepBlockedNote" xml:space="preserve">
+    <value>Esta etapa depende de un prerrequisito anterior de la jornada.</value>
+  </data>
+  <data name="Onboarding.GroupProgress" xml:space="preserve">
+    <value>{0} de {1} completadas</value>
+  </data>
   <data name="Onboarding.AllVerified" xml:space="preserve">
     <value>Todas las etapas obligatorias fueron verificadas con datos reales.</value>
   </data>

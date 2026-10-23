@@ -49,23 +49,28 @@ public sealed class OnboardingController : BaseWebController
             return View(vm);
         }
 
-        var status = await ReadApiResponse<OnboardingStatusWebModel>(client, "api/onboarding/status");
-        if (status.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
-        if (status.Data is null)
+        var statusInicial = await ReadApiResponse<OnboardingStatusWebModel>(client, "api/onboarding/status");
+        if (statusInicial.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+        if (statusInicial.Data is null)
         {
             //tenant autenticado sem onboarding materializado: ponto de partida real, nunca lista fake.
             vm.SemOnboarding = true;
             return View(vm);
         }
 
-        vm.Status = status.Data.Status;
-        vm.Progresso = status.Data.Progresso;
-        vm.ProximaAcao = status.Data.ProximaAcao;
-
         // O GET da API ja reavalia contra os dados persistidos e persiste as transicoes (mesma governanca dos contratos).
         var checklist = await ReadApiListResponseAsync<OnboardingEtapaWebModel>(client, "api/onboarding/checklist");
         if (checklist.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
         vm.ErrorMessage ??= checklist.Error;
+
+        // R99: o GET do checklist acabou de reavaliar o resumo persistido; relemos o status para a
+        // pagina exibir progresso, proximo passo e o link do CTA no MESMO estado (sem mixar o seed
+        // do provisionamento com a reavaliacao — a tela nunca diverge da jornada).
+        var statusRelido = await ReadApiResponse<OnboardingStatusWebModel>(client, "api/onboarding/status");
+        var resumo = statusRelido.Data ?? statusInicial.Data;
+        vm.Status = resumo.Status;
+        vm.Progresso = resumo.Progresso;
+        vm.ProximaAcao = resumo.ProximaAcao;
 
         var etapas = checklist.Data.OrderBy(e => e.Ordem).ToList();
         if (etapas.Any(e => string.IsNullOrEmpty(e.ModuloCodigo)))
@@ -85,6 +90,25 @@ public sealed class OnboardingController : BaseWebController
                 Itens = g.ToList(),
             })
             .OrderBy(grupo => grupo.Itens.Min(e => e.Ordem)));
+
+        // R99: orientacao guiada ao proximo passo + progresso por modulo. O calculo espelha o
+        // servico (escopo ONB_ quando ha catalogo; primeiro PENDENTE/BLOQUEADO na ordem;
+        // obrigatorias em escopo contam feitas = CONCLUIDO) para a UI nunca divergir do resumo
+        // persistido em tenant_onboarding.
+        var temCatalogo = etapas.Any(e => e.Codigo.StartsWith("ONB_", StringComparison.Ordinal));
+        Func<OnboardingEtapaWebModel, bool> NoEscopo = e => !temCatalogo || e.Codigo.StartsWith("ONB_", StringComparison.Ordinal);
+        var proxima = etapas.Where(NoEscopo).FirstOrDefault(e => e.Status == "PENDENTE" || e.Status == "BLOQUEADO");
+        if (proxima is not null && !string.Equals(vm.Status, "FINALIZADO", StringComparison.OrdinalIgnoreCase))
+        {
+            vm.ProximaAcaoLink = proxima.LinkAcao;
+            vm.ProximaAcaoBloqueada = !proxima.PreRequisitoAtendido;
+        }
+        foreach (var grupo in vm.Grupos)
+        {
+            var itens = grupo.Itens.Where(NoEscopo).ToList();
+            grupo.Obrigatorias = itens.Count(i => i.Obrigatorio && i.Status != "PULADA");
+            grupo.Feitas = itens.Count(i => i.Obrigatorio && i.Status == "CONCLUIDO");
+        }
 
         return View(vm);
     }

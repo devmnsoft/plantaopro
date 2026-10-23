@@ -1,0 +1,21 @@
+R99A_DRILL data=20261023-110926 db=plantaopro_test api=52082 web=52081
+PORTAS_LIVRES_INICIO=SIM
+ESTAGEM_1_API_NO_AR ok=SIM pid=29748
+ESTAGEM_1_WEB_NO_AR ok=SIM pid=29260
+PRE_LIMPEZA_RERUN ok=SIM
+PA_PLANO_OK plano1=33a9deb9-6076-4702-b59f-64f31fc4a107 vinculos_plano1=1 plano2=1f32e44c-6aba-4086-a1c4-888f4e53523c vinculos_plano2=0
+PA_MUNDOS_OK trial_tenant=27aa834d-3ae0-4aff-b0e5-1357a6137c0b trial_status=TRIAL semmod_tenant=35f6f6ba-f0b0-428e-bd88-ab510cb1feb8 semmod_status=TRIAL
+FUNIL_STATUS_SEED http=200 status=EM_ANDAMENTO progresso=0 proxima_seed=SIM
+FUNIL_CONTRATO_OK mundo1=9_moderulos_mundo2=6_geral onb=EM_ANDAMENTO_0 seed=SIM
+T1_DUMP_OK arquivo=r99a_t1_contrato_banco.txt
+FUNIL_REAVALIACAO_OK http=200 etapas=9 progresso=14 proxima_convite=SIM
+FUNIL_CONTROLE_OK etapas=6 progresso=0 proxima_empresa=SIM
+PROXIMA_ACAO_OK http=200 titulo_convite=SIM link=/ConvitesEquipe/Index status=PENDENTE
+WEB_LOGIN_OK http=200
+WEB_ONBOARDING_OK http=200 itens=9 cta=SIM cta_link=SIM proxima_convite=SIM progresso=14 grupo_geral=1de4 grupo_plantoes=0de3 sem_saudes360=SIM sem_adm360=SIM
+WEB_LINK_PROXIMA_OK http=200
+WEB_ASSINATURA_OK http=200 faixa=SIM percentual=14 botao=SIM
+WEB_PRIMEIROS_PASSOS_OK http=200 handoff=SIM
+WEB_SUCESSO_OK http=200 orientacao=SIM
+PORTAS_LIVRES=SIM
+RESULTADO=PASSEI

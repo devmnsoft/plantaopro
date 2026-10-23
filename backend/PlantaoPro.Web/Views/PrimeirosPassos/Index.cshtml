@@ -10,6 +10,10 @@
 }
 <h1>Primeiros Passos</h1>
 <p class="lead">Jornada guiada para usuários leigos operarem o PlantãoPro sem depender de treinamento técnico.</p>
+<div class="alert alert-primary d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4" role="note">
+    <div><i class="bi bi-signpost-split me-1" aria-hidden="true"></i> <strong>Sua conta tem uma jornada própria:</strong> a lista de implantação guiada é gerada do seu contrato, módulo por módulo, com o próximo passo sempre indicado.</div>
+    <a class="btn btn-primary btn-sm" asp-controller="Onboarding" asp-action="Index"><i class="bi bi-rocket-takeoff me-1" aria-hidden="true"></i> Ver minha implantação</a>
+</div>
 <div class="row g-3">
 @foreach (var perfil in perfis)
 {

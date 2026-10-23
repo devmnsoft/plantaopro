@@ -370,6 +370,12 @@ values(@usuarioId,@Nome,@Email,upper(@Email),@Telefone,@SenhaHash,false,'{}',@cl
 
             var perfilId = await GarantirPerfilAdminClienteAsync(cn, tx, tenantId, clienteId);
             await cn.ExecuteAsync("insert into plantaopro.usuarios_perfis(id,tenant_id,cliente_id,usuario_id,perfil_id,reg_date,reg_status) values(gen_random_uuid(),@tenantId,@clienteId,@usuarioId,@perfilId,now(),'A')", new { tenantId, clienteId, usuarioId, perfilId }, tx);
+            // R99: os módulos INCLUIDOS no plano viram contrato efetivo do tenant no ato do
+            // provisionamento (antes existiam só via contratação manual MNSOFT — o tenant novo
+            // ficava com modulos_efetivos() vazio: jornada guiada sem etapas de módulo e claims
+            // de login sem o módulo que o plano contratado inclui). Executa antes de
+            // CriarOnboardingAsync para a materialização ver o contrato na mesma transação.
+            await ContratarModulosIncluidosDoPlanoAsync(cn, tx, tenantId, usuarioId, request.Plano.PlanoId);
             await CriarWhiteLabelPadraoAsync(cn, tx, tenantId, request.Empresa.NomeFantasia);
             await CriarOnboardingAsync(cn, tx, tenantId, clienteId);
             var lgpdAceito = string.Equals(origem, "SELF_SERVICE", StringComparison.OrdinalIgnoreCase) && request.Plano.ConsentimentoLgpd;
@@ -789,6 +795,30 @@ where not exists (select 1 from plantaopro.perfil_permissoes pp join plantaopro.
     private static async Task CriarWhiteLabelPadraoAsync(NpgsqlConnection cn, System.Data.Common.DbTransaction tx, Guid tenantId, string clienteNome)
     {
         await cn.ExecuteAsync("insert into plantaopro.tenant_white_label(id,tenant_id,nome_plataforma,cliente_nome,slogan,texto_boas_vindas,texto_rodape,reg_date,reg_status) values(gen_random_uuid(),@tenantId,'PlantãoPro',@clienteNome,'Gestão inteligente de plantões','Bem-vindo ao seu ambiente PlantãoPro','PlantãoPro SaaS',now(),'A')", new { tenantId, clienteNome }, tx);
+    }
+
+    /// <summary>
+    /// R99 - contrato de módulos por padrão do plano: cada linha plano_modulos com incluido=true
+    /// (módulo ATIVO no catálogo) vira tenant_modulos efetivo (origem PLANO, preço 0 porque já
+    /// está incluído no preço do plano, limite contratado do vínculo). Idempotente (on conflict
+    /// reativa como ATIVO, mesma forma de ToggleTenantAsync) e rastreado em
+    /// tenant_modulos_historico. É o que dá ao tenant novo a jornada guiada por módulo real.
+    /// </summary>
+    private static async Task ContratarModulosIncluidosDoPlanoAsync(NpgsqlConnection cn, System.Data.Common.DbTransaction tx, Guid tenantId, Guid usuarioId, Guid planoId)
+    {
+        const string sql = @"with contratadas as (
+insert into plantaopro.tenant_modulos(id,tenant_id,modulo_id,codigo_modulo,codigo,nome,habilitado,origem,status,preco_contratado,limite_contratado,ativado_em,desativado_em,reg_status,reg_date,created_by)
+select gen_random_uuid(),@tenantId,m.id,m.codigo,m.codigo,m.nome,true,'PLANO','ATIVO',0,coalesce(pm.limite,0),now(),null,'A',now(),@usuarioId
+from plantaopro.plano_modulos pm
+join plantaopro.modulos_sistema m on m.id=pm.modulo_id and m.reg_status='A' and upper(coalesce(m.status,'ATIVO'))='ATIVO'
+where pm.plano_id=@planoId and pm.reg_status='A' and pm.incluido=true
+on conflict (tenant_id,modulo_id) where reg_status='A' and modulo_id is not null
+do update set habilitado=true,status='ATIVO',desativado_em=null,ativado_em=coalesce(excluded.ativado_em,now()),reg_update=now()
+returning id,modulo_id)
+insert into plantaopro.tenant_modulos_historico(tenant_modulo_id,tenant_id,modulo_id,acao,antes,depois,usuario_id,ip_origem)
+select contratadas.id,@tenantId,contratadas.modulo_id,'CONTRATAR_PLANO',null::jsonb,'{""origem"":""PLANO"",""incluidoNoPlano"":true}'::jsonb,@usuarioId,null
+from contratadas";
+        await cn.ExecuteAsync(new CommandDefinition(sql, new { tenantId, usuarioId, planoId }, tx));
     }
 
     private static async Task CriarOnboardingAsync(NpgsqlConnection cn, System.Data.Common.DbTransaction tx, Guid tenantId, Guid clienteId)

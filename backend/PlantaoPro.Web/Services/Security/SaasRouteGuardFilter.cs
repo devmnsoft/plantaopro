@@ -99,6 +99,11 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
         ["MinhaCentral"] = "MINHA_CENTRAL",
         ["Notificacoes"] = "NOTIFICACOES",
         ["Ajuda"] = "AJUDA",
+        // R99 (r99a0): a pagina estatica de primeiros passos estava orfa do catalogo do guard -
+        // qualquer usuario nao-global caia em CATALOGO_NAO_CONFIGURADO (link "Comece por aqui"
+        // morto). AJUDA e modulo comum (liberado para todo autenticado) e a propria pagina ja
+        // aponta para a jornada guiada canonica do tenant (/Onboarding). Sem DDL.
+        ["PrimeirosPassos"] = "AJUDA",
         ["HospitalArea"] = "HOSPITAL_AREA",
         ["ParceiroPortal"] = "PARCEIRO",
         ["Comercial"] = "COMERCIAL",

@@ -1,3 +1,4 @@
+@model PlantaoPro.Web.Models.MensageriaPreferenciasViewModel
 @{ ViewData["Title"]="Preferências de notificações"; ViewData["Subtitle"]="Escolha o sinal certo, sem ruído desnecessário."; }
 <section class="notification-center" data-notification-preferences data-api="/bff/operacao/notificacoes">
  <header class="notification-hero"><div><span class="eyebrow">Seu ritmo</span><h2>Como você quer ser avisado</h2><p>O canal interno permanece ativo para proteger a continuidade operacional. E-mail e push ficam preparados, mas indisponíveis até a configuração de provedores.</p></div><a class="button button-subtle" asp-action="Index">Voltar à central</a></header>
@@ -7,6 +8,28 @@
  }
  <div class="preference-actions"><span data-preference-message role="status"></span><button class="button button-primary" type="submit">Salvar preferências</button></div>
  </form>
+</section>
+<section class="notification-center" data-mensageria-outbox>
+ <header class="notification-hero"><div><span class="eyebrow">@UiText.L("Integrations.OutboxEyebrow")</span><h2>@UiText.L("Integrations.OutboxTitle")</h2><p>@UiText.L("Integrations.OutboxIntro")</p></div></header>
+ <div class="preference-grid" data-mensageria-resumo>
+  <article class="preference-card"><h3>@UiText.L("Integrations.SummarySent")</h3><p data-resumo-sent>@Model.Resumo.Enviadas</p></article>
+  <article class="preference-card"><h3>@UiText.L("Integrations.SummaryBlocked")</h3><p data-resumo-blocked>@Model.Resumo.BloqueadasSemConsentimento</p></article>
+  <article class="preference-card"><h3>@UiText.L("Integrations.SummaryNoDestination")</h3><p data-resumo-nodestino>@Model.Resumo.SemDestino</p></article>
+ </div>
+ @if (Model.Itens.Count == 0) {
+  <p data-mensageria-empty>@UiText.L("Integrations.OutboxEmpty")</p>
+ } else {
+  <div class="table-responsive">
+   <table class="table" data-mensageria-tabela>
+   <thead><tr><th scope="col">@UiText.L("Integrations.ChannelHeader")</th><th scope="col">@UiText.L("Integrations.DestinationHeader")</th><th scope="col">@UiText.L("Integrations.EventHeader")</th><th scope="col">@UiText.L("Integrations.StatusHeader")</th><th scope="col">@UiText.L("Integrations.DateHeader")</th></tr></thead>
+   <tbody>
+   @foreach (var item in Model.Itens) {
+    <tr><td data-canal="@item.Canal">@item.Canal</td><td>@item.Destino</td><td data-evento="@item.Evento">@item.Evento</td><td data-status="@item.Status">@item.Status</td><td data-criado-em>@item.CriadoEm</td></tr>
+   }
+   </tbody>
+  </table>
+   </div>
+ }
 </section>
 @section Styles { <link rel="stylesheet" href="~/css/design-system/v2070-notifications.css" asp-append-version="true" /> }
 @section Scripts { <script type="module" src="~/js/pages/notification-center.js" asp-append-version="true"></script> }

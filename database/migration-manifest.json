@@ -1584,6 +1584,16 @@
                                           ],
                             "status":  "active",
                             "transactional":  true
+                        },
+                        {
+                            "version":  "2026_10_v2380_r103_integracoes_whatsapp_email_api_publica",
+                            "source":  "database/migrations/2026_10_v2380_r103_integracoes_whatsapp_email_api_publica.sql",
+                            "checksum":  "d5f010023096d8c5d9aa4dd59505c1f953c157ee1dafb6a82dbf42709609e897",
+                            "dependsOn":  [
+                                              "2026_10_v2379_r102_regulacao_triagem_integridade_adm360"
+                                          ],
+                            "status":  "active",
+                            "transactional":  true
                         }
                    ]
 }

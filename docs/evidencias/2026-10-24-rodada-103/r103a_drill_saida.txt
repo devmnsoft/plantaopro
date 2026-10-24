@@ -1,0 +1,25 @@
+R103A_DRILL data=20261024-040121 db=plantaopro_test api=52186 web=52185
+PORTAS_LIVRES_INICIO=SIM
+ESTAGEM_1_API_NO_AR ok=SIM pid=24768
+ESTAGEM_1_WEB_NO_AR ok=SIM pid=8236
+PRE_LIMPEZA_RERUN ok=SIM
+MIGRACAO_OK v2380 mensagens_saida=SIM api_chaves_usos=SIM rate_limit_cols=3 constraints>=2
+PLANO_OK drill=6be33d4b-5984-4028-adca-0bd5d5184997 mensal=100 anual=1188 integracoes=SIM
+REG_MODULO_OK saude360=CONTRATO notificacoes=CONTRATO
+REG_PERMISSAO_OK NOTIFICACOES.VER via usuario_permissoes_especiais
+REG_FIXTURE_OK medico=03375c5a-4d70-4b91-a8cc-6cef3d9ca087 pac1=4f8a9b04-d678-46fa-a886-32c05d6c746f pac2=7e69da06-3b73-40dd-b2ee-e3b7e3dc4507 pac3=cb9f8995-0346-4d84-807f-f1b19d4aa63f agendamento=81be8d29-40e2-4b2e-9770-57a701eefdee
+OPTIN_OK whatsapp+email canal_banco=EMAIL,WHATSAPP auditoria=2
+MSG_OK enviada=2 sem_destino=1 bloqueada_sem_consentimento=1 provider=LOCAL auditoria=4
+CHAVE_CRIAR_OK id=a7ca470f-3a40-4ae0-99c3-24c00aeda2c7 hash_sha256=OK limites=120min/10000dia
+CHAVE_401_OK chave_inexistente=http=401
+CHAVE_IDENTIDADE_OK chaveId=confere escopos=2
+T1_DUMP_OK arquivo=r103a_t1_publico_situacao.json status=AGENDADO
+CHAVE_PACIENTE_OK leitura_por_escopo_pacientes_read
+CHAVE_403_OK sem_escopo_agendamentos_http=403 chave_restrita_reogada
+CHAVE_429_OK janela_de_minuto_excedida_http=429 limite_restaurado=120
+CHAVE_USOS_OK trilha=3 logs_portal=3 revogada_401=SIM
+CHECKIN_OK http=200 status=CHECKIN_REALIZADO registro=1
+CHECKIN_TRIGGER_OK 2_canais_com_optin enviadas=2 destinos_confirmados=SIM
+WEB_OUTBOX_OK secao+tabela+linhas+resumo_enviado=4
+PORTAS_LIVRES_FIM=SIM
+RESULTADO=PASSEI

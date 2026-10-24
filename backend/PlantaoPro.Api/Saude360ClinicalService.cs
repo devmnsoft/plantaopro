@@ -56,7 +56,7 @@ public sealed class Saude360ClinicalService
         "cid_uso_historico", "clinica_contas_receber", "clinica_recebimentos",
         "consulta_anamnese", "consulta_condutas", "consulta_diagnosticos", "consulta_encaminhamentos",
         "consulta_exame_fisico", "consulta_historico", "consultas", "convenio_autorizacoes",
-        "documentos_clinicos", "encaminhamentos_clinicos", "paciente_alergias", "paciente_consentimentos",
+        "documentos_clinicos", "encaminhamentos_clinicos", "mensagens_saida", "paciente_alergias", "paciente_consentimentos",
         "paciente_contatos", "paciente_convenios", "paciente_documentos", "paciente_enderecos",
         "paciente_historico", "paciente_medicamentos_uso", "paciente_observacoes", "paciente_problemas",
         "painel_chamada_fila", "painel_chamada_historico", "plano_saude_autorizacoes",
@@ -399,7 +399,57 @@ where t.id=@id and t.reg_status='A' and (@isGlobal or (@tenantId is not null and
             ? (object)new { table, acao }
             : new { table, motivo = request.Motivo, justificativa = request.Justificativa };
         await AuditAsync(table, id, acao.ToUpperInvariant(), auditDetalhes);
+        // R103: e-mail/WhatsApp transacional — o evento de check-in avisa o paciente nos canais
+        // com opt-in (consentimento LGPD). Best effort: falha de mensageria nunca quebra a acao.
+        if (string.Equals(tableKey, "agendamentos", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "checkin", StringComparison.OrdinalIgnoreCase))
+        {
+            try { await TentarNotificarCheckInAsync(cn, id); }
+            catch (Exception ex) { logger.LogWarning(ex, "Notificacao de check-in falhou (best effort) para o agendamento {Id}", id); }
+        }
         return await ObterAsync(tableKey, id);
+    }
+
+    // R103: projecao tipada para o gatilho de check-in. O Postgres retorna aliases nao cotados em
+    // minusculas e o acesso dinamico do Dapper e exato (case-sensitive) — a projecao e insensivel
+    // a maiusculas, por isso o gatilho nunca usa membros dinamicos aqui.
+    private sealed record CheckInPacienteLinha(string Nome, string Telefone, string Email, bool Consentimento, string Canais);
+
+    /// <summary>
+    /// R103: notificacao transacional do check-in — o agendamento confirmado no balcao gera
+    /// mensagem ao paciente em cada canal com opt-in (WHATSAPP/EMAIL), registrada na caixa de
+    /// saida com o provider efetivo. Chamada apos o commit da acao, fora da transacao clinica.
+    /// </summary>
+    private async Task TentarNotificarCheckInAsync(NpgsqlConnection cn, Guid agendamentoId)
+    {
+        var linha = await cn.QueryFirstOrDefaultAsync<CheckInPacienteLinha>(new CommandDefinition(@"select coalesce(nullif(p.nome_completo,''), p.nome, '') as Nome, coalesce(p.telefone,'') as Telefone,
+coalesce(p.email,'') as Email, coalesce(p.consentimento_lgpd,false) as Consentimento, coalesce(p.consentimento_lgpd_canal,'') as Canais
+from plantaopro.agendamentos a
+left join plantaopro.pacientes p on p.id=a.paciente_id and p.reg_status='A'
+where a.id=@id and a.reg_status='A'", new { id = agendamentoId }));
+        if (linha is null || !linha.Consentimento) return;
+        var primeiro = linha.Nome.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
+        var canais = linha.Canais.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var provider = string.IsNullOrWhiteSpace(cfg["Integracoes:MensageriaProvider"]) ? "LOCAL" : cfg["Integracoes:MensageriaProvider"]!.Trim().ToUpperInvariant();
+        foreach (var canal in new[] { "WHATSAPP", "EMAIL" })
+        {
+            if (!canais.Contains(canal)) continue;
+            var destino = canal == "WHATSAPP" ? linha.Telefone : linha.Email;
+            if (string.IsNullOrWhiteSpace(destino)) continue;
+            await cn.ExecuteAsync(@"insert into plantaopro.mensagens_saida
+(id, tenant_id, cliente_id, paciente_id, canal, destino, tipo_evento, assunto, mensagem, status, provider, detalhe, criado_por, criado_em, processado_em, reg_date, reg_status)
+select gen_random_uuid(), null, a.cliente_id, a.paciente_id, @canal, @destino, 'CHECKIN_REALIZADO', @assunto, @mensagem, 'ENVIADA', @provider, @detalhe, null, now(), now(), now(), 'A'
+from plantaopro.agendamentos a where a.id=@agendamentoId and a.reg_status='A'", new
+            {
+                canal,
+                destino,
+                assunto = canal == "EMAIL" ? "Check-in realizado no PlantãoPro" : (string?)null,
+                mensagem = "Olá, " + primeiro + ". Seu check-in foi realizado no PlantãoPro. Nossa equipe já foi avisada.",
+                provider,
+                detalhe = provider == "LOCAL" ? "Registro local (provedor LOCAL, sem integração externa configurada)." : (string?)string.Empty,
+                agendamentoId
+            });
+        }
     }
 
     /// <summary>

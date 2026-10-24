@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using Microsoft.IdentityModel.Tokens;
@@ -131,7 +132,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 }
             }
         };
-    });
+    })
+    // R103: esquema de chave de API (X-Api-Key) para as rotas da API publica (/api/publico).
+    // Sem o header o esquema devolve NoResult e o JWT segue como fluxo padrao.
+    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationHandler.SchemeName, o => { });
 
 builder.Services.AddAuthorization(options =>
 {
@@ -255,6 +259,9 @@ builder.Services.AddScoped<IDfeNacionalService>(sp => new DfeNacionalService(sp.
 builder.Services.AddScoped<IGestaoDashboardRepository>(sp => new GestaoDashboardRepository(GetConn(sp)));
 builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();
+// R103: servicos de integracoes (mensageria WhatsApp/e-mail + API publica por chave)
+builder.Services.AddScoped<MensageriaService>();
+builder.Services.AddScoped<IntegracoesPublicaService>();
 builder.Services.AddScoped<Saude360FinanceiroService>();
 builder.Services.AddScoped<IWorkflowSaude360Service, WorkflowSaude360Service>();
 builder.Services.AddScoped<IConsultaRepository, ConsultaRepository>();

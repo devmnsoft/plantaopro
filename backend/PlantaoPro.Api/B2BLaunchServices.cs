@@ -176,10 +176,21 @@ order by reg_date desc", new { tenantId = ctx.Data?.TenantId });
         return ApiResponse<IEnumerable<object>>.Ok(rows.Cast<object>());
     }
 
-    public Task<ApiResponse<IEnumerable<object>>> ListarApiKeyLogsAsync(Guid id)
+    public async Task<ApiResponse<IEnumerable<object>>> ListarApiKeyLogsAsync(Guid id)
     {
-        var logs = new List<object>();
-        return Task.FromResult(ApiResponse<IEnumerable<object>>.Ok(logs));
+        var ctx = await _tenantContext.ObterAtualAsync();
+        if (!ctx.Success) return ApiResponse<IEnumerable<object>>.Fail(ctx.Message, ctx.StatusCode);
+        if (!ctx.Data!.TenantId.HasValue) return ApiResponse<IEnumerable<object>>.Fail("Contexto de tenant obrigatório.", 409);
+
+        // R103: a trilha de uso deixou de ser placeholder — cada requisicao autenticada por chave
+        // deixa linha em api_chaves_usos (metodo, rota, status HTTP e IP), com escopo do tenant.
+        await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+        await cn.OpenAsync();
+        var rows = await cn.QueryAsync(@"select id, chave_id as ChaveId, metodo, rota, status_http as StatusHttp, ip_origem as IpOrigem, reg_date as RegDate
+from plantaopro.api_chaves_usos
+where reg_status='A' and chave_id=@id and tenant_id=@tenantId
+order by reg_date desc limit 100", new { id, tenantId = ctx.Data.TenantId.Value });
+        return ApiResponse<IEnumerable<object>>.Ok(rows.Cast<object>());
     }
 
     public async Task<ApiResponse<ApiKeyCreateResultDto>> RotacionarApiKeyAsync(Guid id, string? ip)

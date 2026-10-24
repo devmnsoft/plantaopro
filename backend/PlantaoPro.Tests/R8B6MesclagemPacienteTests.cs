@@ -36,7 +36,7 @@ public sealed class R8B6MesclagemPacienteTests
         "cid_uso_historico", "clinica_contas_receber", "clinica_recebimentos",
         "consulta_anamnese", "consulta_condutas", "consulta_diagnosticos", "consulta_encaminhamentos",
         "consulta_exame_fisico", "consulta_historico", "consultas", "convenio_autorizacoes",
-        "documentos_clinicos", "encaminhamentos_clinicos", "paciente_alergias", "paciente_consentimentos",
+        "documentos_clinicos", "encaminhamentos_clinicos", "mensagens_saida", "paciente_alergias", "paciente_consentimentos",
         "paciente_contatos", "paciente_convenios", "paciente_documentos", "paciente_enderecos",
         "paciente_historico", "paciente_medicamentos_uso", "paciente_observacoes", "paciente_problemas",
         "painel_chamada_fila", "painel_chamada_historico", "plano_saude_autorizacoes",

@@ -1504,6 +1504,42 @@
   <data name="Clinical.TriageReferTitle" xml:space="preserve">
     <value>Finaliza la triage y registra la regulación del paciente: médico de destino opcional y orientación obligatoria.</value>
   </data>
+  <data name="Integrations.OutboxEyebrow" xml:space="preserve">
+    <value>Integraciones</value>
+  </data>
+  <data name="Integrations.OutboxTitle" xml:space="preserve">
+    <value>Últimos mensajes enviados</value>
+  </data>
+  <data name="Integrations.OutboxIntro" xml:space="preserve">
+    <value>Registro de los canales externos (WhatsApp y correo) según el opt-in del paciente.</value>
+  </data>
+  <data name="Integrations.OutboxEmpty" xml:space="preserve">
+    <value>Aún no se ha enviado ningún mensaje.</value>
+  </data>
+  <data name="Integrations.ChannelHeader" xml:space="preserve">
+    <value>Canal</value>
+  </data>
+  <data name="Integrations.DestinationHeader" xml:space="preserve">
+    <value>Destinatario</value>
+  </data>
+  <data name="Integrations.EventHeader" xml:space="preserve">
+    <value>Evento</value>
+  </data>
+  <data name="Integrations.StatusHeader" xml:space="preserve">
+    <value>Estado</value>
+  </data>
+  <data name="Integrations.DateHeader" xml:space="preserve">
+    <value>Fecha</value>
+  </data>
+  <data name="Integrations.SummarySent" xml:space="preserve">
+    <value>Enviados</value>
+  </data>
+  <data name="Integrations.SummaryBlocked" xml:space="preserve">
+    <value>Sin opt-in</value>
+  </data>
+  <data name="Integrations.SummaryNoDestination" xml:space="preserve">
+    <value>Sin destino</value>
+  </data>
   <data name="Clinical.LookupSelected" xml:space="preserve">
     <value>Registro seleccionado</value>
   </data>
